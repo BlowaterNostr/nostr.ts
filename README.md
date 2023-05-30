@@ -3,7 +3,7 @@ A strongly typed, fast nostr client protocol implementation.
 # how to use
 
 ```ts
-import { ConnectionPool } from "https://raw.githubusercontent.com/BlowaterNostr/nostr.ts/main/relay.ts";
+import { ConnectionPool } from "https://deno.land/x/nostrts@1.0.0/relay.ts";
 
 const pool = new ConnectionPool();
 /* optional await */ pool.addRelayURLs([

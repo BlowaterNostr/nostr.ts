@@ -34,20 +34,51 @@ export interface ProfileInfo {
     follower?: Array<{ publicKey: string; name: string }>;
 }
 
-export type RelayResponse =
-    | RelayResponse_REQ_Message
-    | RelayResponse_OK
-    | RelayResponse_Notice;
-
-export type RelayResponse_REQ_Message =
-    | RelayResponse_Event
-    | RelayResponse_EOSE;
+////////////////////
+// Relay Response //
+////////////////////
 export type SubID = string;
 export type EventID = string;
-export type RelayResponse_Event = ["EVENT", SubID, NostrEvent];
-export type RelayResponse_EOSE = ["EOSE", SubID]; // https://github.com/nostr-protocol/nips/blob/master/15.md
-export type RelayResponse_Notice = ["NOTICE", string];
-export type RelayResponse_OK = ["OK", EventID, boolean, string];
+
+export type _RelayResponse =
+    | _RelayResponse_REQ_Message
+    | _RelayResponse_OK
+    | _RelayResponse_Notice;
+
+export type _RelayResponse_REQ_Message =
+    | _RelayResponse_Event
+    | _RelayResponse_EOSE;
+
+export type _RelayResponse_Event = ["EVENT", SubID, NostrEvent];
+export type _RelayResponse_EOSE = ["EOSE", SubID]; // https://github.com/nostr-protocol/nips/blob/master/15.md
+export type _RelayResponse_Notice = ["NOTICE", string];
+export type _RelayResponse_OK = ["OK", EventID, boolean, string];
+
+export type RelayResponse = RelayResponse_REQ_Message | RelayResponse_OK | RelayResponse_Notice;
+export type RelayResponse_REQ_Message = RelayResponse_Event | RelayResponse_EOSE;
+
+export type RelayResponse_Event = {
+    type: "EVENT";
+    subID: SubID;
+    event: NostrEvent;
+};
+
+export type RelayResponse_EOSE = {
+    type: "EOSE";
+    subID: SubID;
+};
+
+export type RelayResponse_OK = {
+    type: "OK";
+    eventID: EventID;
+    ok: boolean;
+    note: string;
+};
+
+export type RelayResponse_Notice = {
+    type: "NOTICE";
+    note: string;
+};
 
 // Nostr Web Socket Message
 // https://github.com/nostr-protocol/nips/blob/master/01.md#from-client-to-relay-sending-events-and-creating-subscriptions

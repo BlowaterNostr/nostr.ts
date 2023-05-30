@@ -1,9 +1,10 @@
 import {
+    _RelayResponse,
+    _RelayResponse_OK,
+    _RelayResponse_REQ_Message,
     EventID,
     NostrEvent,
     NostrFilters,
-    RelayResponse,
-    RelayResponse_OK,
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
@@ -23,7 +24,7 @@ export class SingleRelayConnection {
     >();
     private okMap = new Map<
         EventID,
-        [csp.Channel<void>, RelayResponse_OK | undefined]
+        [csp.Channel<void>, _RelayResponse_OK | undefined]
     >();
 
     private constructor(
@@ -45,7 +46,7 @@ export class SingleRelayConnection {
                 for (; relay.isClosed() === false;) {
                     await csp.select([
                         [relay.ws.onMessage, async (event: MessageEvent) => {
-                            let nostrMessage: RelayResponse = JSON.parse(
+                            let nostrMessage: _RelayResponse = JSON.parse(
                                 event.data,
                             );
 
@@ -87,7 +88,18 @@ export class SingleRelayConnection {
                                 if (chan.closed()) {
                                     console.log(url, subID, "has been closed");
                                 } else {
-                                    chan.put(nostrMessage);
+                                    if (nostrMessage[0] === "EOSE") {
+                                        chan.put({
+                                            type: nostrMessage[0],
+                                            subID: nostrMessage[1],
+                                        });
+                                    } else {
+                                        chan.put({
+                                            type: nostrMessage[0],
+                                            subID: nostrMessage[1],
+                                            event: nostrMessage[2],
+                                        });
+                                    }
                                 }
                             } else {
                                 console.log(url, "onMessage", event.data); // NOTICE and other non-standard message types
@@ -137,7 +149,7 @@ export class SingleRelayConnection {
         ]));
     };
 
-    async waitEventOK(eventID: EventID): Promise<RelayResponse_OK> {
+    async waitEventOK(eventID: EventID): Promise<_RelayResponse_OK> {
         const eventOK = this.okMap.get(eventID);
         if (!eventOK) {
             throw new Error(`Event ${eventID} dose not exist.`);
