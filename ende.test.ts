@@ -1,14 +1,14 @@
-import { generatePrivateKey, toPublicKey } from "./key.ts";
+import { generatePrivateKeyHex, toPublicKeyHex } from "./key.ts";
 import * as ende from "./ende.ts";
 import { assertEquals } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { utf8Decode, utf8Encode } from "./ende.ts";
 
 Deno.test("utf8 encrypt & decrypt", async () => {
-    let pri1 = generatePrivateKey();
-    let pub1 = toPublicKey(pri1);
+    let pri1 = generatePrivateKeyHex();
+    let pub1 = toPublicKeyHex(pri1);
 
-    let pri2 = generatePrivateKey();
-    let pub2 = toPublicKey(pri2);
+    let pri2 = generatePrivateKeyHex();
+    let pub2 = toPublicKeyHex(pri2);
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax
     // the max number of arguments for spread operator is 126991

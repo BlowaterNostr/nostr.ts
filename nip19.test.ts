@@ -1,5 +1,5 @@
 import { assertEquals, assertIsError, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
-import { PrivateKey, PublicKey } from "./key.ts";
+import { PrivateKey, PublicKey, toPublicKeyHex } from "./key.ts";
 
 Deno.test("nip19 public key", () => {
     const key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -44,4 +44,6 @@ Deno.test("nip19 private key", () => {
     assertIsError(pkey3);
     const pkey4 = PrivateKey.FromBech32(key);
     assertIsError(pkey4);
+
+    assertEquals(pkey.toPublicKey().hex, toPublicKeyHex(pkey.hex));
 });

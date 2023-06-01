@@ -1,33 +1,9 @@
 import * as secp256k1 from "https://esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
 import { bech32 } from "./scure.js";
 
-// NIP 1 https://github.com/nostr-protocol/nips/blob/master/01.md
-export function generatePrivateKey(): string {
-    return secp256k1.utils.bytesToHex(secp256k1.utils.randomPrivateKey());
-}
-
-export function toPublicKey(privateKey: string): string {
-    return secp256k1.utils.bytesToHex(
-        secp256k1.schnorr.getPublicKey(privateKey),
-    );
-}
-
-export function isValidHexKey(key: string) {
-    return /^[0-9a-f]{64}$/.test(key);
-}
-
-export function publicKeyFromNpub(key: string) {
-    if (key.substring(0, 4) === "npub") {
-        const code = bech32.decode(key, 1500);
-        const data = new Uint8Array(bech32.fromWords(code.words));
-        return secp256k1.utils.bytesToHex(data);
-    }
-    return key;
-}
-
 export class PrivateKey {
     static Generate() {
-        const str = generatePrivateKey();
+        const str = generatePrivateKeyHex();
         const key = PrivateKey.FromHex(str);
         if (key instanceof Error) {
             throw key; // impossible
@@ -61,12 +37,14 @@ export class PrivateKey {
         this.bech32 = bech32.encode("nsec", words, 1500);
         this.hex = key;
     }
-}
 
-export class InvalidKey extends Error {
-    constructor(key: string) {
-        super(`${key} is invalid`);
-        this.name = "InvalidKey";
+    toPublicKey(): PublicKey {
+        const hex = toPublicKeyHex(this.hex);
+        const pub = PublicKey.FromHex(hex);
+        if (pub instanceof Error) {
+            throw pub; // impossible
+        }
+        return pub;
     }
 }
 
@@ -75,7 +53,7 @@ export class PublicKey {
         if (!isValidPublicKey(key)) {
             return new InvalidKey(key);
         }
-        return new PublicKey(publicKeyFromNpub(key));
+        return new PublicKey(publicKeyHexFromNpub(key));
     }
 
     static FromHex(key: string) {
@@ -86,7 +64,7 @@ export class PublicKey {
     }
 
     static FromBech32(key: string) {
-        return new PublicKey(publicKeyFromNpub(key));
+        return new PublicKey(publicKeyHexFromNpub(key));
     }
 
     public readonly bech32: string;
@@ -100,6 +78,37 @@ export class PublicKey {
     }
 }
 
+export function toPublicKeyHex(privateKey: string): string {
+    return secp256k1.utils.bytesToHex(
+        secp256k1.schnorr.getPublicKey(privateKey),
+    );
+}
+
+export function isValidHexKey(key: string) {
+    return /^[0-9a-f]{64}$/.test(key);
+}
+
+export function publicKeyHexFromNpub(key: string) {
+    if (key.substring(0, 4) === "npub") {
+        const code = bech32.decode(key, 1500);
+        const data = new Uint8Array(bech32.fromWords(code.words));
+        return secp256k1.utils.bytesToHex(data);
+    }
+    return key;
+}
+
+// NIP 1 https://github.com/nostr-protocol/nips/blob/master/01.md
+export function generatePrivateKeyHex(): string {
+    return secp256k1.utils.bytesToHex(secp256k1.utils.randomPrivateKey());
+}
+
 function isValidPublicKey(key: string) {
     return /^[0-9a-f]{64}$/.test(key) || /^npub[0-9a-z]{59}$/.test(key);
+}
+
+export class InvalidKey extends Error {
+    constructor(key: string) {
+        super(`${key} is invalid`);
+        this.name = "InvalidKey";
+    }
 }

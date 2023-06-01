@@ -1,5 +1,5 @@
 import * as hex from "https://deno.land/std@0.176.0/encoding/hex.ts";
-import { PrivateKey, PublicKey, publicKeyFromNpub, toPublicKey } from "./key.ts";
+import { PrivateKey, PublicKey, publicKeyHexFromNpub, toPublicKeyHex } from "./key.ts";
 import { schnorr, utils } from "https://esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
 import { decrypt, encrypt, utf8Decode, utf8Encode } from "./ende.ts";
 
@@ -163,7 +163,7 @@ export async function prepareEncryptedNostrEvent(
     tags: Tag[],
     content: string,
 ): Promise<NostrEvent> {
-    receiverPublicKey = publicKeyFromNpub(receiverPublicKey);
+    receiverPublicKey = publicKeyHexFromNpub(receiverPublicKey);
 
     const encrypted = await sender.nip04.encrypt(receiverPublicKey, content);
     return prepareNormalNostrEvent(
@@ -319,7 +319,7 @@ export function blobToBase64(blob: Blob): Promise<string> {
 
 export class InMemoryAccountContext implements NostrAccountContext {
     static New(privateKey: PrivateKey) {
-        const publicKey = toPublicKey(privateKey.hex);
+        const publicKey = toPublicKeyHex(privateKey.hex);
         const pub = PublicKey.FromHex(publicKey);
         if (pub instanceof Error) {
             throw pub; // impossible
