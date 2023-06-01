@@ -26,7 +26,7 @@ Deno.test("nip19 public key", () => {
     assertEquals(pkey4.hex, pkey5.hex);
 });
 
-Deno.test("nip19 private key", () => {
+Deno.test("nip19 private key", async (t) => {
     const key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     const nsec = "nsec1424242424242424242424242424242424242424242424242424q3dgem8";
 
@@ -46,4 +46,14 @@ Deno.test("nip19 private key", () => {
     assertIsError(pkey4);
 
     assertEquals(pkey.toPublicKey().hex, toPublicKeyHex(pkey.hex));
+
+    await t.step("Invalid checksum", () => {
+        const key = "nsec1alwevw7n7xxapp4g7c2v3l5qr7zkmxjrhlwqteh6rkh2527gm3qqgj3jh";
+        const pri = PrivateKey.FromBech32(key) as Error;
+        assertEquals(pri instanceof Error, true);
+        assertEquals(
+            pri.message,
+            `Invalid checksum in nsec1alwevw7n7xxapp4g7c2v3l5qr7zkmxjrhlwqteh6rkh2527gm3qqgj3jh: expected "29r5am"`,
+        );
+    });
 });

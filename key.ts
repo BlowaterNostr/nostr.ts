@@ -20,10 +20,14 @@ export class PrivateKey {
 
     static FromBech32(key: string) {
         if (key.substring(0, 4) === "nsec") {
-            const code = bech32.decode(key, 1500);
-            const data = new Uint8Array(bech32.fromWords(code.words));
-            const hex = secp256k1.utils.bytesToHex(data);
-            return PrivateKey.FromHex(hex);
+            try {
+                const code = bech32.decode(key, 1500);
+                const data = new Uint8Array(bech32.fromWords(code.words));
+                const hex = secp256k1.utils.bytesToHex(data);
+                return PrivateKey.FromHex(hex);
+            } catch (e) {
+                return e as Error;
+            }
         }
         return new Error(`${key} is not valid`);
     }
