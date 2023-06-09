@@ -55,7 +55,11 @@ export class AsyncWebSocket {
         if (err) {
             return err;
         }
-        this.ws.send(str);
+        try {
+            this.ws.send(str);
+        } catch (e) {
+            return e as Error;
+        }
     };
 
     close = async (

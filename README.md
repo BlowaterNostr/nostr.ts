@@ -1,9 +1,6 @@
 A strongly typed, fast nostr client protocol implementation.
 
 # how to use
-### Smart Documentation Chat Bot
-npub1dd56gu2v8cvc9nn8ne0u7az48zel62t59cc3shv32n6g6zutmcesvrhf83
-
 ### Examples
 ```ts
 import { ConnectionPool } from "https://deno.land/x/nostrts@1.0.0/relay.ts";
