@@ -1,6 +1,13 @@
 A strongly typed, fast nostr client protocol implementation.
 
-# how to use
+## Guide
+
+This package is divided into 3 modules:
+
+1. Network [`relay.ts`](./relay.ts) provides functionalities for connecting a single relay and connection
+   pools.
+2. Computation [`nostr.ts`](./nostr.ts) provides functions for event creation and transformation.
+3. Storage coming soon
 
 ### Examples
 
