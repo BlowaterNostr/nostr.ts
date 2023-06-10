@@ -1,9 +1,11 @@
 A strongly typed, fast nostr client protocol implementation.
 
 # how to use
+
 ### Examples
+
 ```ts
-import { ConnectionPool } from "https://deno.land/x/nostrts@1.0.0/relay.ts";
+import { ConnectionPool } from "https://deno.land/x/nostrts/relay.ts";
 
 const pool = new ConnectionPool();
 /* optional await */ pool.addRelayURLs([

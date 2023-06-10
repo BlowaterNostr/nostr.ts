@@ -376,10 +376,7 @@ export class ConnectionPool {
         for (let conn of this.connections.values()) {
             (async (relay: SingleRelayConnection) => {
                 let channel = await relay.newSub(subID, filter);
-                if (channel instanceof SubscriptionAlreadyExist) {
-                    console.error(channel);
-                    return;
-                } else if (channel instanceof WebSocketClosed) {
+                if (channel instanceof Error) {
                     console.error(channel);
                     return;
                 }
