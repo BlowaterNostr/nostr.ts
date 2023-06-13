@@ -352,9 +352,9 @@ export class InMemoryAccountContext implements NostrAccountContext {
     };
 }
 
-export function verifyEvent(event: NostrEvent) {
+export async function verifyEvent(event: NostrEvent) {
     try {
-        return schnorr.verify(event.sig, calculateId(event), event.pubkey);
+        return schnorr.verify(event.sig, await calculateId(event), event.pubkey);
     } catch (err) {
         return false;
     }
