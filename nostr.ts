@@ -352,6 +352,14 @@ export class InMemoryAccountContext implements NostrAccountContext {
     };
 }
 
+export function verifyEvent(event: NostrEvent) {
+    try {
+        return schnorr.verify(event.sig, calculateId(event), event.pubkey);
+    } catch (err) {
+        return false;
+    }
+}
+
 ////////////
 // NIP 78 //
 ////////////
