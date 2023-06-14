@@ -32,6 +32,14 @@ export class PrivateKey {
         return new Error(`${key} is not valid`);
     }
 
+    static FromString(raw: string) {
+        const key = PrivateKey.FromBech32(raw);
+        if (key instanceof Error) {
+            return PrivateKey.FromHex(raw);
+        }
+        return key;
+    }
+
     public readonly bech32: string;
     public readonly hex: string;
 

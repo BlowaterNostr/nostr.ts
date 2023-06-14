@@ -56,4 +56,12 @@ Deno.test("nip19 private key", async (t) => {
             `Invalid checksum in nsec1alwevw7n7xxapp4g7c2v3l5qr7zkmxjrhlwqteh6rkh2527gm3qqgj3jh: expected "29r5am"`,
         );
     });
+
+    await t.step("private key from string", () => {
+        const pri = PrivateKey.Generate();
+        const pri_1 = PrivateKey.FromString(pri.bech32) as PrivateKey;
+        const pri_2 = PrivateKey.FromString(pri.hex) as PrivateKey;
+        assertEquals(pri_1.hex, pri_2.hex);
+        assertEquals(pri_1.bech32, pri_2.bech32);
+    });
 });
