@@ -11,8 +11,15 @@ import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 export class SubscriptionAlreadyExist extends Error {
+    // breaking-todo: remove filter
     constructor(public subID: string, public filter: NostrFilters, public url: string) {
         super(`${subID} already exists for ${url}`);
+    }
+}
+
+export class SubscriptionNotExist extends Error {
+    constructor(public subID: string, public url: string) {
+        super(`sub '${subID}' not exist for ${url}`);
     }
 }
 
@@ -387,6 +394,13 @@ export class ConnectionPool {
         }
         this.subscriptionMap.set(subID, [filter, results]);
         return results;
+    }
+
+    async updateSub(subID: string, filter: NostrFilters) {
+        if (!this.subscriptionMap.has(subID)) {
+            return new SubscriptionNotExist(subID, "relay pool");
+        }
+        return;
     }
 
     async sendEvent(nostrEvent: NostrEvent) {

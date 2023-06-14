@@ -11,6 +11,7 @@ import {
     RelayAlreadyRegistered,
     SingleRelayConnection,
     SubscriptionAlreadyExist,
+    SubscriptionNotExist,
 } from "./relay.ts";
 
 import { relays } from "./relay-list.test.ts";
@@ -186,6 +187,26 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
     // don't care the value, just need to make sure that it's from the same relay
     assertEquals(msg[1], relays[0]);
     await pool.close();
+});
+
+Deno.test("updateSub", async (t) => {
+    const pool = new ConnectionPool();
+    await t.step("no sub", async () => {
+        const err = await pool.updateSub("x", {});
+        assertEquals(err instanceof SubscriptionNotExist, true); // same reference
+        assertEquals(err?.message, "sub 'x' not exist for relay pool"); // same reference
+    });
+    await t.step("no relays", async () => {
+        const sub1 = await pool.newSub("x", {});
+        if (sub1 instanceof Error) {
+            fail(sub1.message);
+        }
+        const sub2 = await pool.updateSub("x", {});
+        if (sub2 instanceof Error) {
+            fail(sub2.message);
+        }
+        assertEquals(sub1 == sub2, true); // same reference
+    });
 });
 
 // todo: limit is not supported by some relays
