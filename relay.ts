@@ -413,7 +413,8 @@ export class ConnectionPool {
         if (!sub) {
             return new SubscriptionNotExist(subID, "relay pool");
         }
-        return sub[1];
+        const [pre_filter, chan] = sub;
+        return chan;
     }
 
     async sendEvent(nostrEvent: NostrEvent) {

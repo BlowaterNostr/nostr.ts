@@ -2,6 +2,7 @@ import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master
 import {
     assertEquals,
     assertInstanceOf,
+    assertNotEquals,
     assertNotInstanceOf,
     fail,
 } from "https://deno.land/std@0.176.0/testing/asserts.ts";
@@ -141,6 +142,26 @@ Deno.test("ConnectionPool subscription already exist", async () => {
     await pool.closeSub(subID);
     const chan2 = await pool.newSub(subID, { kinds: [0], limit: 1 });
     assertInstanceOf(chan2, SubscriptionAlreadyExist);
+    await pool.close();
+});
+
+Deno.test("ConnectionPool close subscription", async () => {
+    const pool = new ConnectionPool();
+    pool.addRelayURL(relays[0]);
+    {
+        const subID = "x";
+        const chan = await pool.newSub(subID, { kinds: [0], limit: 1 });
+        assertNotInstanceOf(chan, Error);
+        await pool.closeSub(subID);
+        // even if the subscription is closed,
+        // we don't close the consumer channel
+        assertEquals(chan.closed(), false);
+        const result = await chan.pop();
+        if (result == csp.closed) {
+            fail();
+        }
+        assertEquals(result[0].type, "EVENT");
+    }
     await pool.close();
 });
 
