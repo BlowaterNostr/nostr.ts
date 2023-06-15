@@ -5,7 +5,7 @@ import {
     assertNotInstanceOf,
     fail,
 } from "https://deno.land/std@0.176.0/testing/asserts.ts";
-import { NostrEvent, NostrKind } from "./nostr.ts";
+import { NostrEvent, NostrKind, RelayResponse_REQ_Message } from "./nostr.ts";
 import {
     ConnectionPool,
     RelayAlreadyRegistered,
@@ -15,7 +15,7 @@ import {
 } from "./relay.ts";
 
 import { relays } from "./relay-list.test.ts";
-import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
+import { AsyncWebSocket, AsyncWebSocketInterface, CloseTwice, WebSocketClosed } from "./websocket.ts";
 
 Deno.test("SingleRelayConnection open & close", async () => {
     const ps = [];
@@ -190,11 +190,11 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
 });
 
 Deno.test("updateSub", async (t) => {
-    const pool = new ConnectionPool();
+    const pool = new ConnectionPool({ ws: AsyncWebSocket.New });
     await t.step("no sub", async () => {
-        const err = await pool.updateSub("x", {});
-        assertEquals(err instanceof SubscriptionNotExist, true); // same reference
-        assertEquals(err?.message, "sub 'x' not exist for relay pool"); // same reference
+        const err = await pool.updateSub("x", {}) as Error;
+        assertEquals(err instanceof SubscriptionNotExist, true);
+        assertEquals(err.message, "sub 'x' not exist for relay pool");
     });
     await t.step("no relays", async () => {
         const sub1 = await pool.newSub("x", {});
@@ -207,6 +207,32 @@ Deno.test("updateSub", async (t) => {
         }
         assertEquals(sub1 == sub2, true); // same reference
     });
+
+    const err = await pool.addRelayURL(relays[0]);
+    assertEquals(err, undefined);
+    await t.step("connected to relays", async () => {
+        const sub1 = await pool.newSub("y", { kinds: [NostrKind.TEXT_NOTE] });
+        if (sub1 instanceof Error) {
+            fail(sub1.message);
+        }
+        const r = await sub1.pop() as [RelayResponse_REQ_Message, string];
+        if (r[0].type == "EOSE") {
+            fail();
+        }
+        assertEquals(r[0].event.kind, NostrKind.TEXT_NOTE);
+        const sub2 = await pool.updateSub("y", { kinds: [NostrKind.META_DATA] });
+        if (sub2 instanceof Error) {
+            fail(sub2.message);
+        }
+        assertEquals(sub1 == sub2, true); // same reference
+        const r2 = await sub2.pop() as [RelayResponse_REQ_Message, string];
+        if (r2[0].type == "EOSE") {
+            fail();
+        }
+        assertEquals(r2[0].event.kind, NostrKind.META_DATA);
+    });
+
+    await pool.close();
 });
 
 // todo: limit is not supported by some relays
@@ -297,3 +323,29 @@ Deno.test("websocket offline", async () => {
     assertEquals(pool.getRelays().length, 0);
     await pool.close();
 });
+
+class MockWebSocket implements AsyncWebSocketInterface {
+    isClosed = false;
+
+    isSocketOpen = new csp.Channel<Event>();
+    onMessage = new csp.Channel<MessageEvent>();
+    onError = new csp.Channel<Event>();
+    onClose = new csp.Channel<CloseEvent>();
+
+    send = async (
+        str: string | ArrayBufferLike | Blob | ArrayBufferView,
+    ): Promise<void | WebSocketClosed> => {};
+
+    close = async (
+        code?: number | undefined,
+        reason?: string | undefined,
+    ): Promise<CloseEvent | CloseTwice | typeof csp.closed> => {
+        // this.onClose.close();
+        this.isClosed = true;
+        return csp.closed;
+    };
+
+    isClosedOrClosing(): boolean {
+        throw this.isClosed;
+    }
+}

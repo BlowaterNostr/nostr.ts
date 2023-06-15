@@ -7,7 +7,7 @@ import {
     NostrFilters,
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
-import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
+import { AsyncWebSocket, AsyncWebSocketInterface, WebSocketClosed } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 export class SubscriptionAlreadyExist extends Error {
@@ -246,6 +246,18 @@ export class ConnectionPool {
     >();
     private readonly changeEmitter = csp.chan();
     private readonly changeCaster = csp.multi(this.changeEmitter);
+    private readonly wsCreator: (url: string) => AsyncWebSocket | Error;
+    constructor(
+        private args?: {
+            ws: (url: string) => AsyncWebSocket | Error;
+        },
+    ) {
+        if (!args) {
+            this.wsCreator = AsyncWebSocket.New;
+        } else {
+            this.wsCreator = args.ws;
+        }
+    }
 
     readonly onChange = () => {
         return this.changeCaster.copy();
@@ -279,7 +291,7 @@ export class ConnectionPool {
         if (this.connections.has(url)) {
             return new RelayAlreadyRegistered(url);
         }
-        const relay = SingleRelayConnection.New(url, AsyncWebSocket.New);
+        const relay = SingleRelayConnection.New(url, this.wsCreator);
         if (relay instanceof Error) {
             return relay;
         }
@@ -397,10 +409,11 @@ export class ConnectionPool {
     }
 
     async updateSub(subID: string, filter: NostrFilters) {
-        if (!this.subscriptionMap.has(subID)) {
+        const sub = this.subscriptionMap.get(subID);
+        if (!sub) {
             return new SubscriptionNotExist(subID, "relay pool");
         }
-        return;
+        return sub[1];
     }
 
     async sendEvent(nostrEvent: NostrEvent) {

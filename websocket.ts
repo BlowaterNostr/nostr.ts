@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any no-unused-vars require-await ban-unused-ignore
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 export enum CloseReason {
     ByClient = 4000,
@@ -7,9 +8,21 @@ export enum CloseReason {
 
 export class WebSocketClosed extends Error {}
 
-export class AsyncWebSocket {
-    public readonly isSocketOpen = csp.chan<Event>();
+export type AsyncWebSocketInterface = {
+    isSocketOpen: Channel<Event>;
+    onMessage: Channel<MessageEvent>;
+    onError: Channel<Event>;
+    onClose: Channel<CloseEvent>;
+    send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | void>;
+    close: (
+        code?: number,
+        reason?: string,
+    ) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
+    isClosedOrClosing(): boolean;
+};
 
+export class AsyncWebSocket implements AsyncWebSocketInterface {
+    public readonly isSocketOpen = csp.chan<Event>();
     public readonly onMessage = csp.chan<MessageEvent>();
     public readonly onError = csp.chan<Event>();
     public readonly onClose = csp.chan<CloseEvent>();
@@ -77,7 +90,7 @@ export class AsyncWebSocket {
         return await this.onClose.pop();
     };
 
-    isClosedOrClosing(): boolean {
+    public isClosedOrClosing(): boolean {
         return this.ws.readyState == WebSocket.CLOSED ||
             this.ws.readyState == WebSocket.CLOSING;
     }
@@ -112,23 +125,7 @@ export class AsyncWebSocket {
             `readyState:${this.ws.readyState}, should be ${WebSocket.CONNECTING}`,
         );
     };
-
-    status = (): WebSocketReadyState => {
-        switch (this.ws.readyState) {
-            case WebSocket.CONNECTING:
-                return "Connecting";
-            case WebSocket.OPEN:
-                return "Open";
-            case WebSocket.CLOSING:
-                return "Closing";
-            case WebSocket.CLOSED:
-                return "Closed";
-        }
-        throw new Error("unreachable");
-    };
 }
-
-export type WebSocketReadyState = "Connecting" | "Open" | "Closing" | "Closed";
 
 export class CloseTwice extends Error {
     constructor(public url: string) {
