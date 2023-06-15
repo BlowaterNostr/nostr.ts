@@ -344,29 +344,3 @@ Deno.test("websocket offline", async () => {
     assertEquals(pool.getRelays().length, 0);
     await pool.close();
 });
-
-class MockWebSocket implements AsyncWebSocketInterface {
-    isClosed = false;
-
-    isSocketOpen = new csp.Channel<Event>();
-    onMessage = new csp.Channel<MessageEvent>();
-    onError = new csp.Channel<Event>();
-    onClose = new csp.Channel<CloseEvent>();
-
-    send = async (
-        str: string | ArrayBufferLike | Blob | ArrayBufferView,
-    ): Promise<void | WebSocketClosed> => {};
-
-    close = async (
-        code?: number | undefined,
-        reason?: string | undefined,
-    ): Promise<CloseEvent | CloseTwice | typeof csp.closed> => {
-        // this.onClose.close();
-        this.isClosed = true;
-        return csp.closed;
-    };
-
-    isClosedOrClosing(): boolean {
-        throw this.isClosed;
-    }
-}
