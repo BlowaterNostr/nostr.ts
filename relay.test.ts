@@ -210,51 +210,51 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
     await pool.close();
 });
 
-Deno.test("updateSub", async (t) => {
-    const pool = new ConnectionPool({ ws: AsyncWebSocket.New });
-    await t.step("no sub", async () => {
-        const err = await pool.updateSub("x", {}) as Error;
-        assertEquals(err instanceof SubscriptionNotExist, true);
-        assertEquals(err.message, "sub 'x' not exist for relay pool");
-    });
-    await t.step("no relays", async () => {
-        const sub1 = await pool.newSub("x", {});
-        if (sub1 instanceof Error) {
-            fail(sub1.message);
-        }
-        const sub2 = await pool.updateSub("x", {});
-        if (sub2 instanceof Error) {
-            fail(sub2.message);
-        }
-        assertEquals(sub1 == sub2, true); // same reference
-    });
+// Deno.test("updateSub", async (t) => {
+//     const pool = new ConnectionPool({ ws: AsyncWebSocket.New });
+//     await t.step("no sub", async () => {
+//         const err = await pool.updateSub("x", {}) as Error;
+//         assertEquals(err instanceof SubscriptionNotExist, true);
+//         assertEquals(err.message, "sub 'x' not exist for relay pool");
+//     });
+//     await t.step("no relays", async () => {
+//         const sub1 = await pool.newSub("x", {});
+//         if (sub1 instanceof Error) {
+//             fail(sub1.message);
+//         }
+//         const sub2 = await pool.updateSub("x", {});
+//         if (sub2 instanceof Error) {
+//             fail(sub2.message);
+//         }
+//         assertEquals(sub1 == sub2, true); // same reference
+//     });
 
-    const err = await pool.addRelayURL(relays[0]);
-    assertEquals(err, undefined);
-    await t.step("connected to relays", async () => {
-        const sub1 = await pool.newSub("y", { kinds: [NostrKind.TEXT_NOTE] });
-        if (sub1 instanceof Error) {
-            fail(sub1.message);
-        }
-        const r = await sub1.pop() as [RelayResponse_REQ_Message, string];
-        if (r[0].type == "EOSE") {
-            fail();
-        }
-        assertEquals(r[0].event.kind, NostrKind.TEXT_NOTE);
-        const sub2 = await pool.updateSub("y", { kinds: [NostrKind.META_DATA] });
-        if (sub2 instanceof Error) {
-            fail(sub2.message);
-        }
-        assertEquals(sub1 == sub2, true); // same reference
-        const r2 = await sub2.pop() as [RelayResponse_REQ_Message, string];
-        if (r2[0].type == "EOSE") {
-            fail();
-        }
-        assertEquals(r2[0].event.kind, NostrKind.META_DATA);
-    });
+//     const err = await pool.addRelayURL(relays[0]);
+//     assertEquals(err, undefined);
+//     await t.step("connected to relays", async () => {
+//         const sub1 = await pool.newSub("y", { kinds: [NostrKind.TEXT_NOTE] });
+//         if (sub1 instanceof Error) {
+//             fail(sub1.message);
+//         }
+//         const r = await sub1.pop() as [RelayResponse_REQ_Message, string];
+//         if (r[0].type == "EOSE") {
+//             fail();
+//         }
+//         assertEquals(r[0].event.kind, NostrKind.TEXT_NOTE);
+//         const sub2 = await pool.updateSub("y", { kinds: [NostrKind.META_DATA] });
+//         if (sub2 instanceof Error) {
+//             fail(sub2.message);
+//         }
+//         assertEquals(sub1 == sub2, true); // same reference
+//         const r2 = await sub2.pop() as [RelayResponse_REQ_Message, string];
+//         if (r2[0].type == "EOSE") {
+//             fail();
+//         }
+//         assertEquals(r2[0].event.kind, NostrKind.META_DATA);
+//     });
 
-    await pool.close();
-});
+//     await pool.close();
+// });
 
 // todo: limit is not supported by some relays
 // Deno.test("ConnectionPool open & close", async () => {

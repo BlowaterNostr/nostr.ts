@@ -408,14 +408,14 @@ export class ConnectionPool {
         return results;
     }
 
-    async updateSub(subID: string, filter: NostrFilters) {
-        const sub = this.subscriptionMap.get(subID);
-        if (!sub) {
-            return new SubscriptionNotExist(subID, "relay pool");
-        }
-        const [pre_filter, chan] = sub;
-        return chan;
-    }
+    // async updateSub(subID: string, filter: NostrFilters) {
+    //     const sub = this.subscriptionMap.get(subID);
+    //     if (!sub) {
+    //         return new SubscriptionNotExist(subID, "relay pool");
+    //     }
+    //     const [pre_filter, chan] = sub;
+    //     return chan;
+    // }
 
     async sendEvent(nostrEvent: NostrEvent) {
         if (this.connections.size === 0) {
