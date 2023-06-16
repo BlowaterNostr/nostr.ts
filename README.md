@@ -1,5 +1,11 @@
 A strongly typed, fast nostr client protocol implementation.
 
+#### Copilot Bot Nostr Pubkey
+
+npub1dd56gu2v8cvc9nn8ne0u7az48zel62t59cc3shv32n6g6zutmcesvrhf83
+
+One interesting way of learning this library is to DM with this bot. It can tell you much more than the doc.
+
 ## Guide
 
 This package is divided into 3 modules:
