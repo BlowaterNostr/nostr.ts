@@ -339,7 +339,7 @@ export class InMemoryAccountContext implements NostrAccountContext {
     readonly publicKey: PublicKey;
 
     private constructor(
-        private readonly privateKey: PrivateKey,
+        readonly privateKey: PrivateKey,
     ) {
         this.publicKey = privateKey.toPublicKey();
     }
