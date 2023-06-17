@@ -57,3 +57,21 @@ Deno.test("SingleRelayConnection subscription already exist", async () => {
     assertInstanceOf(chan2, SubscriptionAlreadyExist);
     await relay.close();
 });
+
+Deno.test("SingleRelayConnection: close subscription and keep reading", async () => {
+    const relay = SingleRelayConnection.New(relays[0], AsyncWebSocket.New);
+    if (relay instanceof Error) {
+        fail();
+    }
+    {
+        const subID = "1";
+        const chan = await relay.newSub(subID, { kinds: [0], limit: 1 });
+        if (chan instanceof Error) {
+            fail();
+        }
+        await relay.closeSub(subID);
+        const chan2 = await relay.newSub(subID, { kinds: [0], limit: 1 });
+        assertInstanceOf(chan2, SubscriptionAlreadyExist);
+    }
+    await relay.close();
+});
