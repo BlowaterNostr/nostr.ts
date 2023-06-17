@@ -104,7 +104,7 @@ Deno.test("ConnectionPool close subscription", async () => {
         if (result == csp.closed) {
             fail();
         }
-        assertEquals(result[0].type, "EVENT");
+        assertEquals(result.res.type, "EVENT");
     }
     await pool.close();
 });
@@ -150,7 +150,7 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         fail();
     }
     // don't care the value, just need to make sure that it's from the same relay
-    assertEquals(msg[1], relays[0]);
+    assertEquals(msg.url, relays[0]);
     await pool.close();
 });
 
@@ -180,11 +180,14 @@ Deno.test("updateSub", async (t) => {
         if (sub1 instanceof Error) {
             fail(sub1.message);
         }
-        const r = await sub1.pop() as [RelayResponse_REQ_Message, string];
-        if (r[0].type == "EOSE") {
+        const r = await sub1.pop();
+        if (r == csp.closed) {
             fail();
         }
-        assertEquals(r[0].event.kind, NostrKind.TEXT_NOTE);
+        if (r.res.type == "EOSE") {
+            fail();
+        }
+        assertEquals(r.res.event.kind, NostrKind.TEXT_NOTE);
         const sub2 = await pool.updateSub("y", { kinds: [NostrKind.DIRECT_MESSAGE] });
         if (sub2 instanceof Error) {
             fail(sub2.message);
@@ -194,10 +197,10 @@ Deno.test("updateSub", async (t) => {
         { // need to consume old events that are already in the channel
             let i = 0;
             for await (const e of sub2) {
-                if (e[0].type == "EOSE") {
+                if (e.res.type == "EOSE") {
                     continue;
                 }
-                if (e[0].event.kind == 1) {
+                if (e.res.event.kind == 1) {
                     console.log("skip", ++i);
                     continue;
                 }
@@ -205,11 +208,14 @@ Deno.test("updateSub", async (t) => {
             }
         }
 
-        const r2 = await sub2.pop() as [RelayResponse_REQ_Message, string];
-        if (r2[0].type == "EOSE") {
-            fail(r2[0].type);
+        const r2 = await sub2.pop();
+        if (r2 == csp.closed) {
+            fail();
         }
-        assertEquals(r2[0].event.kind, NostrKind.DIRECT_MESSAGE);
+        if (r2.res.type == "EOSE") {
+            fail(r2.res.type);
+        }
+        assertEquals(r2.res.event.kind, NostrKind.DIRECT_MESSAGE);
     });
 
     await pool.close();
