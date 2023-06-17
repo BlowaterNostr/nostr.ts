@@ -177,25 +177,6 @@ export async function prepareEncryptedNostrEvent(
     );
 }
 
-export async function prepareRelayConfigEvent(
-    sender: NostrAccountContext,
-    urls: URL[],
-): Promise<NostrEvent | Error> {
-    const encrypted = await sender.nip04.encrypt(
-        sender.publicKey.hex,
-        JSON.stringify(urls.map((url) => url.toString())),
-    );
-    if (encrypted instanceof Error) {
-        return encrypted;
-    }
-    return prepareNormalNostrEvent(
-        sender,
-        NostrKind.CustomAppData,
-        [],
-        encrypted,
-    );
-}
-
 export async function prepareNormalNostrEvent(
     sender: NostrAccountContext,
     kind: NostrKind,

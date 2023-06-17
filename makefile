@@ -1,4 +1,5 @@
 test:
+	rm -rf cov_profile*
 	deno test --allow-net --trace-ops --coverage=cov_profile
 
 # https://deno.com/manual@main/basics/testing/coverage

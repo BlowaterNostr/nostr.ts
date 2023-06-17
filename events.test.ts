@@ -1,8 +1,10 @@
-import { assertEquals, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { PrivateKey } from "./key.ts";
 import {
     decryptNostrEvent,
+    getTags,
     InMemoryAccountContext,
+    prepareCustomAppDataEvent,
     prepareEncryptedNostrEvent,
     prepareNormalNostrEvent,
     verifyEvent,
@@ -34,18 +36,39 @@ Deno.test("Encrypt & Decript Event", async () => {
         ctx,
         ctx.publicKey.hex,
         1,
-        [],
+        [
+            ["p", "some pubkey 1"],
+            ["p", "some pubkey 2"],
+            ["e", "some event id 1"],
+            ["e", "some event id 2"],
+        ],
         "test",
     );
-    if (event instanceof Error) {
-        fail(event.message);
-    }
+    assertNotInstanceOf(event, Error);
     let ok = await verifyEvent(event);
     assertEquals(ok, true);
+
+    assertEquals(getTags(event), {
+        p: ["some pubkey 1", "some pubkey 2"],
+        e: ["some event id 1", "some event id 2"],
+    });
 
     const decrypted = await decryptNostrEvent(event, ctx, ctx.publicKey.hex);
     if (decrypted instanceof Error) {
         fail(decrypted.message);
     }
     assertEquals(decrypted.content, "test");
+});
+
+Deno.test("Custom Event", async () => {
+    let ctx = InMemoryAccountContext.New(PrivateKey.Generate());
+    const event = await prepareCustomAppDataEvent(ctx, { whatever: "whatever" });
+    assertNotInstanceOf(event, Error);
+
+    const decrypted = await decryptNostrEvent(event, ctx, ctx.publicKey.hex);
+    assertNotInstanceOf(decrypted, Error);
+
+    assertEquals(decrypted.content, `{"whatever":"whatever"}`);
+
+    assertEquals(getTags(event).p, []);
 });
