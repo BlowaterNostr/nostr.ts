@@ -148,6 +148,33 @@ export class SingleRelayConnection {
         return chan;
     };
 
+    updateSub = async (subID: string, filter: NostrFilters) => {
+        const sub = this.subscriptionMap.get(subID);
+        if (sub == undefined) {
+            return new SubscriptionNotExist(subID, this.url);
+        }
+        {
+            const err = await this.ws.send(JSON.stringify([
+                "CLOSE",
+                subID, // multiplex marker / channel
+            ]));
+            if (err) {
+                return err;
+            }
+        }
+        {
+            const err = await this.ws.send(JSON.stringify([
+                "REQ",
+                subID,
+                filter,
+            ]));
+            if (err) {
+                return err;
+            }
+        }
+        return sub[1];
+    };
+
     sendEvent = async (nostrEvent: NostrEvent) => {
         this.okMap.set(nostrEvent.id, [csp.chan<void>(), undefined]);
         return await this.ws.send(JSON.stringify([
@@ -173,7 +200,7 @@ export class SingleRelayConnection {
     closeSub = async (subID: string) => {
         let err = await this.ws.send(JSON.stringify([
             "CLOSE",
-            subID,
+            subID, // multiplex marker / channel
         ]));
         if (err) {
             console.error(err); // do not return because we still need to close sub map channels
@@ -408,14 +435,19 @@ export class ConnectionPool {
         return results;
     }
 
-    // async updateSub(subID: string, filter: NostrFilters) {
-    //     const sub = this.subscriptionMap.get(subID);
-    //     if (!sub) {
-    //         return new SubscriptionNotExist(subID, "relay pool");
-    //     }
-    //     const [pre_filter, chan] = sub;
-    //     return chan;
-    // }
+    async updateSub(subID: string, filter: NostrFilters) {
+        const sub = this.subscriptionMap.get(subID);
+        if (!sub) {
+            return new SubscriptionNotExist(subID, "relay pool");
+        }
+        for (const relay of this.connections.values()) {
+            const err = await relay.updateSub(subID, filter);
+            if (err instanceof Error) {
+                return err;
+            }
+        }
+        return sub[1];
+    }
 
     async sendEvent(nostrEvent: NostrEvent) {
         if (this.connections.size === 0) {
