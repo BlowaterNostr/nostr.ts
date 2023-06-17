@@ -1,10 +1,10 @@
-# https://deno.com/manual@main/basics/testing/coverage
 test:
 	deno test --allow-net --trace-ops --coverage=cov_profile
+
+# https://deno.com/manual@main/basics/testing/coverage
+cov:
 	deno coverage cov_profile --lcov --output=cov_profile.lcov
 	genhtml -o cov_profile/html cov_profile.lcov
-
-cov:
 	file_server cov_profile/html
 
 fmt:
