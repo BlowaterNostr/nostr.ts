@@ -146,26 +146,29 @@ export function getTags(event: NostrEvent): Tags {
 
 // https://github.com/nostr-protocol/nips/blob/master/07.md
 export interface NostrAccountContext {
-    getPublicKey(): PublicKey;
+    readonly publicKey: PublicKey;
     signEvent(event: UnsignedNostrEvent): Promise<NostrEvent>;
     nip04: NIP04;
 }
 
 export interface NIP04 {
-    encrypt(pubkey: string, plaintext: string): Promise<string>;
-    decrypt(pubkey: string, ciphertext: string): Promise<string>;
+    encrypt(pubkey: string, plaintext: string): Promise<string | Error>;
+    decrypt(pubkey: string, ciphertext: string): Promise<string | Error>;
 }
 
 export async function prepareEncryptedNostrEvent(
     sender: NostrAccountContext,
-    receiverPublicKey: string,
+    pubkeyHex: string,
     kind: NostrKind,
     tags: Tag[],
     content: string,
-): Promise<NostrEvent> {
-    receiverPublicKey = publicKeyHexFromNpub(receiverPublicKey);
+): Promise<NostrEvent | Error> {
+    pubkeyHex = publicKeyHexFromNpub(pubkeyHex);
 
-    const encrypted = await sender.nip04.encrypt(receiverPublicKey, content);
+    const encrypted = await sender.nip04.encrypt(pubkeyHex, content);
+    if (encrypted instanceof Error) {
+        return encrypted;
+    }
     return prepareNormalNostrEvent(
         sender,
         kind,
@@ -177,11 +180,14 @@ export async function prepareEncryptedNostrEvent(
 export async function prepareRelayConfigEvent(
     sender: NostrAccountContext,
     urls: URL[],
-): Promise<NostrEvent> {
+): Promise<NostrEvent | Error> {
     const encrypted = await sender.nip04.encrypt(
-        sender.getPublicKey().hex,
+        sender.publicKey.hex,
         JSON.stringify(urls.map((url) => url.toString())),
     );
+    if (encrypted instanceof Error) {
+        return encrypted;
+    }
     return prepareNormalNostrEvent(
         sender,
         NostrKind.CustomAppData,
@@ -200,7 +206,7 @@ export async function prepareNormalNostrEvent(
     const event: UnsignedNostrEvent = {
         created_at: Math.floor(Date.now() / 1000),
         kind: kind,
-        pubkey: sender.getPublicKey().hex,
+        pubkey: sender.publicKey.hex,
         tags: tags,
         content,
     };
@@ -208,10 +214,14 @@ export async function prepareNormalNostrEvent(
 }
 
 export async function prepareCustomAppDataEvent(sender: NostrAccountContext, data: Object) {
-    const hex = sender.getPublicKey().hex;
+    const hex = sender.publicKey.hex;
+    const encrypted = await sender.nip04.encrypt(hex, JSON.stringify(data));
+    if (encrypted instanceof Error) {
+        return encrypted;
+    }
     const event: UnsignedNostrEvent = {
         created_at: Math.floor(Date.now() / 1000),
-        content: await sender.nip04.encrypt(hex, JSON.stringify(data)),
+        content: encrypted,
         kind: NostrKind.CustomAppData,
         pubkey: hex,
         tags: [],
@@ -247,7 +257,7 @@ export class DecryptionFailure extends Error {
 export async function decryptNostrEvent(
     nostrEvent: NostrEvent,
     accountContext: NostrAccountContext,
-    publicKey: string,
+    publicKeyHex: string,
 ): Promise<NostrEvent | DecryptionFailure> {
     const content = nostrEvent.content;
     if (content.length === 0) {
@@ -255,7 +265,11 @@ export async function decryptNostrEvent(
     }
     const created_at = nostrEvent.created_at;
     try {
-        const msg = await accountContext.nip04.decrypt(publicKey, content);
+        const msg = await accountContext.nip04.decrypt(publicKeyHex, content);
+        if (msg instanceof Error) {
+            console.error(msg.message);
+            return new DecryptionFailure(nostrEvent);
+        }
         return {
             content: msg,
             created_at,
@@ -319,21 +333,15 @@ export function blobToBase64(blob: Blob): Promise<string> {
 
 export class InMemoryAccountContext implements NostrAccountContext {
     static New(privateKey: PrivateKey) {
-        const publicKey = toPublicKeyHex(privateKey.hex);
-        const pub = PublicKey.FromHex(publicKey);
-        if (pub instanceof Error) {
-            throw pub; // impossible
-        }
-        return new InMemoryAccountContext(privateKey, pub);
+        return new InMemoryAccountContext(privateKey);
     }
 
-    private constructor(
-        public readonly privateKey: PrivateKey,
-        private readonly publicKey: PublicKey,
-    ) {}
+    readonly publicKey: PublicKey;
 
-    getPublicKey() {
-        return this.publicKey;
+    private constructor(
+        private readonly privateKey: PrivateKey,
+    ) {
+        this.publicKey = privateKey.toPublicKey();
     }
 
     async signEvent(event: UnsignedNostrEvent): Promise<NostrEvent> {
