@@ -173,10 +173,10 @@ Deno.test("updateSub", async (t) => {
         assertEquals(sub1 == sub2, true); // same reference
     });
 
-    const err = await pool.addRelayURL(relays[0]);
+    const err = await pool.addRelayURLs(relays);
     assertEquals(err, undefined);
     await t.step("connected to relays", async () => {
-        const sub1 = await pool.newSub("y", { kinds: [NostrKind.TEXT_NOTE] });
+        const sub1 = await pool.newSub("y", { kinds: [NostrKind.TEXT_NOTE], limit: 1000 });
         if (sub1 instanceof Error) {
             fail(sub1.message);
         }
@@ -190,6 +190,21 @@ Deno.test("updateSub", async (t) => {
             fail(sub2.message);
         }
         assertEquals(sub1 == sub2, true); // same reference
+
+        { // need to consume old events that are already in the channel
+            let i = 0;
+            for await (const e of sub2) {
+                if (e[0].type == "EOSE") {
+                    continue;
+                }
+                if (e[0].event.kind == 1) {
+                    console.log("skip", ++i);
+                    continue;
+                }
+                break;
+            }
+        }
+
         const r2 = await sub2.pop() as [RelayResponse_REQ_Message, string];
         if (r2[0].type == "EOSE") {
             fail(r2[0].type);
