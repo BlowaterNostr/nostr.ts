@@ -125,7 +125,22 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
             `readyState:${this.ws.readyState}, should be ${WebSocket.CONNECTING}`,
         );
     };
+
+    status = (): WebSocketReadyState => {
+        switch (this.ws.readyState) {
+            case WebSocket.CONNECTING:
+                return "Connecting";
+            case WebSocket.OPEN:
+                return "Open";
+            case WebSocket.CLOSING:
+                return "Closing";
+            case WebSocket.CLOSED:
+                return "Closed";
+        }
+        throw new Error("unreachable");
+    };
 }
+export type WebSocketReadyState = "Connecting" | "Open" | "Closing" | "Closed";
 
 export class CloseTwice extends Error {
     constructor(public url: string) {
