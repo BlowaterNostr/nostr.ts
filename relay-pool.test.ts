@@ -1,74 +1,20 @@
-import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import {
     assertEquals,
     assertInstanceOf,
     assertNotInstanceOf,
     fail,
 } from "https://deno.land/std@0.176.0/testing/asserts.ts";
-import { NostrEvent, NostrKind } from "./nostr.ts";
+import { NostrKind, RelayResponse_REQ_Message } from "./nostr.ts";
+import { relays } from "./relay-list.test.ts";
 import {
     ConnectionPool,
     RelayAlreadyRegistered,
     SingleRelayConnection,
     SubscriptionAlreadyExist,
+    SubscriptionNotExist,
 } from "./relay.ts";
-
-import { relays } from "./relay-list.test.ts";
 import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
-
-Deno.test("SingleRelayConnection open & close", async () => {
-    const ps = [];
-    for (let url of relays) {
-        const p = (async () => {
-            const relay = SingleRelayConnection.New(url, AsyncWebSocket.New);
-            if (relay instanceof Error) {
-                fail(relay.message);
-            }
-            await relay.untilOpen();
-            await relay.sendEvent({ id: "test id" } as NostrEvent);
-            await relay.close();
-            console.log("---------------------------------------");
-        })();
-        ps.push(p);
-    }
-    await Promise.all(ps);
-});
-
-Deno.test("SingleRelayConnection newSub & close", async () => {
-    // able to open & close
-    const url = relays[0];
-    const relay = SingleRelayConnection.New(url, AsyncWebSocket.New);
-    if (relay instanceof Error) {
-        fail(relay.message);
-    }
-    await relay.untilOpen();
-    const chan = await relay.newSub("1", { kinds: [0], limit: 1 });
-    if (chan instanceof Error) {
-        console.log(chan);
-        fail();
-    }
-    await relay.close();
-    if (chan instanceof SubscriptionAlreadyExist) {
-        fail("unreachable");
-    }
-    assertEquals(chan.closed(), "close sub 1");
-});
-
-Deno.test("SingleRelayConnection subscription already exist", async () => {
-    const relay = SingleRelayConnection.New(relays[0], AsyncWebSocket.New);
-    if (relay instanceof Error) {
-        fail();
-    }
-    const subID = "1";
-    const chan = await relay.newSub(subID, { kinds: [0], limit: 1 });
-    if (chan instanceof Error) {
-        fail();
-    }
-    await relay.closeSub(subID);
-    const chan2 = await relay.newSub(subID, { kinds: [0], limit: 1 });
-    assertInstanceOf(chan2, SubscriptionAlreadyExist);
-    await relay.close();
-});
+import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
     const pool = new ConnectionPool();
@@ -143,6 +89,26 @@ Deno.test("ConnectionPool subscription already exist", async () => {
     await pool.close();
 });
 
+Deno.test("ConnectionPool close subscription", async () => {
+    const pool = new ConnectionPool();
+    pool.addRelayURL(relays[0]);
+    {
+        const subID = "x";
+        const chan = await pool.newSub(subID, { kinds: [0], limit: 1 });
+        assertNotInstanceOf(chan, Error);
+        await pool.closeSub(subID);
+        // even if the subscription is closed,
+        // we don't close the consumer channel
+        assertEquals(chan.closed(), false);
+        const result = await chan.pop();
+        if (result == csp.closed) {
+            fail();
+        }
+        assertEquals(result.res.type, "EVENT");
+    }
+    await pool.close();
+});
+
 Deno.test("ConnectionPool register the same relay twice", async () => {
     const pool = new ConnectionPool();
 
@@ -184,7 +150,74 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         fail();
     }
     // don't care the value, just need to make sure that it's from the same relay
-    assertEquals(msg[1], relays[0]);
+    assertEquals(msg.url, relays[0]);
+    await pool.close();
+});
+
+Deno.test("updateSub", async (t) => {
+    const pool = new ConnectionPool({ ws: AsyncWebSocket.New });
+    await t.step("no sub", async () => {
+        const err = await pool.updateSub("x", {}) as Error;
+        assertEquals(err instanceof SubscriptionNotExist, true);
+        assertEquals(err.message, "sub 'x' not exist for relay pool");
+    });
+    await t.step("no relays", async () => {
+        const sub1 = await pool.newSub("x", {});
+        if (sub1 instanceof Error) {
+            fail(sub1.message);
+        }
+        const sub2 = await pool.updateSub("x", {});
+        if (sub2 instanceof Error) {
+            fail(sub2.message);
+        }
+        assertEquals(sub1 == sub2, true); // same reference
+    });
+
+    const err = await pool.addRelayURLs(relays);
+    assertEquals(err, undefined);
+    await t.step("connected to relays", async () => {
+        const sub1 = await pool.newSub("y", { kinds: [NostrKind.TEXT_NOTE], limit: 1000 });
+        if (sub1 instanceof Error) {
+            fail(sub1.message);
+        }
+        const r = await sub1.pop();
+        if (r == csp.closed) {
+            fail();
+        }
+        if (r.res.type == "EOSE") {
+            fail();
+        }
+        assertEquals(r.res.event.kind, NostrKind.TEXT_NOTE);
+        const sub2 = await pool.updateSub("y", { kinds: [NostrKind.DIRECT_MESSAGE] });
+        if (sub2 instanceof Error) {
+            fail(sub2.message);
+        }
+        assertEquals(sub1 == sub2, true); // same reference
+
+        { // need to consume old events that are already in the channel
+            let i = 0;
+            for await (const e of sub2) {
+                if (e.res.type == "EOSE") {
+                    continue;
+                }
+                if (e.res.event.kind == 1) {
+                    console.log("skip", ++i);
+                    continue;
+                }
+                break;
+            }
+        }
+
+        const r2 = await sub2.pop();
+        if (r2 == csp.closed) {
+            fail();
+        }
+        if (r2.res.type == "EOSE") {
+            fail(r2.res.type);
+        }
+        assertEquals(r2.res.event.kind, NostrKind.DIRECT_MESSAGE);
+    });
+
     await pool.close();
 });
 
