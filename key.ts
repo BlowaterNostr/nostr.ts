@@ -79,13 +79,15 @@ export class PublicKey {
         return new PublicKey(publicKeyHexFromNpub(key));
     }
 
-    public readonly bech32: string;
+    public bech32 = (): string => {
+        const array = secp256k1.utils.hexToBytes(this.hex);
+        const words = bech32.toWords(array);
+        return bech32.encode("npub", words, 1500);
+    };
+
     public readonly hex: string;
 
     private constructor(key: string) {
-        const array = secp256k1.utils.hexToBytes(key);
-        const words = bech32.toWords(array);
-        this.bech32 = bech32.encode("npub", words, 1500);
         this.hex = key;
     }
 }

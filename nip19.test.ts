@@ -8,12 +8,12 @@ Deno.test("nip19 public key", () => {
     const pkey = PublicKey.FromHex(key);
     if (pkey instanceof Error) fail();
     assertEquals(key, pkey.hex);
-    assertEquals(npub, pkey.bech32);
+    assertEquals(npub, pkey.bech32());
 
     const pkey2 = PublicKey.FromBech32(npub);
     if (pkey2 instanceof Error) fail();
     assertEquals(pkey.hex, pkey2.hex);
-    assertEquals(npub, pkey2.bech32);
+    assertEquals(npub, pkey2.bech32());
 
     const pkey3 = PublicKey.FromHex("");
     assertIsError(pkey3);
@@ -24,6 +24,16 @@ Deno.test("nip19 public key", () => {
     if (pkey5 instanceof Error) fail();
 
     assertEquals(pkey4.hex, pkey5.hex);
+});
+
+Deno.test("nip19 public key performance", async (t) => {
+    const key = PrivateKey.Generate().toPublicKey().hex;
+    const count = 100000;
+    await t.step(`${count}`, () => {
+        for (let i = 0; i < count; i++) {
+            PublicKey.FromHex(key);
+        }
+    });
 });
 
 Deno.test("nip19 private key", async (t) => {
