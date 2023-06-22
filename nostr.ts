@@ -158,12 +158,12 @@ export interface NIP04 {
 
 export async function prepareEncryptedNostrEvent(
     sender: NostrAccountContext,
-    pubkeyHex: string,
+    pubkeyHexOrBech32: string, /* used to encrypt*/
     kind: NostrKind,
     tags: Tag[],
     content: string,
 ): Promise<NostrEvent | Error> {
-    pubkeyHex = publicKeyHexFromNpub(pubkeyHex);
+    const pubkeyHex = publicKeyHexFromNpub(pubkeyHexOrBech32);
 
     const encrypted = await sender.nip04.encrypt(pubkeyHex, content);
     if (encrypted instanceof Error) {
