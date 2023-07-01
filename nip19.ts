@@ -5,10 +5,7 @@ export class NoteID {
     static FromBech32(id: string): NoteID | Error {
         if (id.substring(0, 4) === "note") {
             try {
-                const code = bech32.decode(id, 1500);
-                const data = new Uint8Array(bech32.fromWords(code.words));
-                const hex = utils.bytesToHex(data);
-                return new NoteID(hex);
+                return new NoteID(toHex(id));
             } catch (e) {
                 return e as Error;
             }
@@ -40,8 +37,14 @@ export class NoteID {
     }
 }
 
-function toBech32(v: string, prefix: string) {
-    const array = utils.hexToBytes(v);
+function toBech32(hex: string, prefix: string) {
+    const array = utils.hexToBytes(hex);
     const words = bech32.toWords(array);
     return bech32.encode(prefix, words, 1500);
+}
+
+function toHex(bech: string) {
+    const code = bech32.decode(bech, 1500);
+    const data = new Uint8Array(bech32.fromWords(code.words));
+    return utils.bytesToHex(data);
 }
