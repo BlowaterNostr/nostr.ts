@@ -1,5 +1,6 @@
 import { assertEquals, assertIsError, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
-import { PrivateKey, PublicKey, toPublicKeyHex } from "./key.ts";
+import { PrivateKey, PublicKey } from "./key.ts";
+import { NoteID } from "./nip19.ts";
 
 Deno.test("nip19 public key", () => {
     const key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -55,8 +56,6 @@ Deno.test("nip19 private key", async (t) => {
     const pkey4 = PrivateKey.FromBech32(key);
     assertIsError(pkey4);
 
-    assertEquals(pkey.toPublicKey().hex, toPublicKeyHex(pkey.hex));
-
     await t.step("Invalid checksum", () => {
         const key = "nsec1alwevw7n7xxapp4g7c2v3l5qr7zkmxjrhlwqteh6rkh2527gm3qqgj3jh";
         const pri = PrivateKey.FromBech32(key) as Error;
@@ -74,4 +73,27 @@ Deno.test("nip19 private key", async (t) => {
         assertEquals(pri_1.hex, pri_2.hex);
         assertEquals(pri_1.bech32, pri_2.bech32);
     });
+});
+
+Deno.test("nip19 note", async () => {
+    const note = "note16rqxdnalykdjm422plpc8056a2w9r5g8w6f9cy8ct9tfa5c493nqkp2ypm";
+    const hex = "d0c066cfbf259b2dd54a0fc383be9aea9c51d10776925c10f859569ed3152c66";
+    {
+        const noteID = NoteID.FromBech32(note) as NoteID;
+        assertEquals(noteID.hex, hex);
+        assertEquals(noteID.bech32(), note);
+    }
+    {
+        const noteID = NoteID.FromHex(hex) as NoteID;
+        assertEquals(noteID.hex, hex);
+        assertEquals(noteID.bech32(), note);
+    }
+    {
+        const noteID1 = NoteID.FromString(hex) as NoteID;
+        const noteID2 = NoteID.FromString(note) as NoteID;
+        assertEquals(noteID1.hex, noteID2.hex);
+        assertEquals(noteID1.hex, hex);
+        assertEquals(noteID1.bech32(), noteID2.bech32());
+        assertEquals(noteID1.bech32(), note);
+    }
 });

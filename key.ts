@@ -92,7 +92,7 @@ export class PublicKey {
     }
 }
 
-export function toPublicKeyHex(privateKey: string): string {
+function toPublicKeyHex(privateKey: string): string {
     return secp256k1.utils.bytesToHex(
         secp256k1.schnorr.getPublicKey(privateKey),
     );
@@ -112,7 +112,7 @@ export function publicKeyHexFromNpub(key: string) {
 }
 
 // NIP 1 https://github.com/nostr-protocol/nips/blob/master/01.md
-export function generatePrivateKeyHex(): string {
+function generatePrivateKeyHex(): string {
     return secp256k1.utils.bytesToHex(secp256k1.utils.randomPrivateKey());
 }
 
