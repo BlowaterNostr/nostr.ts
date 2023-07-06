@@ -29,10 +29,6 @@ export class SingleRelayConnection {
         string,
         { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
     >();
-    private okMap = new Map<
-        EventID,
-        [csp.Channel<void>, _RelayResponse_OK | undefined]
-    >();
 
     private constructor(
         readonly url: string,
@@ -52,36 +48,16 @@ export class SingleRelayConnection {
             (async () => {
                 for (; relay.isClosed() === false;) {
                     await csp.select([
-                        [relay.ws.onMessage, async (event: MessageEvent) => {
-                            let nostrMessage: _RelayResponse = JSON.parse(
-                                event.data,
+                        [relay.ws.onMessage, async (wsMessage: MessageEvent) => {
+                            let relayResponse: _RelayResponse = JSON.parse(
+                                wsMessage.data,
                             );
 
-                            if (nostrMessage[0] === "OK") {
-                                const eventOK = relay.okMap.get(
-                                    nostrMessage[1],
-                                );
-                                if (!eventOK) {
-                                    throw new Error(
-                                        `Event ${nostrMessage[1]} dose not exist.`,
-                                    );
-                                }
-
-                                eventOK[1] = nostrMessage;
-                                if (eventOK[0].closed()) {
-                                    console.log(eventOK[0].closed());
-                                }
-                                await eventOK[0].close(
-                                    `event ${nostrMessage[1]} is OK`,
-                                );
-                                return;
-                            }
-
                             if (
-                                nostrMessage[0] === "EVENT" ||
-                                nostrMessage[0] === "EOSE"
+                                relayResponse[0] === "EVENT" ||
+                                relayResponse[0] === "EOSE"
                             ) {
-                                let subID = nostrMessage[1];
+                                let subID = relayResponse[1];
                                 let subscription = relay.subscriptionMap.get(
                                     subID,
                                 );
@@ -95,21 +71,21 @@ export class SingleRelayConnection {
                                 if (chan.closed()) {
                                     console.log(url, subID, "has been closed");
                                 } else {
-                                    if (nostrMessage[0] === "EOSE") {
+                                    if (relayResponse[0] === "EOSE") {
                                         chan.put({
-                                            type: nostrMessage[0],
-                                            subID: nostrMessage[1],
+                                            type: relayResponse[0],
+                                            subID: relayResponse[1],
                                         });
                                     } else {
                                         chan.put({
-                                            type: nostrMessage[0],
-                                            subID: nostrMessage[1],
-                                            event: nostrMessage[2],
+                                            type: relayResponse[0],
+                                            subID: relayResponse[1],
+                                            event: relayResponse[2],
                                         });
                                     }
                                 }
                             } else {
-                                console.log(url, "onMessage", event.data); // NOTICE and other non-standard message types
+                                console.log(url, wsMessage.data); // NOTICE, OK and other non-standard response types
                             }
                         }],
                         [relay.ws.onError, async (event: Event) => {
@@ -176,26 +152,11 @@ export class SingleRelayConnection {
     };
 
     sendEvent = async (nostrEvent: NostrEvent) => {
-        this.okMap.set(nostrEvent.id, [csp.chan<void>(), undefined]);
         return await this.ws.send(JSON.stringify([
             "EVENT",
             nostrEvent,
         ]));
     };
-
-    async waitEventOK(eventID: EventID): Promise<_RelayResponse_OK> {
-        const eventOK = this.okMap.get(eventID);
-        if (!eventOK) {
-            throw new Error(`Event ${eventID} dose not exist.`);
-        }
-
-        await eventOK[0].pop();
-        const res = eventOK[1];
-        if (!res) {
-            throw new Error("unreachable");
-        }
-        return res;
-    }
 
     closeSub = async (subID: string) => {
         let err = await this.ws.send(JSON.stringify([
@@ -486,15 +447,6 @@ export class ConnectionPool {
                 throw err; // should never happen
             }
         }
-    }
-
-    async waitEventOK(eventID: EventID, waitAll: boolean = false) {
-        const ps = [];
-        for (const connection of this.connections.values()) {
-            ps.push(connection.waitEventOK(eventID));
-        }
-
-        return waitAll ? Promise.all(ps) : [await Promise.race(ps)];
     }
 
     async closeSub(subID: string) {
