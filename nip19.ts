@@ -1,4 +1,4 @@
-import { utils } from "https://esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
+import { utils } from "./vendor/esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
 import { bech32 } from "./scure.js";
 
 export class NoteID {

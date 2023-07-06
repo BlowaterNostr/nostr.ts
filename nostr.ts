@@ -1,6 +1,6 @@
 import * as hex from "https://deno.land/std@0.176.0/encoding/hex.ts";
 import { PrivateKey, PublicKey, publicKeyHexFromNpub } from "./key.ts";
-import { schnorr, utils } from "https://esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
+import { schnorr, utils } from "./vendor/esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
 import { decrypt, encrypt, utf8Decode, utf8Encode } from "./ende.ts";
 
 export enum NostrKind {
