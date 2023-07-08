@@ -36,7 +36,7 @@ export async function decrypt(
     privateKey: string,
     publicKey: string,
     data: string,
-): Promise<string> {
+): Promise<string | Error> {
     const [ctb64, ivb64] = data.split("?iv=");
     const key = secp.getSharedSecret(privateKey, "02" + publicKey);
     const normalizedKey = getNormalizedX(key);
@@ -48,7 +48,12 @@ export async function decrypt(
         false,
         ["decrypt"],
     );
-    const ciphertext = base64.decode(ctb64);
+    let ciphertext: BufferSource;
+    try {
+        ciphertext = base64.decode(ctb64);
+    } catch (e) {
+        return e;
+    }
     const iv = base64.decode(ivb64);
 
     const plaintext = await crypto.subtle.decrypt(

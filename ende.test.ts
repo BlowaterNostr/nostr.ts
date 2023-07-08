@@ -1,5 +1,5 @@
 import * as ende from "./ende.ts";
-import { assertEquals } from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import { assertEquals, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { utf8Decode, utf8Encode } from "./ende.ts";
 import { PrivateKey } from "./key.ts";
 
@@ -25,6 +25,9 @@ Deno.test("utf8 encrypt & decrypt", async () => {
     let t2 = Date.now();
     console.log("encrypt cost", t2 - start, "ms");
     let decrypted1 = await ende.decrypt(pri2.hex, pub1.hex, encrypted); // decrypt with receiver pri & sender  pub
+    if (decrypted1 instanceof Error) {
+        fail(decrypted1.message);
+    }
     let t3 = Date.now();
     console.log("decrypt cost", t3 - t2, "ms");
     let decrypted2 = await ende.decrypt(pri1.hex, pub2.hex, encrypted); // decrypt with sender   pri & reciver pub

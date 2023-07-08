@@ -148,10 +148,6 @@ export function getTags(event: NostrEvent): Tags {
 export interface NostrAccountContext {
     readonly publicKey: PublicKey;
     signEvent(event: UnsignedNostrEvent): Promise<NostrEvent>;
-    nip04: NIP04;
-}
-
-export interface NIP04 {
     encrypt(pubkey: string, plaintext: string): Promise<string | Error>;
     decrypt(pubkey: string, ciphertext: string): Promise<string | Error>;
 }
@@ -165,7 +161,7 @@ export async function prepareEncryptedNostrEvent(
 ): Promise<NostrEvent | Error> {
     const pubkeyHex = publicKeyHexFromNpub(pubkeyHexOrBech32);
 
-    const encrypted = await sender.nip04.encrypt(pubkeyHex, content);
+    const encrypted = await sender.encrypt(pubkeyHex, content);
     if (encrypted instanceof Error) {
         return encrypted;
     }
@@ -196,7 +192,7 @@ export async function prepareNormalNostrEvent(
 
 export async function prepareCustomAppDataEvent(sender: NostrAccountContext, data: Object) {
     const hex = sender.publicKey.hex;
-    const encrypted = await sender.nip04.encrypt(hex, JSON.stringify(data));
+    const encrypted = await sender.encrypt(hex, JSON.stringify(data));
     if (encrypted instanceof Error) {
         return encrypted;
     }
@@ -246,7 +242,7 @@ export async function decryptNostrEvent(
     }
     const created_at = nostrEvent.created_at;
     try {
-        const msg = await accountContext.nip04.decrypt(publicKeyHex, content);
+        const msg = await accountContext.decrypt(publicKeyHex, content);
         if (msg instanceof Error) {
             console.error(msg.message);
             return new DecryptionFailure(nostrEvent);
@@ -331,13 +327,11 @@ export class InMemoryAccountContext implements NostrAccountContext {
         return { ...event, id, sig };
     }
 
-    readonly nip04 = {
-        encrypt: (pubkey: string, plaintext: string): Promise<string> => {
-            return encrypt(pubkey, plaintext, this.privateKey.hex);
-        },
-        decrypt: (pubkey: string, ciphertext: string): Promise<string> => {
-            return decrypt(this.privateKey.hex, pubkey, ciphertext);
-        },
+    encrypt = (pubkey: string, plaintext: string): Promise<string> => {
+        return encrypt(pubkey, plaintext, this.privateKey.hex);
+    };
+    decrypt = (pubkey: string, ciphertext: string): Promise<string | Error> => {
+        return decrypt(this.privateKey.hex, pubkey, ciphertext);
     };
 }
 
