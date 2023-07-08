@@ -2,12 +2,11 @@ import {
     _RelayResponse,
     _RelayResponse_OK,
     _RelayResponse_REQ_Message,
-    EventID,
     NostrEvent,
     NostrFilters,
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
-import { AsyncWebSocket, AsyncWebSocketInterface, WebSocketClosed } from "./websocket.ts";
+import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 export class SubscriptionAlreadyExist extends Error {
@@ -219,6 +218,12 @@ export class NoRelayRegistered extends Error {
         this.name = "NoRelayRegistered";
     }
 }
+export class RelayGroupNotExist extends Error {
+    constructor(public readonly group: string) {
+        super(`relay group ${group} does not exist`);
+        this.name = "RelayGroupNotExist";
+    }
+}
 export class RelayAlreadyRegistered extends Error {
     constructor(public url: string) {
         super(`relay ${url} has been registered already`);
@@ -235,9 +240,26 @@ export class ConnectionPool {
             chan: csp.Channel<{ res: RelayResponse_REQ_Message; url: string }>;
         }
     >();
+
+    // Groups
+    private readonly groups = new Map<string, Set<string>>();
+    addGroup(group: string, url: string) {
+        let g = this.groups.get(group);
+        if (!g) {
+            g = new Set();
+            this.groups.set(group, g);
+        }
+        if (this.connections.has(url)) {
+            g.add(url);
+        } else {
+            return new NoRelayRegistered(); // todo: use a different error
+        }
+    }
+
     private readonly changeEmitter = csp.chan();
     private readonly changeCaster = csp.multi(this.changeEmitter);
     private readonly wsCreator: (url: string) => AsyncWebSocket | Error;
+
     constructor(
         private args?: {
             ws: (url: string) => AsyncWebSocket | Error;
@@ -413,11 +435,20 @@ export class ConnectionPool {
         return sub.chan;
     }
 
-    async sendEvent(nostrEvent: NostrEvent) {
+    async sendEvent(nostrEvent: NostrEvent, group?: string) {
         if (this.connections.size === 0) {
             return new NoRelayRegistered();
         }
+        if (group && !this.groups.has(group)) {
+            return new RelayGroupNotExist(group);
+        }
         for (let relay of this.connections.values()) {
+            if (group) {
+                const g = this.groups.get(group);
+                if (g && !g.has(relay.url)) {
+                    continue; // skip because this relay is not in the group
+                }
+            }
             if (relay.isClosed() && !relay.isClosedByClient) {
                 continue;
             }
