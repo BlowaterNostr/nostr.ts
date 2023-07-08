@@ -435,14 +435,20 @@ export class ConnectionPool {
         return sub.chan;
     }
 
-    async sendEvent(nostrEvent: NostrEvent, group: string) {
+    async sendEvent(nostrEvent: NostrEvent, group?: string) {
         if (this.connections.size === 0) {
             return new NoRelayRegistered();
         }
-        if (!this.groups.has(group)) {
+        if (group && !this.groups.has(group)) {
             return new RelayGroupNotExist(group);
         }
         for (let relay of this.connections.values()) {
+            if (group) {
+                const g = this.groups.get(group);
+                if (g && !g.has(relay.url)) {
+                    continue; // skip because this relay is not in the group
+                }
+            }
             if (relay.isClosed() && !relay.isClosedByClient) {
                 continue;
             }

@@ -1,9 +1,9 @@
-import { assert, assertEquals, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import { assertEquals, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { PrivateKey } from "./key.ts";
 import { InMemoryAccountContext, NostrKind, prepareNormalNostrEvent } from "./nostr.ts";
 import { damus, wirednet } from "./relay-list.test.ts";
 import { ConnectionPool, RelayGroupNotExist } from "./relay.ts";
-import { Channel, sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 Deno.test("Relay Group", async () => {
     const pri = PrivateKey.Generate();
