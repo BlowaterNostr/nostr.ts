@@ -32,38 +32,38 @@ Deno.test("Relay Group", async () => {
         err = await pool.sendEvent(e2, "B");
         assertEquals(err instanceof Error, false);
 
-        await sleep(500)
+        await sleep(500);
 
         // now
         // damus should have e1 and e2
         //   nos should only have e2
         const sub = await pool.newSub("test", {
-            authors: [ctx.publicKey.hex]
-        })
-        if(sub instanceof Error) {
-            fail(sub.message)
+            authors: [ctx.publicKey.hex],
+        });
+        if (sub instanceof Error) {
+            fail(sub.message);
         }
         let i = 0;
-        const resMap = new Map<string, Set<string>>()
-        for await (const {res, url} of sub) {
-            if(res.type == "EOSE") {
-                i++
-                if(i == 2) {
+        const resMap = new Map<string, Set<string>>();
+        for await (const { res, url } of sub) {
+            if (res.type == "EOSE") {
+                i++;
+                if (i == 2) {
                     break;
                 }
-                continue
+                continue;
             }
 
-            let set = resMap.get(url)
-            if(!set) {
-                set = new Set()
-                resMap.set(url, set)
+            let set = resMap.get(url);
+            if (!set) {
+                set = new Set();
+                resMap.set(url, set);
             }
-            console.log("add", res.event.id, "to", url)
-            set.add(res.event.id)
+            console.log("add", res.event.id, "to", url);
+            set.add(res.event.id);
         }
-        assertEquals(resMap.get(damus), new Set([e1.id, e2.id]))
-        assertEquals(resMap.get(wirednet), new Set([e2.id]))
+        assertEquals(resMap.get(damus), new Set([e1.id, e2.id]));
+        assertEquals(resMap.get(wirednet), new Set([e2.id]));
     }
     await pool.close();
 });

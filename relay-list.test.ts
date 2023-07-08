@@ -5,5 +5,5 @@ export const wirednet = "wss://relay.nostr.wirednet.jp";
 export const relays = [
     nos,
     damus,
-    wirednet
+    wirednet,
 ];
