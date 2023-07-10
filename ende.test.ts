@@ -3,7 +3,7 @@ import { assertEquals, fail } from "https://deno.land/std@0.176.0/testing/assert
 import { utf8Decode, utf8Encode } from "./ende.ts";
 import { PrivateKey } from "./key.ts";
 
-Deno.test("utf8 encrypt & decrypt", async () => {
+Deno.test("utf8 encrypt & decrypt", async (t) => {
     let pri1 = PrivateKey.Generate();
     let pub1 = pri1.toPublicKey();
 
@@ -38,4 +38,13 @@ Deno.test("utf8 encrypt & decrypt", async () => {
     let decryptedBin1 = utf8Encode(decrypted1);
     assertEquals(decryptedBin1.length, originalBin.length);
     assertEquals(decryptedBin1.byteLength, originalBin.byteLength);
+
+    await t.step("decrpt invalid content", async () => {
+        const err = await ende.decrypt(pri2.hex, pub1.hex, "a random string");
+        assertEquals(err instanceof Error, true);
+        assertEquals(err.toString(), "Error: Invalid padding: string should have whole number of bytes");
+        const invalidIv64 = await ende.decrypt(pri2.hex, pub1.hex, "5l2hCloJ8iFAHpfr2UkuYg==");
+        assertEquals(invalidIv64 instanceof Error, true);
+        assertEquals(invalidIv64.toString(), "Error: join.decode input should be string");
+    });
 });

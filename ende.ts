@@ -49,12 +49,13 @@ export async function decrypt(
         ["decrypt"],
     );
     let ciphertext: BufferSource;
+    let iv: BufferSource;
     try {
         ciphertext = base64.decode(ctb64);
+        iv = base64.decode(ivb64);
     } catch (e) {
         return e;
     }
-    const iv = base64.decode(ivb64);
 
     const plaintext = await crypto.subtle.decrypt(
         { name: "AES-CBC", iv },
