@@ -160,6 +160,9 @@ export async function prepareEncryptedNostrEvent(
     content: string,
 ): Promise<NostrEvent | Error> {
     const pubkeyHex = publicKeyHexFromNpub(pubkeyHexOrBech32);
+    if (pubkeyHex instanceof Error) {
+        return pubkeyHex;
+    }
 
     const encrypted = await sender.encrypt(pubkeyHex, content);
     if (encrypted instanceof Error) {

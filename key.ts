@@ -65,7 +65,11 @@ export class PublicKey {
         if (!isValidPublicKey(key)) {
             return new InvalidKey(key);
         }
-        return new PublicKey(publicKeyHexFromNpub(key));
+        const hex = publicKeyHexFromNpub(key);
+        if (hex instanceof Error) {
+            return hex;
+        }
+        return new PublicKey(hex);
     }
 
     static FromHex(key: string) {
@@ -76,7 +80,11 @@ export class PublicKey {
     }
 
     static FromBech32(key: string) {
-        return new PublicKey(publicKeyHexFromNpub(key));
+        const hex = publicKeyHexFromNpub(key);
+        if (hex instanceof Error) {
+            return hex;
+        }
+        return new PublicKey(hex);
     }
 
     public bech32 = (): string => {
@@ -103,12 +111,16 @@ export function isValidHexKey(key: string) {
 }
 
 export function publicKeyHexFromNpub(key: string) {
-    if (key.substring(0, 4) === "npub") {
-        const code = bech32.decode(key, 1500);
-        const data = new Uint8Array(bech32.fromWords(code.words));
-        return secp256k1.utils.bytesToHex(data);
+    try {
+        if (key.substring(0, 4) === "npub") {
+            const code = bech32.decode(key, 1500);
+            const data = new Uint8Array(bech32.fromWords(code.words));
+            return secp256k1.utils.bytesToHex(data);
+        }
+        return key;
+    } catch (e) {
+        return e as Error;
     }
-    return key;
 }
 
 // NIP 1 https://github.com/nostr-protocol/nips/blob/master/01.md
