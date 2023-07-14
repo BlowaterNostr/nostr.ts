@@ -103,14 +103,15 @@ export interface RequestFilter {
 }
 
 // https://github.com/nostr-protocol/nips/blob/master/04.md
-export interface NostrEvent<TagType = Tag> extends UnsignedNostrEvent<TagType> {
+export interface NostrEvent<Kind extends NostrKind = NostrKind, TagType extends Tag = Tag>
+    extends UnsignedNostrEvent<Kind, TagType> {
     readonly id: EventID;
     readonly sig: string;
 }
 
-export interface UnsignedNostrEvent<TagType = Tag> {
+export interface UnsignedNostrEvent<Kind extends NostrKind = NostrKind, TagType extends Tag = Tag> {
     readonly pubkey: string;
-    readonly kind: NostrKind;
+    readonly kind: Kind;
     readonly created_at: number;
     readonly tags: TagType[];
     readonly content: string;
