@@ -194,7 +194,14 @@ export async function prepareNormalNostrEvent(
     return sender.signEvent(event);
 }
 
-export async function prepareCustomAppDataEvent(sender: NostrAccountContext, data: Object) {
+export type CustomAppData = {
+    type: string;
+    client?: string;
+};
+export async function prepareCustomAppDataEvent<T extends CustomAppData>(
+    sender: NostrAccountContext,
+    data: T,
+) {
     const hex = sender.publicKey.hex;
     const encrypted = await sender.encrypt(hex, JSON.stringify(data));
     if (encrypted instanceof Error) {

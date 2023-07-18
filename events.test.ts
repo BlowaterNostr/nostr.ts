@@ -62,13 +62,13 @@ Deno.test("Encrypt & Decript Event", async () => {
 
 Deno.test("Custom Event", async () => {
     let ctx = InMemoryAccountContext.New(PrivateKey.Generate());
-    const event = await prepareCustomAppDataEvent(ctx, { whatever: "whatever" });
+    const event = await prepareCustomAppDataEvent(ctx, { type: "whatever" });
     assertNotInstanceOf(event, Error);
 
     const decrypted = await decryptNostrEvent(event, ctx, ctx.publicKey.hex);
     assertNotInstanceOf(decrypted, Error);
 
-    assertEquals(decrypted.content, `{"whatever":"whatever"}`);
+    assertEquals(decrypted.content, `{"type":"whatever"}`);
 
     assertEquals(getTags(event).p, []);
 });
