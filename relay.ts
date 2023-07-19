@@ -186,7 +186,6 @@ export class SingleRelayConnection {
     };
 
     close = async () => {
-        await this.ws.close();
         this.isClosedByClient = true;
         for (const [subID, { chan }] of this.subscriptionMap.entries()) {
             if (chan.closed()) {
@@ -194,6 +193,7 @@ export class SingleRelayConnection {
             }
             await this.closeSub(subID);
         }
+        await this.ws.close();
     };
 
     isClosed(): boolean {
