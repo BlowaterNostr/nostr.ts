@@ -241,23 +241,6 @@ export class ConnectionPool {
         }
     >();
 
-    // Groups
-    private readonly groups = new Map<string, Set<string>>();
-    addGroup(group: string, url: string) {
-        let g = this.groups.get(group);
-        if (!g) {
-            g = new Set();
-            this.groups.set(group, g);
-        }
-        if (this.connections.has(url)) {
-            g.add(url);
-        } else {
-            return new NoRelayRegistered(); // todo: use a different error
-        }
-    }
-
-    private readonly changeEmitter = csp.chan();
-    private readonly changeCaster = csp.multi(this.changeEmitter);
     private readonly wsCreator: (url: string) => AsyncWebSocket | Error;
 
     constructor(
@@ -271,10 +254,6 @@ export class ConnectionPool {
             this.wsCreator = args.ws;
         }
     }
-
-    readonly onChange = () => {
-        return this.changeCaster.copy();
-    };
 
     getClosedRelaysThatShouldBeReconnected() {
         const closed: string[] = [];
@@ -338,19 +317,10 @@ export class ConnectionPool {
         }
 
         this.connections.set(relay.url, relay);
-        this.changeEmitter.put(undefined);
-        relay.ws.onClose.pop().then(async (_) => {
-            await this.changeEmitter.put(undefined);
-        });
-
-        relay.ws.isSocketOpen.pop().then(async (_) => {
-            await this.changeEmitter.put(undefined);
-        });
 
         const err = await relay.untilOpen();
         if (err) {
             this.connections.delete(relay.url);
-            this.changeEmitter.put(undefined);
             return err;
         }
 
@@ -377,8 +347,6 @@ export class ConnectionPool {
                 }
             })();
         }
-
-        await this.changeEmitter.put(undefined);
     }
 
     async removeRelay(url: string) {
@@ -387,10 +355,8 @@ export class ConnectionPool {
             return;
         }
         const p = relay.close();
-        this.changeEmitter.put(undefined); // do not await
         await p;
         this.connections.delete(url);
-        this.changeEmitter.put(undefined); // do not await
     }
 
     async newSub(
@@ -435,20 +401,11 @@ export class ConnectionPool {
         return sub.chan;
     }
 
-    async sendEvent(nostrEvent: NostrEvent, group?: string) {
+    async sendEvent(nostrEvent: NostrEvent) {
         if (this.connections.size === 0) {
             return new NoRelayRegistered();
         }
-        if (group && !this.groups.has(group)) {
-            return new RelayGroupNotExist(group);
-        }
         for (let relay of this.connections.values()) {
-            if (group) {
-                const g = this.groups.get(group);
-                if (g && !g.has(relay.url)) {
-                    continue; // skip because this relay is not in the group
-                }
-            }
             if (relay.isClosed() && !relay.isClosedByClient) {
                 continue;
             }
