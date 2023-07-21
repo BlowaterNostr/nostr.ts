@@ -148,7 +148,7 @@ export function getTags(event: NostrEvent): Tags {
 // https://github.com/nostr-protocol/nips/blob/master/07.md
 export interface NostrAccountContext {
     readonly publicKey: PublicKey;
-    signEvent(event: UnsignedNostrEvent): Promise<NostrEvent>;
+    signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
     encrypt(pubkey: string, plaintext: string): Promise<string | Error>;
     decrypt(pubkey: string, ciphertext: string): Promise<string | Error>;
 }
@@ -207,7 +207,7 @@ export async function prepareCustomAppDataEvent<T extends CustomAppData>(
     if (encrypted instanceof Error) {
         return encrypted;
     }
-    const event: UnsignedNostrEvent = {
+    const event: UnsignedNostrEvent<NostrKind.CustomAppData> = {
         created_at: Math.floor(Date.now() / 1000),
         content: encrypted,
         kind: NostrKind.CustomAppData,
@@ -332,7 +332,9 @@ export class InMemoryAccountContext implements NostrAccountContext {
         this.publicKey = privateKey.toPublicKey();
     }
 
-    async signEvent(event: UnsignedNostrEvent): Promise<NostrEvent> {
+    async signEvent<Kind extends NostrKind = NostrKind>(
+        event: UnsignedNostrEvent<Kind>,
+    ): Promise<NostrEvent<Kind>> {
         const id = await calculateId(event);
         const sig = utf8Decode(hex.encode(await signId(id, this.privateKey.hex)));
         return { ...event, id, sig };
