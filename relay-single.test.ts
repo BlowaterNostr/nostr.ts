@@ -1,14 +1,15 @@
 import {
     assertEquals,
     assertInstanceOf,
+    assertIsError,
     assertNotInstanceOf,
     fail,
 } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { NostrEvent } from "./nostr.ts";
 import { relays } from "./relay-list.test.ts";
-import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay.ts";
+import { SingleRelayConnection, SubscriptionAlreadyExist, SubscriptionNotExist } from "./relay.ts";
 import { AsyncWebSocket } from "./websocket.ts";
-import { closed } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { closed, sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 Deno.test("SingleRelayConnection open & close", async () => {
     const ps = [];
@@ -130,4 +131,20 @@ Deno.test("SingleRelayConnection: update subscription", async () => {
         assertEquals(e4.type, "EOSE");
     }
     await relay.close();
+});
+
+Deno.test("updateSub", async (t) => {
+    await t.step("update an absent sub id", async () => {
+        const relay = SingleRelayConnection.New(relays[1], AsyncWebSocket.New);
+        if (relay instanceof Error) {
+            fail(relay.message);
+        }
+        {
+            const err = await relay.updateSub("test", {});
+            if (err instanceof Error) {
+                fail(err.message);
+            }
+        }
+        await relay.close();
+    });
 });

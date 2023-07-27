@@ -126,7 +126,7 @@ export class SingleRelayConnection {
     updateSub = async (subID: string, filter: NostrFilters) => {
         const sub = this.subscriptionMap.get(subID);
         if (sub == undefined) {
-            return new SubscriptionNotExist(subID, this.url);
+            return this.newSub(subID, filter);
         }
         {
             const err = await this.ws.send(JSON.stringify([
