@@ -37,34 +37,8 @@ export async function decrypt(
     publicKey: string,
     data: string,
 ): Promise<string | Error> {
-    const [ctb64, ivb64] = data.split("?iv=");
-    const key = secp.getSharedSecret(privateKey, "02" + publicKey);
-    const normalizedKey = getNormalizedX(key);
-
-    const cryptoKey = await crypto.subtle.importKey(
-        "raw",
-        normalizedKey,
-        { name: "AES-CBC" },
-        false,
-        ["decrypt"],
-    );
-    let ciphertext: BufferSource;
-    let iv: BufferSource;
-    try {
-        ciphertext = base64.decode(ctb64);
-        iv = base64.decode(ivb64);
-    } catch (e) {
-        return e;
-    }
-
-    const plaintext = await crypto.subtle.decrypt(
-        { name: "AES-CBC", iv },
-        cryptoKey,
-        ciphertext,
-    );
-
-    const text = utf8Decode(plaintext);
-    return text;
+    const key = secp.getSharedSecret(privateKey, "02" + publicKey); // this line is very slow
+    return decrypt_with_shared_secret(data, key);
 }
 
 export async function decrypt_with_shared_secret(
