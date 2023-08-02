@@ -106,7 +106,7 @@ export function utf8Encode(str: string) {
 }
 
 export function utf8Decode(bin: Uint8Array | ArrayBuffer): string {
-    const decoder = new TextDecoder();
+    let decoder = new TextDecoder();
     return decoder.decode(bin);
 }
 
