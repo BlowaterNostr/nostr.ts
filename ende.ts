@@ -37,9 +37,16 @@ export async function decrypt(
     publicKey: string,
     data: string,
 ): Promise<string | Error> {
+    const key = secp.getSharedSecret(privateKey, "02" + publicKey); // this line is very slow
+    return decrypt_with_shared_secret(data, key);
+}
+
+export async function decrypt_with_shared_secret(
+    data: string,
+    sharedSecret: Uint8Array,
+): Promise<string | Error> {
     const [ctb64, ivb64] = data.split("?iv=");
-    const key = secp.getSharedSecret(privateKey, "02" + publicKey);
-    const normalizedKey = getNormalizedX(key);
+    const normalizedKey = getNormalizedX(sharedSecret);
 
     const cryptoKey = await crypto.subtle.importKey(
         "raw",

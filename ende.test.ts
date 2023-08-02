@@ -1,7 +1,9 @@
 import * as ende from "./ende.ts";
-import { assertEquals, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { utf8Decode, utf8Encode } from "./ende.ts";
 import { PrivateKey } from "./key.ts";
+import { InMemoryAccountContext, prepareCustomAppDataEvent } from "./nostr.ts";
+import { getSharedSecret } from "./vendor/esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
 
 Deno.test("utf8 encrypt & decrypt", async (t) => {
     let pri1 = PrivateKey.Generate();
@@ -46,5 +48,20 @@ Deno.test("utf8 encrypt & decrypt", async (t) => {
         const invalidIv64 = await ende.decrypt(pri2.hex, pub1.hex, "5l2hCloJ8iFAHpfr2UkuYg==");
         assertEquals(invalidIv64 instanceof Error, true);
         assertEquals(invalidIv64.toString(), "Error: join.decode input should be string");
+    });
+});
+
+Deno.test("decryption performance", async (t) => {
+    let ctx = InMemoryAccountContext.New(PrivateKey.Generate());
+    const event = await prepareCustomAppDataEvent(ctx, {
+        type: "whatever",
+    });
+    assertNotInstanceOf(event, Error);
+    const key = getSharedSecret(ctx.privateKey.hex, "02" + ctx.publicKey.hex);
+
+    await t.step("", async () => {
+        for (let i = 0; i < 100; i++) {
+            await ende.decrypt_with_shared_secret(event.content, key);
+        }
     });
 });
