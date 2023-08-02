@@ -67,13 +67,46 @@ export async function decrypt(
     return text;
 }
 
+export async function decrypt_with_shared_secret(
+    data: string,
+    sharedSecret: Uint8Array,
+): Promise<string | Error> {
+    const [ctb64, ivb64] = data.split("?iv=");
+    const normalizedKey = getNormalizedX(sharedSecret);
+
+    const cryptoKey = await crypto.subtle.importKey(
+        "raw",
+        normalizedKey,
+        { name: "AES-CBC" },
+        false,
+        ["decrypt"],
+    );
+    let ciphertext: BufferSource;
+    let iv: BufferSource;
+    try {
+        ciphertext = base64.decode(ctb64);
+        iv = base64.decode(ivb64);
+    } catch (e) {
+        return e;
+    }
+
+    const plaintext = await crypto.subtle.decrypt(
+        { name: "AES-CBC", iv },
+        cryptoKey,
+        ciphertext,
+    );
+
+    const text = utf8Decode(plaintext);
+    return text;
+}
+
 export function utf8Encode(str: string) {
     let encoder = new TextEncoder();
     return encoder.encode(str);
 }
 
 export function utf8Decode(bin: Uint8Array | ArrayBuffer): string {
-    let decoder = new TextDecoder();
+    const decoder = new TextDecoder();
     return decoder.decode(bin);
 }
 
