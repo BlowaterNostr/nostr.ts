@@ -1,7 +1,11 @@
 import * as hex from "https://deno.land/std@0.176.0/encoding/hex.ts";
 import { PrivateKey, PublicKey, publicKeyHexFromNpub } from "./key.ts";
-import { schnorr, utils } from "./vendor/esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
-import { decrypt, encrypt, utf8Decode, utf8Encode } from "./ende.ts";
+import {
+    getSharedSecret,
+    schnorr,
+    utils,
+} from "./vendor/esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
+import { decrypt_with_shared_secret, encrypt, utf8Decode, utf8Encode } from "./ende.ts";
 
 export enum NostrKind {
     META_DATA = 0,
@@ -326,6 +330,8 @@ export class InMemoryAccountContext implements NostrAccountContext {
 
     readonly publicKey: PublicKey;
 
+    private readonly sharedSecretsMap = new Map<string, Uint8Array>();
+
     private constructor(
         readonly privateKey: PrivateKey,
     ) {
@@ -344,7 +350,12 @@ export class InMemoryAccountContext implements NostrAccountContext {
         return encrypt(pubkey, plaintext, this.privateKey.hex);
     };
     decrypt = (pubkey: string, ciphertext: string): Promise<string | Error> => {
-        return decrypt(this.privateKey.hex, pubkey, ciphertext);
+        let key = this.sharedSecretsMap.get(pubkey);
+        if (key == undefined) {
+            key = getSharedSecret(this.privateKey.hex, "02" + pubkey) as Uint8Array;
+            this.sharedSecretsMap.set(pubkey, key);
+        }
+        return decrypt_with_shared_secret(ciphertext, key);
     };
 }
 
