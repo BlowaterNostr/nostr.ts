@@ -205,12 +205,6 @@ export class SingleRelayConnection {
     };
 }
 
-let i = 0;
-
-export function newSubID(): string {
-    return String(++i);
-}
-
 export class ConnectionPoolClosed extends Error {}
 export class NoRelayRegistered extends Error {
     constructor() {
