@@ -7,7 +7,7 @@ import {
 } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { NostrEvent } from "./nostr.ts";
 import { relays } from "./relay-list.test.ts";
-import { SingleRelayConnection, SubscriptionAlreadyExist, SubscriptionNotExist } from "./relay.ts";
+import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay.ts";
 import { AsyncWebSocket } from "./websocket.ts";
 import { closed, sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 

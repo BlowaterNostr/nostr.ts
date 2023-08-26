@@ -16,12 +16,6 @@ export class SubscriptionAlreadyExist extends Error {
     }
 }
 
-export class SubscriptionNotExist extends Error {
-    constructor(public subID: string, public url: string) {
-        super(`sub '${subID}' not exist for ${url}`);
-    }
-}
-
 export class SingleRelayConnection {
     isClosedByClient = false;
     private subscriptionMap = new Map<
@@ -383,8 +377,8 @@ export class ConnectionPool {
 
     async updateSub(subID: string, filter: NostrFilters) {
         const sub = this.subscriptionMap.get(subID);
-        if (!sub) {
-            return new SubscriptionNotExist(subID, "relay pool");
+        if (sub == undefined) {
+            return this.newSub(subID, filter);
         }
         for (const relay of this.connections.values()) {
             const err = await relay.updateSub(subID, filter);

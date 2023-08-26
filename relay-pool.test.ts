@@ -4,14 +4,13 @@ import {
     assertNotInstanceOf,
     fail,
 } from "https://deno.land/std@0.176.0/testing/asserts.ts";
-import { NostrKind, RelayResponse_REQ_Message } from "./nostr.ts";
+import { NostrKind } from "./nostr.ts";
 import { relays } from "./relay-list.test.ts";
 import {
     ConnectionPool,
     RelayAlreadyRegistered,
     SingleRelayConnection,
     SubscriptionAlreadyExist,
-    SubscriptionNotExist,
 } from "./relay.ts";
 import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
@@ -156,16 +155,12 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
 
 Deno.test("updateSub", async (t) => {
     const pool = new ConnectionPool({ ws: AsyncWebSocket.New });
-    await t.step("no sub", async () => {
-        const err = await pool.updateSub("x", {}) as Error;
-        assertEquals(err instanceof SubscriptionNotExist, true);
-        assertEquals(err.message, "sub 'x' not exist for relay pool");
-    });
-    await t.step("no relays", async () => {
-        const sub1 = await pool.newSub("x", {});
+    await t.step("no sub & no relays", async () => {
+        const sub1 = await pool.updateSub("x", {}) as Error;
         if (sub1 instanceof Error) {
             fail(sub1.message);
         }
+
         const sub2 = await pool.updateSub("x", {});
         if (sub2 instanceof Error) {
             fail(sub2.message);
@@ -216,6 +211,13 @@ Deno.test("updateSub", async (t) => {
             fail(r2.res.type);
         }
         assertEquals(r2.res.event.kind, NostrKind.DIRECT_MESSAGE);
+    });
+
+    await t.step("create new sub if the sub name does not exist", async () => {
+        const sub = await pool.updateSub("new sub", { limit: 1 });
+        if (sub instanceof Error) {
+            fail(sub.message);
+        }
     });
 
     await pool.close();
