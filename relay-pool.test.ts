@@ -223,6 +223,46 @@ Deno.test("updateSub", async (t) => {
     await pool.close();
 });
 
+Deno.test("updateSub profilesStream", async (t) => {
+    const pool = new ConnectionPool({ ws: AsyncWebSocket.New });
+    await pool.addRelayURL(relays[1]);
+    {
+        const stream1 = await pool.updateSub("profilesStream", {
+            kinds: [NostrKind.META_DATA],
+            limit: 1,
+        });
+        if (stream1 instanceof Error) {
+            fail(stream1.message);
+        }
+        const stream2 = await pool.updateSub("profilesStream", {
+            kinds: [NostrKind.CustomAppData],
+            limit: 1,
+        });
+        if (stream2 instanceof Error) {
+            fail(stream2.message);
+        }
+        assertEquals(stream1, stream2);
+
+        const res1 = await stream1.pop();
+        const res2 = await stream2.pop();
+        const res3 = await stream2.pop();
+        const res4 = await stream1.pop();
+
+        if (res1 == csp.closed || res2 == csp.closed || res3 == csp.closed || res4 == csp.closed) {
+            fail();
+        }
+        if (res1.res.type != "EVENT" || res1.res.event.kind != NostrKind.META_DATA) {
+            fail();
+        }
+        assertEquals(res2.res.type, "EOSE");
+        if (res3.res.type != "EVENT" || res3.res.event.kind != NostrKind.CustomAppData) {
+            fail();
+        }
+        assertEquals(res4.res.type, "EOSE");
+    }
+    await pool.close();
+});
+
 // todo: limit is not supported by some relays
 // Deno.test("ConnectionPool open & close", async () => {
 //     let pool = new ConnectionPool();
