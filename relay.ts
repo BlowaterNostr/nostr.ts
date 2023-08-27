@@ -141,6 +141,7 @@ export class SingleRelayConnection {
                 return err;
             }
         }
+        console.log(this.url, "updateSub", subID, filter);
         return sub.chan;
     };
 
