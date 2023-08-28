@@ -12,7 +12,7 @@ import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master
 export class SubscriptionAlreadyExist extends Error {
     // breaking-todo: remove filter
     constructor(public subID: string, public filter: NostrFilters, public url: string) {
-        super(`${subID} already exists for ${url}`);
+        super(`subscription '${subID}' already exists for ${url}`);
     }
 }
 
@@ -118,6 +118,7 @@ export class SingleRelayConnection {
     };
 
     updateSub = async (subID: string, filter: NostrFilters) => {
+        console.log(this.url, "updateSub", subID, filter)
         const sub = this.subscriptionMap.get(subID);
         if (sub == undefined) {
             return this.newSub(subID, filter);
@@ -315,6 +316,7 @@ export class ConnectionPool {
 
         // for this newly added relay, do all the subs
         for (let [subID, { filter, chan }] of this.subscriptionMap.entries()) {
+            console.log("before pool.addRelay")
             let sub = await relay.newSub(subID, filter);
             if (sub instanceof Error) {
                 return sub;
@@ -361,6 +363,7 @@ export class ConnectionPool {
         results.name = `${Math.floor(Math.random() * 10)}`;
         for (let conn of this.connections.values()) {
             (async (relay: SingleRelayConnection) => {
+                console.log("before pool.newSub")
                 const sub = await relay.newSub(subID, filter);
                 if (sub instanceof Error) {
                     console.error(sub);
