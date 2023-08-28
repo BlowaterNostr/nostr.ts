@@ -60,17 +60,17 @@ Deno.test("ConnectionPool newSub & close", async () => {
         const err = await connectionPool.addRelay(relay);
         assertEquals(err, undefined);
     }
-    const chan = await connectionPool.newSub("1", { kinds: [0], limit: 1 });
-    if (chan instanceof Error) {
-        console.log(chan);
+    const sub = await connectionPool.newSub("1", { kinds: [0], limit: 1 });
+    if (sub instanceof Error) {
+        console.log(sub);
         fail();
     }
     await connectionPool.close();
-    if (chan instanceof SubscriptionAlreadyExist) {
+    if (sub instanceof SubscriptionAlreadyExist) {
         fail("unreachable");
     }
     assertEquals(
-        chan.closed(),
+        sub.chan.closed(),
         "close sub 1 because of pool is closed by the client",
     );
 });
@@ -93,13 +93,13 @@ Deno.test("ConnectionPool close subscription", async () => {
     pool.addRelayURL(relays[0]);
     {
         const subID = "x";
-        const chan = await pool.newSub(subID, { kinds: [0], limit: 1 });
-        assertNotInstanceOf(chan, Error);
+        const sub = await pool.newSub(subID, { kinds: [0], limit: 1 });
+        assertNotInstanceOf(sub, Error);
         await pool.closeSub(subID);
         // even if the subscription is closed,
         // we don't close the consumer channel
-        assertEquals(chan.closed(), false);
-        const result = await chan.pop();
+        assertEquals(sub.chan.closed(), false);
+        const result = await sub.chan.pop();
         if (result == csp.closed) {
             fail();
         }
@@ -144,7 +144,7 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
     const err1 = await pool.addRelay(relay);
     assertEquals(err1, undefined);
 
-    const msg = await chan.pop();
+    const msg = await chan.chan.pop();
     if (msg === csp.closed) {
         fail();
     }
@@ -175,7 +175,7 @@ Deno.test("updateSub", async (t) => {
         if (sub1 instanceof Error) {
             fail(sub1.message);
         }
-        const r = await sub1.pop();
+        const r = await sub1.chan.pop();
         if (r == csp.closed) {
             fail();
         }
@@ -191,7 +191,7 @@ Deno.test("updateSub", async (t) => {
 
         { // need to consume old events that are already in the channel
             let i = 0;
-            for await (const e of sub2) {
+            for await (const e of sub2.chan) {
                 if (e.res.type == "EOSE") {
                     continue;
                 }
@@ -203,7 +203,7 @@ Deno.test("updateSub", async (t) => {
             }
         }
 
-        const r2 = await sub2.pop();
+        const r2 = await sub2.chan.pop();
         if (r2 == csp.closed) {
             fail();
         }
@@ -223,9 +223,8 @@ Deno.test("updateSub", async (t) => {
     await pool.close();
 });
 
-Deno.test("updateSub profilesStream", async (t) => {
+Deno.test("updateSub 2 times & add relay url later", async (t) => {
     const pool = new ConnectionPool({ ws: AsyncWebSocket.New });
-    await pool.addRelayURL(relays[1]);
     {
         const stream1 = await pool.updateSub("profilesStream", {
             kinds: [NostrKind.META_DATA],
@@ -234,6 +233,7 @@ Deno.test("updateSub profilesStream", async (t) => {
         if (stream1 instanceof Error) {
             fail(stream1.message);
         }
+
         const stream2 = await pool.updateSub("profilesStream", {
             kinds: [NostrKind.CustomAppData],
             limit: 1,
@@ -241,24 +241,54 @@ Deno.test("updateSub profilesStream", async (t) => {
         if (stream2 instanceof Error) {
             fail(stream2.message);
         }
+
         assertEquals(stream1, stream2);
 
-        const res1 = await stream1.pop();
-        const res2 = await stream2.pop();
-        const res3 = await stream2.pop();
-        const res4 = await stream1.pop();
+        // add relay after creating subscriptions
+        // should not create starvation for readers
+        await pool.addRelayURL(relays[1]);
 
-        if (res1 == csp.closed || res2 == csp.closed || res3 == csp.closed || res4 == csp.closed) {
+        const res1 = await stream1.chan.pop();
+        const res2 = await stream2.chan.pop();
+
+        if (res1 == csp.closed || res2 == csp.closed) {
             fail();
         }
-        if (res1.res.type != "EVENT" || res1.res.event.kind != NostrKind.META_DATA) {
-            fail();
+        if (res1.res.type != "EVENT" || res1.res.event.kind != NostrKind.CustomAppData) {
+            fail(JSON.stringify(res1.res));
         }
         assertEquals(res2.res.type, "EOSE");
-        if (res3.res.type != "EVENT" || res3.res.event.kind != NostrKind.CustomAppData) {
-            fail();
+    }
+    await pool.close();
+});
+
+Deno.test("newSub 2 times & add relay url later", async (t) => {
+    const pool = new ConnectionPool({ ws: AsyncWebSocket.New });
+    {
+        const stream1 = await pool.newSub("sub1", {
+            kinds: [NostrKind.META_DATA],
+            limit: 1,
+        });
+        if (stream1 instanceof Error) {
+            fail(stream1.message);
         }
-        assertEquals(res4.res.type, "EOSE");
+        const stream2 = await pool.newSub("sub2", {
+            kinds: [NostrKind.CustomAppData],
+            limit: 1,
+        });
+        if (stream2 instanceof Error) {
+            fail(stream2.message);
+        }
+
+        // add relay after creating subscriptions
+        // should not create starvation for readers
+        await pool.addRelayURL(relays[1]);
+
+        const res1 = await stream1.chan.pop();
+        const res2 = await stream1.chan.pop();
+        const res3 = await stream2.chan.pop();
+        const res4 = await stream2.chan.pop();
+        // as long as it does not block
     }
     await pool.close();
 });

@@ -114,7 +114,7 @@ export class SingleRelayConnection {
         // @ts-ignore debug id
         chan.id = subID;
         this.subscriptionMap.set(subID, { filter, chan });
-        return chan;
+        return { filter, chan };
     };
 
     updateSub = async (subID: string, filter: NostrFilters) => {
@@ -142,7 +142,7 @@ export class SingleRelayConnection {
             }
         }
         console.log(this.url, "updateSub", subID, filter);
-        return sub.chan;
+        return sub;
     };
 
     sendEvent = async (nostrEvent: NostrEvent) => {
@@ -315,13 +315,14 @@ export class ConnectionPool {
 
         // for this newly added relay, do all the subs
         for (let [subID, { filter, chan }] of this.subscriptionMap.entries()) {
-            let results = await relay.newSub(subID, filter);
-            if (results instanceof Error) {
-                return results;
+            let sub = await relay.newSub(subID, filter);
+            if (sub instanceof Error) {
+                return sub;
             }
             // pipe the channel
             (async () => {
-                for await (let msg of results) {
+                for await (let msg of sub.chan) {
+                    // console.log(subID, filter, msg)
                     let err = await chan.put({ res: msg, url: relay.url });
                     if (err instanceof csp.PutToClosedChannelError) {
                         if (this.closed === true) {
@@ -351,29 +352,29 @@ export class ConnectionPool {
     async newSub(
         subID: string,
         filter: NostrFilters,
-    ): Promise<
-        | csp.Channel<{ res: RelayResponse_REQ_Message; url: string }>
-        | SubscriptionAlreadyExist
-        | WebSocketClosed
-    > {
+    ) {
         if (this.subscriptionMap.has(subID)) {
             return new SubscriptionAlreadyExist(subID, filter, "relay pool");
         }
         let results = csp.chan<{ res: RelayResponse_REQ_Message; url: string }>();
+        // @ts-ignore
+        results.name = `${Math.floor(Math.random() * 10)}`;
         for (let conn of this.connections.values()) {
+            console.log("no here");
             (async (relay: SingleRelayConnection) => {
-                let channel = await relay.newSub(subID, filter);
-                if (channel instanceof Error) {
-                    console.error(channel);
+                const sub = await relay.newSub(subID, filter);
+                if (sub instanceof Error) {
+                    console.error(sub);
                     return;
                 }
-                for await (let msg of channel) {
+                for await (let msg of sub.chan) {
                     await results.put({ res: msg, url: relay.url });
                 }
             })(conn);
         }
-        this.subscriptionMap.set(subID, { filter, chan: results });
-        return results;
+        const sub = { filter, chan: results };
+        this.subscriptionMap.set(subID, sub);
+        return sub;
     }
 
     async updateSub(subID: string, filter: NostrFilters) {
@@ -381,13 +382,15 @@ export class ConnectionPool {
         if (sub == undefined) {
             return this.newSub(subID, filter);
         }
+        sub.filter = filter;
         for (const relay of this.connections.values()) {
+            console.log("no here");
             const err = await relay.updateSub(subID, filter);
             if (err instanceof Error) {
                 return err;
             }
         }
-        return sub.chan;
+        return sub;
     }
 
     async sendEvent(nostrEvent: NostrEvent) {
