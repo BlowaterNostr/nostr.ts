@@ -360,7 +360,6 @@ export class ConnectionPool {
         // @ts-ignore
         results.name = `${Math.floor(Math.random() * 10)}`;
         for (let conn of this.connections.values()) {
-            console.log("no here");
             (async (relay: SingleRelayConnection) => {
                 const sub = await relay.newSub(subID, filter);
                 if (sub instanceof Error) {
@@ -384,7 +383,6 @@ export class ConnectionPool {
         }
         sub.filter = filter;
         for (const relay of this.connections.values()) {
-            console.log("no here");
             const err = await relay.updateSub(subID, filter);
             if (err instanceof Error) {
                 return err;
