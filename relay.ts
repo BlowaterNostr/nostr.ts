@@ -118,7 +118,11 @@ export class SingleRelayConnection {
     };
 
     updateSub = async (subID: string, filter: NostrFilters) => {
-        console.log(this.url, "updateSub", subID, filter)
+        const err = await this.untilOpen();
+        if (err instanceof Error) {
+            return err;
+        }
+        console.log(this.url, "updateSub", subID, filter);
         const sub = this.subscriptionMap.get(subID);
         if (sub == undefined) {
             return this.newSub(subID, filter);
@@ -316,7 +320,7 @@ export class ConnectionPool {
 
         // for this newly added relay, do all the subs
         for (let [subID, { filter, chan }] of this.subscriptionMap.entries()) {
-            console.log("before pool.addRelay")
+            console.log("before pool.addRelay");
             let sub = await relay.newSub(subID, filter);
             if (sub instanceof Error) {
                 return sub;
@@ -363,7 +367,7 @@ export class ConnectionPool {
         results.name = `${Math.floor(Math.random() * 10)}`;
         for (let conn of this.connections.values()) {
             (async (relay: SingleRelayConnection) => {
-                console.log("before pool.newSub")
+                console.log("before pool.newSub");
                 const sub = await relay.newSub(subID, filter);
                 if (sub instanceof Error) {
                     console.error(sub);
