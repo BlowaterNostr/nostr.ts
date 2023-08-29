@@ -333,7 +333,7 @@ Deno.test("concurrent execution", async () => {
 
         const kind_0 = (async () => {
             const stream = await pool.updateSub("kind 0", {
-                kinds: [NostrKind.META_DATA],
+                kinds: [NostrKind.CONTACTS],
                 limit: 1,
             });
             if (stream instanceof Error) {
