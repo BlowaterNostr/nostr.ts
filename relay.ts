@@ -52,6 +52,9 @@ export class SingleRelayConnection {
         wsCreator: (url: string) => AsyncWebSocket | Error,
     ): SingleRelayConnection | Error {
         try {
+            if (!url.startsWith("wss://") && !url.startsWith("ws://")) {
+                url = "wss://" + url;
+            }
             const ws = wsCreator(url);
             if (ws instanceof Error) {
                 return ws;
@@ -265,21 +268,16 @@ export class ConnectionPool {
     }
 
     async addRelayURL(url: string) {
-        try {
-            new URL(url);
-        } catch (e) {
-            if (e instanceof TypeError) {
-                return e;
-            }
-            throw e; // impossible
-        }
-
         if (this.connections.has(url)) {
             return new RelayAlreadyRegistered(url);
         }
         const relay = SingleRelayConnection.New(url, this.wsCreator);
         if (relay instanceof Error) {
             return relay;
+        }
+        if (this.connections.has(relay.url)) {
+            await relay.close();
+            return new RelayAlreadyRegistered(relay.url);
         }
         return this.addRelay(relay);
     }
