@@ -16,6 +16,25 @@ export class SubscriptionAlreadyExist extends Error {
     }
 }
 
+export class ConnectionPoolClosed extends Error {}
+export class NoRelayRegistered extends Error {
+    constructor() {
+        super();
+        this.name = "NoRelayRegistered";
+    }
+}
+export class RelayGroupNotExist extends Error {
+    constructor(public readonly group: string) {
+        super(`relay group ${group} does not exist`);
+        this.name = "RelayGroupNotExist";
+    }
+}
+export class RelayAlreadyRegistered extends Error {
+    constructor(public url: string) {
+        super(`relay ${url} has been registered already`);
+    }
+}
+
 export class SingleRelayConnection {
     isClosedByClient = false;
     private subscriptionMap = new Map<
@@ -205,25 +224,6 @@ export class SingleRelayConnection {
     };
 }
 
-export class ConnectionPoolClosed extends Error {}
-export class NoRelayRegistered extends Error {
-    constructor() {
-        super();
-        this.name = "NoRelayRegistered";
-    }
-}
-export class RelayGroupNotExist extends Error {
-    constructor(public readonly group: string) {
-        super(`relay group ${group} does not exist`);
-        this.name = "RelayGroupNotExist";
-    }
-}
-export class RelayAlreadyRegistered extends Error {
-    constructor(public url: string) {
-        super(`relay ${url} has been registered already`);
-    }
-}
-
 export class ConnectionPool {
     private closed = false;
     private readonly connections = new Map<string, SingleRelayConnection>(); // url -> relay
@@ -320,7 +320,6 @@ export class ConnectionPool {
 
         // for this newly added relay, do all the subs
         for (let [subID, { filter, chan }] of this.subscriptionMap.entries()) {
-            console.log("before pool.addRelay");
             let sub = await relay.newSub(subID, filter);
             if (sub instanceof Error) {
                 return sub;

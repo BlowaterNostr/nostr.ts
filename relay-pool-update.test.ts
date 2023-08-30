@@ -161,6 +161,24 @@ Deno.test("concurrent execution", async () => {
             assertEquals(msg.res.event.kind, NostrKind.META_DATA);
         })();
 
+        const kind_4 = (async () => {
+            const stream = await pool.updateSub("DIRECT_MESSAGE", {
+                kinds: [NostrKind.DIRECT_MESSAGE],
+            });
+            if (stream instanceof Error) {
+                fail(stream.message);
+            }
+            const msg = await stream.chan.pop();
+            if (msg == csp.closed) {
+                fail();
+            }
+            if (msg.res.type == "EOSE") {
+                fail();
+            }
+            await pool.closeSub("DIRECT_MESSAGE");
+            assertEquals(msg.res.event.kind, NostrKind.DIRECT_MESSAGE);
+        })();
+
         // add relays
         const err = await pool.addRelayURL(relays[0]);
         if (err instanceof Error) {
@@ -168,6 +186,7 @@ Deno.test("concurrent execution", async () => {
         }
         await kind_1;
         await kind_0;
+        await kind_4;
     }
     await pool.close();
 });
