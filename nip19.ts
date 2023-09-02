@@ -87,14 +87,14 @@ export type AddressPointer = {
 
 // https://github.com/nostr-protocol/nips/blob/master/19.md#shareable-identifiers-with-extra-metadata
 export class NostrAddress {
-    static encode(addr: AddressPointer): string | Error {
+    encode(): string | Error {
         let kind = new ArrayBuffer(4);
-        new DataView(kind).setUint32(0, addr.kind, false);
+        new DataView(kind).setUint32(0, this.addr.kind, false);
 
         let data = encodeTLV({
-            0: [utf8Encode(addr.identifier)],
-            1: (addr.relays || []).map((url) => utf8Encode(url)),
-            2: [utils.hexToBytes(addr.pubkey)],
+            0: [utf8Encode(this.addr.identifier)],
+            1: (this.addr.relays || []).map((url) => utf8Encode(url)),
+            2: [utils.hexToBytes(this.addr.pubkey)],
             3: [new Uint8Array(kind)],
         });
 
@@ -105,6 +105,7 @@ export class NostrAddress {
         let { prefix, words } = bech32.decode(naddr, 1500);
         let data = new Uint8Array(bech32.fromWords(words));
         let tlv = parseTLV(data);
+        if (tlv instanceof Error) return tlv;
         if (!tlv[0]?.[0]) return new Error("missing TLV 0 for naddr");
         if (!tlv[2]?.[0]) return new Error("missing TLV 2 for naddr");
         if (tlv[2][0].length !== 32) return new Error("TLV 2 should be 32 bytes");
@@ -117,6 +118,5 @@ export class NostrAddress {
             relays: tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
         });
     }
-
-    private constructor(public readonly addr: AddressPointer) {}
+   public constructor(public readonly addr: AddressPointer) {}
 }

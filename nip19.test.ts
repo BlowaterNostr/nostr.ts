@@ -112,7 +112,8 @@ Deno.test("nip19 naddr", async () => {
         pubkey: pubkeyhex,
     };
     {
-        const naddr_encode = NostrAddress.encode(addressPointer);
+        const nostraddress = new NostrAddress(addressPointer);
+        const naddr_encode = nostraddress.encode();
         assertEquals(naddr_encode, naddr);
     }
     {
