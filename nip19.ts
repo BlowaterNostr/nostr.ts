@@ -67,10 +67,6 @@ function encodeTLV(tlv: TLV): Uint8Array {
 
     return utils.concatBytes(...entries);
 }
-// function bytetoBech32(prefix: string, data: Uint8Array) {
-//     const words = bech32.toWords(data);
-//     return bech32.encode(prefix, words, 1500);
-// }
 function parseTLV(data: Uint8Array): TLV {
     let result: TLV = {};
     let rest = data;
@@ -92,7 +88,9 @@ export type AddressPointer = {
     kind: number;
     relays?: string[];
 };
-export class NaddrID {
+
+// https://github.com/nostr-protocol/nips/blob/master/19.md#shareable-identifiers-with-extra-metadata
+export class NostrAddress {
     static encode(addr: AddressPointer): string | Error {
         let kind = new ArrayBuffer(4);
         new DataView(kind).setUint32(0, addr.kind, false);
@@ -112,19 +110,18 @@ export class NaddrID {
         let { prefix, words } = bech32.decode(naddr, 1500);
         let data = new Uint8Array(bech32.fromWords(words));
         let tlv = parseTLV(data);
-        if (!tlv[0]?.[0]) throw new Error("missing TLV 0 for naddr");
-        if (!tlv[2]?.[0]) throw new Error("missing TLV 2 for naddr");
-        if (tlv[2][0].length !== 32) throw new Error("TLV 2 should be 32 bytes");
-        if (!tlv[3]?.[0]) throw new Error("missing TLV 3 for naddr");
-        if (tlv[3][0].length !== 4) throw new Error("TLV 3 should be 4 bytes");
-        return new NaddrID({
+        if (!tlv[0]?.[0]) return new Error("missing TLV 0 for naddr");
+        if (!tlv[2]?.[0]) return new Error("missing TLV 2 for naddr");
+        if (tlv[2][0].length !== 32) return new Error("TLV 2 should be 32 bytes");
+        if (!tlv[3]?.[0]) return new Error("missing TLV 3 for naddr");
+        if (tlv[3][0].length !== 4) return new Error("TLV 3 should be 4 bytes");
+        return new NostrAddress({
             identifier: utf8Decode(tlv[0][0]),
             pubkey: utils.bytesToHex(tlv[2][0]),
             kind: parseInt(utils.bytesToHex(tlv[3][0]), 16),
             relays: tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
         });
     }
-    private _addrPointer: AddressPointer | undefined;
 
     private constructor(public readonly addr: AddressPointer) {}
 }

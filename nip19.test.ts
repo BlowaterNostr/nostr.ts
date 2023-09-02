@@ -1,6 +1,6 @@
 import { assertEquals, assertIsError, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { PrivateKey, PublicKey } from "./key.ts";
-import { AddressPointer, NaddrID, NoteID } from "./nip19.ts";
+import { AddressPointer, NostrAddress, NoteID } from "./nip19.ts";
 import { stringToBytes } from "./scure.js";
 
 Deno.test("nip19 public key", () => {
@@ -112,12 +112,12 @@ Deno.test("nip19 naddr", async () => {
         pubkey: pubkeyhex,
     };
     {
-        const naddr_encode = NaddrID.encode(addressPointer);
+        const naddr_encode = NostrAddress.encode(addressPointer);
         assertEquals(naddr_encode, naddr);
     }
     {
-        const naddr_decode = NaddrID.decode(naddr);
-
-        assertEquals(naddr_decode.addr, addressPointer);
+        const naddr_decode = NostrAddress.decode(naddr);
+        
+        assertEquals(naddr_decode.addr , addressPointer);
     }
 });
