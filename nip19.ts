@@ -120,4 +120,3 @@ export class NostrAddress {
     }
     public constructor(public readonly addr: AddressPointer) {}
 }
-
