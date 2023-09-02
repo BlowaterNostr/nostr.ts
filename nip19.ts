@@ -1,13 +1,8 @@
 import { utils } from "./vendor/esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
 import { bech32 } from "./scure.js";
 import { utf8Decode, utf8Encode } from "./ende.ts";
-export type AddressPointer = {
-    identifier: string;
-    pubkey: string;
-    kind: number;
-    relays?: string[];
-};
-type TLV = { [t: number]: Uint8Array[] };
+
+
 
 export class NoteID {
     static FromBech32(id: string): NoteID | Error {
@@ -56,6 +51,7 @@ function toHex(bech: string) {
     const data = new Uint8Array(bech32.fromWords(code.words));
     return utils.bytesToHex(data);
 }
+type TLV = { [t: number]: Uint8Array[] };
 function encodeTLV(tlv: TLV): Uint8Array {
     let entries: Uint8Array[] = [];
 
@@ -71,10 +67,10 @@ function encodeTLV(tlv: TLV): Uint8Array {
 
     return utils.concatBytes(...entries);
 }
-function bytetoBech32(prefix: string, data: Uint8Array) {
-    const words = bech32.toWords(data);
-    return bech32.encode(prefix, words, 1500);
-}
+// function bytetoBech32(prefix: string, data: Uint8Array) {
+//     const words = bech32.toWords(data);
+//     return bech32.encode(prefix, words, 1500);
+// }
 function parseTLV(data: Uint8Array): TLV {
     let result: TLV = {};
     let rest = data;
@@ -90,7 +86,12 @@ function parseTLV(data: Uint8Array): TLV {
     }
     return result;
 }
-
+export type AddressPointer = {
+    identifier: string;
+    pubkey: string;
+    kind: number;
+    relays?: string[];
+};
 export class NaddrID {
     static encode(addr: AddressPointer): string | Error {
         let kind = new ArrayBuffer(4);
@@ -103,7 +104,9 @@ export class NaddrID {
             3: [new Uint8Array(kind)],
         });
 
-        return bytetoBech32("naddr", data);
+            const words = bech32.toWords(data);
+    return bech32.encode("naddr", words, 1500);
+
     }
     static decode(naddr: string) {
         let { prefix, words } = bech32.decode(naddr, 1500);
