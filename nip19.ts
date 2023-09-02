@@ -54,29 +54,27 @@ function toHex(bech: string) {
 type TLV = { [t: number]: Uint8Array[] };
 function encodeTLV(tlv: TLV): Uint8Array {
     let entries: Uint8Array[] = [];
-
-    Object.entries(tlv).forEach(([t, vs]) => {
-        vs.forEach((v) => {
+    for (const [t,vs] of  Object.entries(tlv)) {
+        for (const v of vs) {
             let entry = new Uint8Array(v.length + 2);
             entry.set([parseInt(t)], 0);
             entry.set([v.length], 1);
             entry.set(v, 2);
             entries.push(entry);
-        });
-    });
-
+    }
+    }
     return utils.concatBytes(...entries);
 }
-function parseTLV(data: Uint8Array): TLV {
+function parseTLV(data: Uint8Array): TLV | Error {
     let result: TLV = {};
     let rest = data;
     while (rest.length > 0) {
         let t = rest[0];
         let l = rest[1];
-        if (!l) throw new Error(`malformed TLV ${t}`);
+        if (!l) return new Error(`malformed TLV ${t}`);
         let v = rest.slice(2, 2 + l);
         rest = rest.slice(2 + l);
-        if (v.length < l) throw new Error(`not enough data to read on TLV ${t}`);
+        if (v.length < l) return new Error(`not enough data to read on TLV ${t}`);
         result[t] = result[t] || [];
         result[t].push(v);
     }

@@ -116,7 +116,7 @@ Deno.test("nip19 naddr", async () => {
         assertEquals(naddr_encode, naddr);
     }
     {
-        const naddr_decode = NostrAddress.decode(naddr);
+        const naddr_decode = NostrAddress.decode(naddr) as NostrAddress;
         
         assertEquals(naddr_decode.addr , addressPointer);
     }
