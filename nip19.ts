@@ -2,8 +2,6 @@ import { utils } from "./vendor/esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp25
 import { bech32 } from "./scure.js";
 import { utf8Decode, utf8Encode } from "./ende.ts";
 
-
-
 export class NoteID {
     static FromBech32(id: string): NoteID | Error {
         if (id.substring(0, 4) === "note") {
@@ -54,14 +52,14 @@ function toHex(bech: string) {
 type TLV = { [t: number]: Uint8Array[] };
 function encodeTLV(tlv: TLV): Uint8Array {
     let entries: Uint8Array[] = [];
-    for (const [t,vs] of  Object.entries(tlv)) {
+    for (const [t, vs] of Object.entries(tlv)) {
         for (const v of vs) {
             let entry = new Uint8Array(v.length + 2);
             entry.set([parseInt(t)], 0);
             entry.set([v.length], 1);
             entry.set(v, 2);
             entries.push(entry);
-    }
+        }
     }
     return utils.concatBytes(...entries);
 }
@@ -100,9 +98,8 @@ export class NostrAddress {
             3: [new Uint8Array(kind)],
         });
 
-            const words = bech32.toWords(data);
-    return bech32.encode("naddr", words, 1500);
-
+        const words = bech32.toWords(data);
+        return bech32.encode("naddr", words, 1500);
     }
     static decode(naddr: string) {
         let { prefix, words } = bech32.decode(naddr, 1500);
