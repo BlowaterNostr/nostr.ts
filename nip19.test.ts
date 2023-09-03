@@ -1,7 +1,7 @@
 import { assertEquals, assertIsError, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { PrivateKey, PublicKey } from "./key.ts";
-import { AddressPointer, NostrAddress, NoteID } from "./nip19.ts";
-import { stringToBytes } from "./scure.js";
+import { AddressPointer, NostrAddress, NostrProfile, NoteID } from "./nip19.ts";
+import { relays } from "./relay-list.test.ts";
 
 Deno.test("nip19 public key", () => {
     const key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -121,4 +121,22 @@ Deno.test("nip19 naddr", async () => {
 
         assertEquals(naddr_decode.addr, addressPointer);
     }
+});
+
+Deno.test("nip19 nprofile", async () => {
+    const pubkey = PrivateKey.Generate().toPublicKey();
+    const nProfile = new NostrProfile(pubkey, relays);
+
+    const encoded_nProfile = nProfile.encode();
+    if (encoded_nProfile instanceof Error) {
+        fail(encoded_nProfile.message);
+    }
+
+    const decoded_nProfile = NostrProfile.decode(encoded_nProfile);
+    if (decoded_nProfile instanceof Error) {
+        fail(decoded_nProfile.message);
+    }
+
+    assertEquals(decoded_nProfile.pubkey.hex, nProfile.pubkey.hex);
+    assertEquals(decoded_nProfile.relays, nProfile.relays);
 });
