@@ -1,7 +1,7 @@
 /*
 ende stands for encryption decryption
 */
-import * as secp from "npm:@noble/secp256k1@1.7.1";
+import * as secp from "https://esm.sh/@noble/secp256k1@1.7.1";
 import { base64 } from "./scure.js";
 
 export async function encrypt(

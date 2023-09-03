@@ -1,4 +1,4 @@
-import * as secp256k1 from "npm:@noble/secp256k1@1.7.1";
+import * as secp256k1 from "https://esm.sh/@noble/secp256k1@1.7.1";
 import { bech32 } from "./scure.js";
 
 export class PrivateKey {
