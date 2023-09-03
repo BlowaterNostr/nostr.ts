@@ -66,12 +66,10 @@ Deno.test("ConnectionPool newSub & close", async () => {
         fail();
     }
     await connectionPool.close();
-    if (sub instanceof SubscriptionAlreadyExist) {
-        fail("unreachable");
-    }
+    if (sub instanceof SubscriptionAlreadyExist) fail(sub.message);
     assertEquals(
         sub.chan.closed(),
-        "close sub 1 because of pool is closed by the client",
+        true,
     );
 });
 
@@ -88,24 +86,20 @@ Deno.test("ConnectionPool subscription already exist", async () => {
     await pool.close();
 });
 
-Deno.test("ConnectionPool close subscription", async () => {
-    const pool = new ConnectionPool();
-    pool.addRelayURL(relays[0]);
-    {
-        const subID = "x";
-        const sub = await pool.newSub(subID, { kinds: [0], limit: 1 });
-        assertNotInstanceOf(sub, Error);
-        await pool.closeSub(subID);
-        // even if the subscription is closed,
-        // we don't close the consumer channel
-        assertEquals(sub.chan.closed(), false);
-        const result = await sub.chan.pop();
-        if (result == csp.closed) {
-            fail();
+Deno.test("ConnectionPool close subscription", async (t) => {
+    await t.step("single relay", async () => {
+        const pool = new ConnectionPool();
+        const err = await pool.addRelayURLs(relays);
+        if (err instanceof Error) fail(err.message);
+        {
+            const subID = "x";
+            const sub = await pool.newSub(subID, { limit: 1 });
+            assertNotInstanceOf(sub, Error);
+            await pool.closeSub(subID);
+            assertEquals(sub.chan.closed(), true);
         }
-        assertEquals(result.res.type, "EVENT");
-    }
-    await pool.close();
+        await pool.close();
+    });
 });
 
 Deno.test("ConnectionPool register the same relay twice", async () => {

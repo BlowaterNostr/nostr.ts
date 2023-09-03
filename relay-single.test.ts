@@ -78,7 +78,7 @@ Deno.test("SingleRelayConnection: close subscription and keep reading", async ()
             fail();
         }
         await relay.closeSub(subID);
-        assertEquals(sub.chan.closed() != false, true);
+        assertEquals(sub.chan.closed(), "close sub 1");
     }
     await relay.close();
 });

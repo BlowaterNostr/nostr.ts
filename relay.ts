@@ -6,6 +6,13 @@ import {
     NostrFilters,
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
+import {
+    Closer,
+    EventSender,
+    Subscriber,
+    SubscriptionCloser,
+    SubscriptionUpdater,
+} from "./relay.interface.ts";
 import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
@@ -35,7 +42,8 @@ export class RelayAlreadyRegistered extends Error {
     }
 }
 
-export class SingleRelayConnection {
+export class SingleRelayConnection
+    implements Subscriber, SubscriptionUpdater, SubscriptionCloser, EventSender, Closer {
     isClosedByClient = false;
     private subscriptionMap = new Map<
         string,
@@ -84,7 +92,7 @@ export class SingleRelayConnection {
                                 }
                                 const chan = subscription.chan;
                                 if (chan.closed()) {
-                                    console.log(url, subID, "has been closed");
+                                    console.log(url, subID, "has been closed", chan.closed());
                                 } else {
                                     if (relayResponse[0] === "EOSE") {
                                         chan.put({
@@ -227,7 +235,7 @@ export class SingleRelayConnection {
     };
 }
 
-export class ConnectionPool {
+export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
     private closed = false;
     private readonly connections = new Map<string, SingleRelayConnection>(); // url -> relay
     private readonly subscriptionMap = new Map<
@@ -364,7 +372,6 @@ export class ConnectionPool {
         results.name = `${Math.floor(Math.random() * 10)}`;
         for (let conn of this.connections.values()) {
             (async (relay: SingleRelayConnection) => {
-                console.log("before pool.newSub");
                 const sub = await relay.newSub(subID, filter);
                 if (sub instanceof Error) {
                     console.error(sub);
@@ -434,27 +441,24 @@ export class ConnectionPool {
     async closeSub(subID: string) {
         for (const relay of this.connections.values()) {
             await relay.closeSub(subID);
-            // do not close the subscription channel because
-            // there might be pending web socket events
-            // that are not consumed yet
+        }
+        const subscription = this.subscriptionMap.get(subID);
+        if (subscription && subscription.chan.closed() == false) {
+            await subscription.chan.close();
         }
     }
     async close(): Promise<void> {
         this.closed = true;
-
-        // this function should not be called in production
-        // but we implement it for testing purpose
-        for (let [subID, { chan }] of this.subscriptionMap.entries()) {
-            await this.closeSub(subID);
-            await chan.close(
-                `close sub ${subID} because of pool is closed by the client`,
-            );
-        }
-        for (let relay of this.connections.values()) {
+        for (const relay of this.connections.values()) {
             if (relay.isClosed()) {
                 continue;
             }
             await relay.close();
+        }
+        // this function should not be called in production
+        // but we implement it for testing purpose
+        for (const [subID, { chan }] of this.subscriptionMap.entries()) {
+            await this.closeSub(subID);
         }
     }
 }

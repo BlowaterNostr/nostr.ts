@@ -1,4 +1,4 @@
-import { utils } from "npm:@noble/secp256k1@1.7.1";
+import { utils } from "./vendor/secp256k1.js";
 import { bech32 } from "./scure.js";
 import { utf8Decode, utf8Encode } from "./ende.ts";
 import { PublicKey } from "./key.ts";
