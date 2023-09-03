@@ -4,7 +4,7 @@ import {
     getSharedSecret,
     schnorr,
     utils,
-} from "./vendor/esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
+} from "npm:@noble/secp256k1@1.7.1";
 import { decrypt_with_shared_secret, encrypt, utf8Decode, utf8Encode } from "./ende.ts";
 
 export enum NostrKind {
