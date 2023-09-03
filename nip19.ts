@@ -2,6 +2,7 @@ import { utils } from "npm:@noble/secp256k1@1.7.1";
 import { bech32 } from "./scure.js";
 import { utf8Decode, utf8Encode } from "./ende.ts";
 import { PublicKey } from "./key.ts";
+import { NostrKind } from "./nostr.ts";
 
 export class NoteID {
     static FromBech32(id: string): NoteID | Error {
@@ -85,8 +86,8 @@ function parseTLV(data: Uint8Array): TLV | Error {
 }
 export type AddressPointer = {
     identifier: string;
-    pubkey: string;
-    kind: number;
+    pubkey: PublicKey;
+    kind: NostrKind;
     relays?: string[];
 };
 
@@ -99,7 +100,7 @@ export class NostrAddress {
         const data = encodeTLV({
             0: [utf8Encode(this.addr.identifier)],
             1: (this.addr.relays || []).map((url) => utf8Encode(url)),
-            2: [utils.hexToBytes(this.addr.pubkey)],
+            2: [utils.hexToBytes(this.addr.pubkey.hex)],
             3: [new Uint8Array(kind)],
         });
 
@@ -116,9 +117,13 @@ export class NostrAddress {
         if (tlv[2][0].length !== 32) return new Error("TLV 2 should be 32 bytes");
         if (!tlv[3][0]) return new Error("missing TLV 3 for naddr");
         if (tlv[3][0].length !== 4) return new Error("TLV 3 should be 4 bytes");
+        const pubkey = PublicKey.FromHex(utils.bytesToHex(tlv[2][0]));
+        if (pubkey instanceof Error) {
+            return pubkey;
+        }
         return new NostrAddress({
             identifier: utf8Decode(tlv[0][0]),
-            pubkey: utils.bytesToHex(tlv[2][0]),
+            pubkey,
             kind: parseInt(utils.bytesToHex(tlv[3][0]), 16),
             relays: tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
         });

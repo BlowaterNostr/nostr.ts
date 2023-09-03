@@ -1,4 +1,4 @@
-import * as secp256k1 from "./vendor/esm.sh/v106/@noble/secp256k1@1.7.1/es2022/secp256k1.js";
+import * as secp256k1 from "npm:@noble/secp256k1@1.7.1";
 import { bech32 } from "./scure.js";
 
 export class PrivateKey {
@@ -87,11 +87,11 @@ export class PublicKey {
         return new PublicKey(hex);
     }
 
-    public bech32 = (): string => {
+    bech32(): string {
         const array = secp256k1.utils.hexToBytes(this.hex);
         const words = bech32.toWords(array);
         return bech32.encode("npub", words, 1500);
-    };
+    }
 
     public readonly hex: string;
 
