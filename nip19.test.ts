@@ -1,6 +1,6 @@
 import { assertEquals, assertIsError, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { PrivateKey, PublicKey } from "./key.ts";
-import { AddressPointer, NostrAddress, NoteID } from "./nip19.ts";
+import { AddressPointer, NostrAddress, NostrProfile, NoteID, ProfilePointer } from "./nip19.ts";
 import { stringToBytes } from "./scure.js";
 
 Deno.test("nip19 public key", () => {
@@ -120,5 +120,27 @@ Deno.test("nip19 naddr", async () => {
         const naddr_decode = NostrAddress.decode(naddr) as NostrAddress;
 
         assertEquals(naddr_decode.addr, addressPointer);
+    }
+});
+
+Deno.test("nip19 nprofile", async () => {
+    const hex = "cc8d072efdcc676fcbac14f6cd6825edc3576e55eb786a2a975ee034a6a026cb"
+    const relays: string[] = ["wss://purplepag.es"];
+    const nprofile = "nprofile1qqsverg89m7ucem0ewkpfakddqj7ms6hde27k7r292t4acp556szdjcpzfmhxue69uhhqatjwpkx2urpvuhx2uc0ta8pd"
+    const profilePointer: ProfilePointer = {
+        pubkey: hex,
+
+        relays: relays,
+       
+    };
+    {
+        const nostraddress = new NostrProfile(profilePointer);
+        const naddr_encode = nostraddress.encode();
+        assertEquals(naddr_encode, nprofile);
+    }
+    {
+        const naddr_decode = NostrProfile.decode(nprofile) as NostrProfile;
+
+        assertEquals(naddr_decode.profile, profilePointer);
     }
 });
