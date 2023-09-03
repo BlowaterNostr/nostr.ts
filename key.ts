@@ -87,11 +87,11 @@ export class PublicKey {
         return new PublicKey(hex);
     }
 
-    public bech32 = (): string => {
+    bech32(): string {
         const array = secp256k1.utils.hexToBytes(this.hex);
         const words = bech32.toWords(array);
         return bech32.encode("npub", words, 1500);
-    };
+    }
 
     public readonly hex: string;
 

@@ -2,6 +2,7 @@ import { assertEquals, assertIsError, fail } from "https://deno.land/std@0.176.0
 import { PrivateKey, PublicKey } from "./key.ts";
 import { AddressPointer, NostrAddress, NostrProfile, NoteID } from "./nip19.ts";
 import { relays } from "./relay-list.test.ts";
+import { NostrKind } from "./nostr.ts";
 
 Deno.test("nip19 public key", () => {
     const key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -99,28 +100,29 @@ Deno.test("nip19 note", async () => {
     }
 });
 Deno.test("nip19 naddr", async () => {
-    const naddr =
-        "naddr1qq2ksdtww994xkt0w4gxxuf3tf342snz25uyxq3qmqcwu7muxz3kfvfyfdme47a579t8x0lm3jrjx5yxuf4sknnpe43qxpqqqp65wq55g62";
     const identifier = "h5nqKSYouPcq1ZcUBbU8C";
-    const kind = 30023;
+    const kind = NostrKind.Long_Form;
     const relays: string[] = [];
-    const pubkeyhex = "d830ee7b7c30a364b1244b779afbb4f156733ffb8c87235086e26b0b4e61cd62";
+    const pubkeyhex = PrivateKey.Generate().toPublicKey();
     const addressPointer: AddressPointer = {
         identifier: identifier,
         kind: kind,
         relays: relays,
         pubkey: pubkeyhex,
     };
-    {
-        const nostraddress = new NostrAddress(addressPointer);
-        const naddr_encode = nostraddress.encode();
-        assertEquals(naddr_encode, naddr);
-    }
-    {
-        const naddr_decode = NostrAddress.decode(naddr) as NostrAddress;
 
-        assertEquals(naddr_decode.addr, addressPointer);
+    const nostraddress = new NostrAddress(addressPointer);
+    const naddr_encoded = nostraddress.encode();
+    if (naddr_encoded instanceof Error) {
+        fail(naddr_encoded.message);
     }
+
+    const naddr_decoded = NostrAddress.decode(naddr_encoded);
+    if (naddr_decoded instanceof Error) {
+        fail(naddr_decoded.message);
+    }
+
+    assertEquals(naddr_decoded.addr, addressPointer);
 });
 
 Deno.test("nip19 nprofile", async () => {

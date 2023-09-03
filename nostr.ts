@@ -1,10 +1,6 @@
 import * as hex from "https://deno.land/std@0.176.0/encoding/hex.ts";
 import { PrivateKey, PublicKey, publicKeyHexFromNpub } from "./key.ts";
-import {
-    getSharedSecret,
-    schnorr,
-    utils,
-} from "npm:@noble/secp256k1@1.7.1";
+import { getSharedSecret, schnorr, utils } from "npm:@noble/secp256k1@1.7.1";
 import { decrypt_with_shared_secret, encrypt, utf8Decode, utf8Encode } from "./ende.ts";
 
 export enum NostrKind {
@@ -15,6 +11,7 @@ export enum NostrKind {
     DIRECT_MESSAGE = 4,
     DELETE = 5,
     CustomAppData = 1078, // https://github.com/nostr-protocol/nips/blob/master/78.mds
+    Long_Form = 30023, // https://github.com/nostr-protocol/nips/blob/master/23.md
 }
 
 export interface NostrFilters {
