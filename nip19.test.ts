@@ -1,7 +1,11 @@
-import { assertEquals, assertIsError, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import {
+    assertEquals,
+    assertIsError,
+    fail,
+} from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { PrivateKey, PublicKey } from "./key.ts";
-import { AddressPointer, NostrAddress, NostrProfile, NoteID, ProfilePointer } from "./nip19.ts";
-import { stringToBytes } from "./scure.js";
+import { AddressPointer, NostrAddress, NostrProfile, NoteID } from "./nip19.ts";
+import { relays } from "./relay-list.test.ts";
 
 Deno.test("nip19 public key", () => {
     const key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -124,23 +128,19 @@ Deno.test("nip19 naddr", async () => {
 });
 
 Deno.test("nip19 nprofile", async () => {
-    const hex = "cc8d072efdcc676fcbac14f6cd6825edc3576e55eb786a2a975ee034a6a026cb";
-    const relays: string[] = ["wss://purplepag.es"];
-    const nprofile =
-        "nprofile1qqsverg89m7ucem0ewkpfakddqj7ms6hde27k7r292t4acp556szdjcpzfmhxue69uhhqatjwpkx2urpvuhx2uc0ta8pd";
-    const profilePointer: ProfilePointer = {
-        pubkey: hex,
+    const pubkey = PrivateKey.Generate().toPublicKey();
+    const nProfile = new NostrProfile(pubkey, relays);
 
-        relays: relays,
-    };
-    {
-        const nostraddress = new NostrProfile(profilePointer);
-        const naddr_encode = nostraddress.encode();
-        assertEquals(naddr_encode, nprofile);
+    const encoded_nProfile = nProfile.encode();
+    if (encoded_nProfile instanceof Error) {
+        fail(encoded_nProfile.message);
     }
-    {
-        const naddr_decode = NostrProfile.decode(nprofile) as NostrProfile;
 
-        assertEquals(naddr_decode.profile, profilePointer);
+    const decoded_nProfile = NostrProfile.decode(encoded_nProfile);
+    if (decoded_nProfile instanceof Error) {
+        fail(decoded_nProfile.message);
     }
+
+    assertEquals(decoded_nProfile.pubkey.hex, nProfile.pubkey.hex);
+    assertEquals(decoded_nProfile.relays, nProfile.relays);
 });
