@@ -124,14 +124,14 @@ Deno.test("nip19 naddr", async () => {
 });
 
 Deno.test("nip19 nprofile", async () => {
-    const hex = "cc8d072efdcc676fcbac14f6cd6825edc3576e55eb786a2a975ee034a6a026cb"
+    const hex = "cc8d072efdcc676fcbac14f6cd6825edc3576e55eb786a2a975ee034a6a026cb";
     const relays: string[] = ["wss://purplepag.es"];
-    const nprofile = "nprofile1qqsverg89m7ucem0ewkpfakddqj7ms6hde27k7r292t4acp556szdjcpzfmhxue69uhhqatjwpkx2urpvuhx2uc0ta8pd"
+    const nprofile =
+        "nprofile1qqsverg89m7ucem0ewkpfakddqj7ms6hde27k7r292t4acp556szdjcpzfmhxue69uhhqatjwpkx2urpvuhx2uc0ta8pd";
     const profilePointer: ProfilePointer = {
         pubkey: hex,
 
         relays: relays,
-       
     };
     {
         const nostraddress = new NostrProfile(profilePointer);

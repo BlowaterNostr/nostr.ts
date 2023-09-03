@@ -121,7 +121,6 @@ export class NostrAddress {
     public constructor(public readonly addr: AddressPointer) {}
 }
 
-
 export type ProfilePointer = {
     pubkey: string;
     relays?: string[];
@@ -133,7 +132,7 @@ export class NostrProfile {
         let kind = new ArrayBuffer(4);
         let data = encodeTLV({
             0: [utils.hexToBytes(this.profile.pubkey)],
-            1: (this.profile.relays || []).map(url => utf8Encode(url)),
+            1: (this.profile.relays || []).map((url) => utf8Encode(url)),
         });
 
         const words = bech32.toWords(data);
@@ -144,8 +143,8 @@ export class NostrProfile {
         let data = new Uint8Array(bech32.fromWords(words));
         let tlv = parseTLV(data);
         if (tlv instanceof Error) return tlv;
-        if (!tlv[0]?.[0]) throw new Error('missing TLV 0 for nprofile')
-        if (tlv[0][0].length !== 32) throw new Error('TLV 0 should be 32 bytes')
+        if (!tlv[0]?.[0]) throw new Error("missing TLV 0 for nprofile");
+        if (tlv[0][0].length !== 32) throw new Error("TLV 0 should be 32 bytes");
         return new NostrProfile({
             pubkey: utils.bytesToHex(tlv[0][0]),
             relays: tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
