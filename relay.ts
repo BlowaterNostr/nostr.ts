@@ -459,9 +459,6 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         // but we implement it for testing purpose
         for (const [subID, { chan }] of this.subscriptionMap.entries()) {
             await this.closeSub(subID);
-            // await chan.close(
-            //     `close sub ${subID} because of pool is closed by the client`,
-            // );
         }
     }
 }
