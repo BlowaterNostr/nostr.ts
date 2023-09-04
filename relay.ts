@@ -76,7 +76,8 @@ export class SingleRelayConnection
 
                             if (
                                 relayResponse[0] === "EVENT" ||
-                                relayResponse[0] === "EOSE"
+                                relayResponse[0] === "EOSE" ||
+                                relayResponse[0] === "NEG-MSG"
                             ) {
                                 let subID = relayResponse[1];
                                 let subscription = relay.subscriptionMap.get(
@@ -97,11 +98,17 @@ export class SingleRelayConnection
                                             type: relayResponse[0],
                                             subID: relayResponse[1],
                                         });
-                                    } else {
+                                    } else if(relayResponse[0] === "EVENT") {
                                         chan.put({
                                             type: relayResponse[0],
                                             subID: relayResponse[1],
                                             event: relayResponse[2],
+                                        });
+                                    } else {
+                                        chan.put({
+                                            type: relayResponse[0],
+                                            subID: relayResponse[1],
+                                            msg: relayResponse[2],
                                         });
                                     }
                                 }

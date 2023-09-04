@@ -45,7 +45,8 @@ export type EventID = string;
 export type _RelayResponse =
     | _RelayResponse_REQ_Message
     | _RelayResponse_OK
-    | _RelayResponse_Notice;
+    | _RelayResponse_Notice
+    | ["NEG-MSG", string, string]
 
 export type _RelayResponse_REQ_Message =
     | _RelayResponse_Event
@@ -57,7 +58,11 @@ export type _RelayResponse_Notice = ["NOTICE", string];
 export type _RelayResponse_OK = ["OK", EventID, boolean, string];
 
 export type RelayResponse = RelayResponse_REQ_Message | RelayResponse_OK | RelayResponse_Notice;
-export type RelayResponse_REQ_Message = RelayResponse_Event | RelayResponse_EOSE;
+export type RelayResponse_REQ_Message = RelayResponse_Event | RelayResponse_EOSE | {
+    type: "NEG-MSG",
+    subID: string,
+    msg: string
+};
 
 export type RelayResponse_Event = {
     type: "EVENT";

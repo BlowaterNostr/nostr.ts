@@ -65,7 +65,8 @@ function encodeTLV(tlv: TLV): Uint8Array {
     }
     return utils.concatBytes(...entries);
 }
-function parseTLV(data: Uint8Array): TLV | Error {
+
+export function parseTLV(data: Uint8Array): TLV | Error {
     const result: TLV = {};
     let rest = data;
     while (rest.length > 0) {
