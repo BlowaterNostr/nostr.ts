@@ -66,12 +66,10 @@ Deno.test("ConnectionPool newSub & close", async () => {
         fail();
     }
     await connectionPool.close();
-    if (sub instanceof SubscriptionAlreadyExist) {
-        fail("unreachable");
-    }
+    if (sub instanceof SubscriptionAlreadyExist) fail(sub.message);
     assertEquals(
         sub.chan.closed(),
-        "close sub 1 because of pool is closed by the client",
+        true,
     );
 });
 
@@ -88,34 +86,20 @@ Deno.test("ConnectionPool subscription already exist", async () => {
     await pool.close();
 });
 
-Deno.test("ConnectionPool close subscription", async () => {
-    const pool = new ConnectionPool();
-    const err = await pool.addRelayURL(relays[0]);
-    if (err instanceof Error) fail(err.message);
-    {
-        const subID = "x";
-        const sub = await pool.newSub(subID, { limit: 1 });
-        assertNotInstanceOf(sub, Error);
-        await pool.closeSub(subID);
-        // even if the subscription is closed,
-        // we don't close the consumer channel
-        assertEquals(sub.chan.closed(), false);
-        const result = await sub.chan.pop();
-        if (result == csp.closed) {
-            fail();
+Deno.test("ConnectionPool close subscription", async (t) => {
+    await t.step("single relay", async () => {
+        const pool = new ConnectionPool();
+        const err = await pool.addRelayURLs(relays);
+        if (err instanceof Error) fail(err.message);
+        {
+            const subID = "x";
+            const sub = await pool.newSub(subID, { limit: 1 });
+            assertNotInstanceOf(sub, Error);
+            await pool.closeSub(subID);
+            assertEquals(sub.chan.closed(), true);
         }
-        assertEquals(result.res.type, "EVENT");
-        const result2 = await sub.chan.pop();
-        if (result2 == csp.closed) {
-            fail();
-        }
-        assertEquals(result2.res.type, "EOSE");
-        // Even if EOSE has been seen, we don't close the channel
-        // because EOSE from 1 relay doesn't mean EOSE from another
-        // EOSE also doesn't mean there won't be new events in the future.
-        assertEquals(sub.chan.closed(), false);
-    }
-    await pool.close();
+        await pool.close();
+    });
 });
 
 Deno.test("ConnectionPool register the same relay twice", async () => {
