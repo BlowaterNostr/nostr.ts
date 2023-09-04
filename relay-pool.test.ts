@@ -93,7 +93,7 @@ Deno.test("ConnectionPool close subscription", async () => {
     pool.addRelayURL(relays[0]);
     {
         const subID = "x";
-        const sub = await pool.newSub(subID, { kinds: [0], limit: 1 });
+        const sub = await pool.newSub(subID, { limit: 1 });
         assertNotInstanceOf(sub, Error);
         await pool.closeSub(subID);
         // even if the subscription is closed,

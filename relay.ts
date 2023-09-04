@@ -6,6 +6,13 @@ import {
     NostrFilters,
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
+import {
+    Closer,
+    EventSender,
+    Subscriber,
+    SubscriptionCloser,
+    SubscriptionUpdater,
+} from "./relay.interface.ts";
 import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
@@ -35,7 +42,8 @@ export class RelayAlreadyRegistered extends Error {
     }
 }
 
-export class SingleRelayConnection {
+export class SingleRelayConnection
+    implements Subscriber, SubscriptionUpdater, SubscriptionCloser, EventSender, Closer {
     isClosedByClient = false;
     private subscriptionMap = new Map<
         string,
@@ -227,7 +235,7 @@ export class SingleRelayConnection {
     };
 }
 
-export class ConnectionPool {
+export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
     private closed = false;
     private readonly connections = new Map<string, SingleRelayConnection>(); // url -> relay
     private readonly subscriptionMap = new Map<
