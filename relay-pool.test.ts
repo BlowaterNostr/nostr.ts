@@ -90,7 +90,8 @@ Deno.test("ConnectionPool subscription already exist", async () => {
 
 Deno.test("ConnectionPool close subscription", async () => {
     const pool = new ConnectionPool();
-    pool.addRelayURL(relays[0]);
+    const err = await pool.addRelayURL(relays[0]);
+    if (err instanceof Error) fail(err.message);
     {
         const subID = "x";
         const sub = await pool.newSub(subID, { limit: 1 });
@@ -104,6 +105,15 @@ Deno.test("ConnectionPool close subscription", async () => {
             fail();
         }
         assertEquals(result.res.type, "EVENT");
+        const result2 = await sub.chan.pop();
+        if (result2 == csp.closed) {
+            fail();
+        }
+        assertEquals(result2.res.type, "EOSE");
+        // Even if EOSE has been seen, we don't close the channel
+        // because EOSE from 1 relay doesn't mean EOSE from another
+        // EOSE also doesn't mean there won't be new events in the future.
+        assertEquals(sub.chan.closed(), false);
     }
     await pool.close();
 });
