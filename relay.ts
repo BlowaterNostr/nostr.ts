@@ -275,6 +275,13 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         return Array.from(this.connections.values());
     }
 
+    getRelay(url: string | URL): SingleRelayConnection | undefined {
+        if (url instanceof URL) {
+            url = url.toString();
+        }
+        return this.connections.get(url);
+    }
+
     async addRelayURL(url: string) {
         if (this.connections.has(url)) {
             return new RelayAlreadyRegistered(url);
