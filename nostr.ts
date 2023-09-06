@@ -10,7 +10,8 @@ export enum NostrKind {
     CONTACTS = 3,
     DIRECT_MESSAGE = 4,
     DELETE = 5,
-    CustomAppData = 1078, // https://github.com/nostr-protocol/nips/blob/master/78.mds
+    CustomAppData = 1078, // not parameterized
+    Custom_App_Data = 30078, // https://github.com/nostr-protocol/nips/blob/master/78.md
     Long_Form = 30023, // https://github.com/nostr-protocol/nips/blob/master/23.md
 }
 
@@ -118,9 +119,10 @@ export interface UnsignedNostrEvent<Kind extends NostrKind = NostrKind, TagType 
     readonly content: string;
 }
 
-export type Tag = TagPubKey | TagEvent | [string, ...string[]];
+export type Tag = TagPubKey | TagEvent | TagIdentifier | [string, ...string[]];
 export type TagPubKey = ["p", string];
 export type TagEvent = ["e", string];
+export type TagIdentifier = ["d", string];
 
 export type Tags = {
     p: string[];
@@ -152,70 +154,6 @@ export interface NostrAccountContext {
     signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
     encrypt(pubkey: string, plaintext: string): Promise<string | Error>;
     decrypt(pubkey: string, ciphertext: string): Promise<string | Error>;
-}
-
-export async function prepareEncryptedNostrEvent(
-    sender: NostrAccountContext,
-    pubkeyHexOrBech32: string, /* used to encrypt*/
-    kind: NostrKind,
-    tags: Tag[],
-    content: string,
-): Promise<NostrEvent | Error> {
-    const pubkeyHex = publicKeyHexFromNpub(pubkeyHexOrBech32);
-    if (pubkeyHex instanceof Error) {
-        return pubkeyHex;
-    }
-
-    const encrypted = await sender.encrypt(pubkeyHex, content);
-    if (encrypted instanceof Error) {
-        return encrypted;
-    }
-    return prepareNormalNostrEvent(
-        sender,
-        kind,
-        tags,
-        encrypted,
-    );
-}
-
-export async function prepareNormalNostrEvent(
-    sender: NostrAccountContext,
-    kind: NostrKind,
-    tags: Tag[],
-    content: string,
-): Promise<NostrEvent> {
-    // prepare nostr event
-    const event: UnsignedNostrEvent = {
-        created_at: Math.floor(Date.now() / 1000),
-        kind: kind,
-        pubkey: sender.publicKey.hex,
-        tags: tags,
-        content,
-    };
-    return sender.signEvent(event);
-}
-
-export type CustomAppData = {
-    type: string;
-    client?: string;
-};
-export async function prepareCustomAppDataEvent<T extends CustomAppData>(
-    sender: NostrAccountContext,
-    data: T,
-) {
-    const hex = sender.publicKey.hex;
-    const encrypted = await sender.encrypt(hex, JSON.stringify(data));
-    if (encrypted instanceof Error) {
-        return encrypted;
-    }
-    const event: UnsignedNostrEvent<NostrKind.CustomAppData> = {
-        created_at: Math.floor(Date.now() / 1000),
-        content: encrypted,
-        kind: NostrKind.CustomAppData,
-        pubkey: hex,
-        tags: [],
-    };
-    return sender.signEvent(event);
 }
 
 export function groupBy<group, T>(

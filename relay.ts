@@ -30,12 +30,7 @@ export class NoRelayRegistered extends Error {
         this.name = "NoRelayRegistered";
     }
 }
-export class RelayGroupNotExist extends Error {
-    constructor(public readonly group: string) {
-        super(`relay group ${group} does not exist`);
-        this.name = "RelayGroupNotExist";
-    }
-}
+
 export class RelayAlreadyRegistered extends Error {
     constructor(public url: string) {
         super(`relay ${url} has been registered already`);
@@ -57,11 +52,14 @@ export class SingleRelayConnection
 
     public static New(
         url: string,
-        wsCreator: (url: string) => AsyncWebSocket | Error,
+        wsCreator?: (url: string) => AsyncWebSocket | Error,
     ): SingleRelayConnection | Error {
         try {
             if (!url.startsWith("wss://") && !url.startsWith("ws://")) {
                 url = "wss://" + url;
+            }
+            if (wsCreator == undefined) {
+                wsCreator = AsyncWebSocket.New;
             }
             const ws = wsCreator(url);
             if (ws instanceof Error) {
@@ -180,6 +178,7 @@ export class SingleRelayConnection
         return sub;
     };
 
+    // todo: add waitForOk back
     sendEvent = async (nostrEvent: NostrEvent) => {
         return await this.ws.send(JSON.stringify([
             "EVENT",

@@ -2,8 +2,9 @@ import * as ende from "./ende.ts";
 import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { utf8Decode, utf8Encode } from "./ende.ts";
 import { PrivateKey } from "./key.ts";
-import { InMemoryAccountContext, prepareCustomAppDataEvent } from "./nostr.ts";
+import { InMemoryAccountContext } from "./nostr.ts";
 import { getSharedSecret } from "./vendor/secp256k1.js";
+import { prepareCustomAppDataEvent } from "./event.ts";
 
 Deno.test("utf8 encrypt & decrypt", async (t) => {
     let pri1 = PrivateKey.Generate();
