@@ -6,7 +6,6 @@ import { NostrEvent, NostrFilters, RelayResponse_REQ_Message } from "./nostr.ts"
 import { hexToBytes } from "https://esm.sh/v131/@noble/hashes@1.3.2/utils.js";
 import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
-
 async function Neg(
     relay: SingleRelayConnection,
     subID: string,
@@ -48,16 +47,16 @@ Deno.test("Negentropy", async () => {
     {
         const s = new Set();
         const stream = await Neg(relay, "test", {
-            limit: 3
+            limit: 3,
         }, []);
         if (stream instanceof Error) fail(stream.message);
         for await (const msg of stream.chan) {
             s.add(msg);
             console.log("::", msg);
 
-            if(msg.type == "NEG-MSG") {
+            if (msg.type == "NEG-MSG") {
                 let [newMsg, have, need] = stream.ne.reconcile(msg.msg);
-                console.log("?", newMsg, "|", have, "|", need)
+                console.log("?", newMsg, "|", have, "|", need);
             }
         }
     }

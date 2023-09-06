@@ -98,7 +98,7 @@ export class SingleRelayConnection
                                             type: relayResponse[0],
                                             subID: relayResponse[1],
                                         });
-                                    } else if(relayResponse[0] === "EVENT") {
+                                    } else if (relayResponse[0] === "EVENT") {
                                         chan.put({
                                             type: relayResponse[0],
                                             subID: relayResponse[1],
