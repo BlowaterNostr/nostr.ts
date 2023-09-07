@@ -29,6 +29,15 @@ Deno.test("nip19 public key", () => {
     assertEquals(pkey4.hex, pkey5.hex);
 });
 
+Deno.test("nip19 public key incorrect", () => {
+    const pub = PublicKey.FromBech32("invalid");
+    if (pub instanceof Error) {
+        assertEquals(pub.message, "key 'invalid' is invalid");
+    } else {
+        fail("should be error");
+    }
+});
+
 Deno.test("nip19 public key performance", async (t) => {
     const key = PrivateKey.Generate().toPublicKey().hex;
     const count = 100000;
