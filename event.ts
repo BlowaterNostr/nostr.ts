@@ -1,4 +1,4 @@
-import { publicKeyHexFromNpub } from "./key.ts";
+import { PublicKey } from "./key.ts";
 import {
     NostrAccountContext,
     NostrEvent,
@@ -10,17 +10,12 @@ import {
 
 export async function prepareEncryptedNostrEvent(
     sender: NostrAccountContext,
-    pubkeyHexOrBech32: string, /* used to encrypt*/
+    pubkeyKey: PublicKey, /* used to encrypt*/
     kind: NostrKind,
     tags: Tag[],
     content: string,
 ): Promise<NostrEvent | Error> {
-    const pubkeyHex = publicKeyHexFromNpub(pubkeyHexOrBech32);
-    if (pubkeyHex instanceof Error) {
-        return pubkeyHex;
-    }
-
-    const encrypted = await sender.encrypt(pubkeyHex, content);
+    const encrypted = await sender.encrypt(pubkeyKey.hex, content);
     if (encrypted instanceof Error) {
         return encrypted;
     }

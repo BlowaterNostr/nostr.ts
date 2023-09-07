@@ -42,7 +42,7 @@ Deno.test("Encrypt & Decript Event", async () => {
     let ctx = InMemoryAccountContext.New(PrivateKey.Generate());
     let event = await prepareEncryptedNostrEvent(
         ctx,
-        ctx.publicKey.hex,
+        ctx.publicKey,
         1,
         [
             ["p", "some pubkey 1"],

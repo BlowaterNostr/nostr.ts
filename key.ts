@@ -110,7 +110,7 @@ export function isValidHexKey(key: string) {
     return /^[0-9a-f]{64}$/.test(key);
 }
 
-export function publicKeyHexFromNpub(key: string) {
+function publicKeyHexFromNpub(key: string) {
     try {
         if (key.substring(0, 4) === "npub") {
             const code = bech32.decode(key, 1500);
