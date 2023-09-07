@@ -106,12 +106,12 @@ function toPublicKeyHex(privateKey: string): string {
     );
 }
 
-export function isValidHexKey(key: string) {
-    return /^[0-9a-f]{64}$/.test(key);
-}
-
-export function publicKeyHexFromNpub(key: string) {
+function publicKeyHexFromNpub(key: string) {
     try {
+        const ok = isValidPublicKey(key);
+        if (!ok) {
+            return new InvalidKey(key);
+        }
         if (key.substring(0, 4) === "npub") {
             const code = bech32.decode(key, 1500);
             const data = new Uint8Array(bech32.fromWords(code.words));
@@ -132,9 +132,13 @@ function isValidPublicKey(key: string) {
     return /^[0-9a-f]{64}$/.test(key) || /^npub[0-9a-z]{59}$/.test(key);
 }
 
+export function isValidHexKey(key: string) {
+    return /^[0-9a-f]{64}$/.test(key);
+}
+
 export class InvalidKey extends Error {
     constructor(key: string) {
-        super(`${key} is invalid`);
+        super(`key '${key}' is invalid`);
         this.name = "InvalidKey";
     }
 }

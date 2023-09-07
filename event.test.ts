@@ -42,7 +42,7 @@ Deno.test("Encrypt & Decript Event", async () => {
     let ctx = InMemoryAccountContext.New(PrivateKey.Generate());
     let event = await prepareEncryptedNostrEvent(
         ctx,
-        ctx.publicKey.hex,
+        ctx.publicKey,
         1,
         [
             ["p", "some pubkey 1"],
@@ -109,9 +109,9 @@ Deno.test("Parameterized Event", async () => {
     assertNotInstanceOf(relay, Error);
     {
         const err = await relay.sendEvent(event_v1);
-        assertNotInstanceOf(err, Error);
+        if (err instanceof Error) fail(err.message);
         const err2 = await relay.sendEvent(event_v2);
-        assertNotInstanceOf(err2, Error);
+        if (err2 instanceof Error) fail(err2.message);
         await sleep(500);
 
         const stream = await relay.newSub("sub", {
