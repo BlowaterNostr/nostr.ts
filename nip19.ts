@@ -142,7 +142,14 @@ export class NostrProfile {
         return bech32.encode("nprofile", words, 1500);
     }
     static decode(nprofile: string) {
-        const { prefix, words } = bech32.decode(nprofile, 1500);
+        let words;
+        try {
+            const res = bech32.decode(nprofile, 1500);
+            words = res.words;
+        } catch (e) {
+            return new Error(`failed to decode ${nprofile}, ${e.message}`);
+        }
+
         const data = new Uint8Array(bech32.fromWords(words));
         const tlv = parseTLV(data);
         if (tlv instanceof Error) {
