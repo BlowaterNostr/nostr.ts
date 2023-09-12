@@ -108,8 +108,15 @@ export class NostrAddress {
         return bech32.encode("naddr", words, 1500);
     }
     static decode(naddr: string) {
-        const { prefix, words } = bech32.decode(naddr, 1500);
-        const data = new Uint8Array(bech32.fromWords(words));
+        let decodeWords;
+        try {
+            const { prefix, words } = bech32.decode(naddr, 1500);
+            decodeWords = words;
+        } catch (e) {
+            return e as Error;
+        }
+
+        const data = new Uint8Array(bech32.fromWords(decodeWords));
         const tlv = parseTLV(data);
         if (tlv instanceof Error) return tlv;
         if (!tlv[0][0]) return new Error("missing TLV 0 for naddr");
@@ -153,7 +160,7 @@ export class NostrProfile {
         const data = new Uint8Array(bech32.fromWords(words));
         const tlv = parseTLV(data);
         if (tlv instanceof Error) {
-            return tlv;
+            return new Error("tlv format error");
         }
         if (!tlv[0][0]) {
             return new Error("missing TLV 0 for nprofile");
