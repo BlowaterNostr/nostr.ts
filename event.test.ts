@@ -146,3 +146,20 @@ Deno.test("Parameterized Event", async () => {
 
     await relay.close();
 });
+
+Deno.test("wrong encryption key causing decryption failure", async () => {
+    const ctx = InMemoryAccountContext.New(PrivateKey.Generate());
+    const key = PrivateKey.Generate().hex;
+    const event = await prepareEncryptedNostrEvent(ctx, ctx.publicKey, NostrKind.DIRECT_MESSAGE, [
+        ["p", key],
+    ], "123");
+    if (event instanceof Error) fail(event.message);
+    const err = await ctx.decrypt(key, event.content);
+    if (err instanceof Error) {
+        if (err.message != "Cannot find square root" && err.message != "Decryption failed") {
+            fail(`get ${err.message}`);
+        }
+    } else {
+        fail(`should have error, get ${err}`);
+    }
+});

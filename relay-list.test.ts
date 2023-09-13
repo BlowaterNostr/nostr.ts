@@ -4,6 +4,7 @@ export const wirednet = "wss://relay.nostr.wirednet.jp";
 
 export const relays = [
     nos,
-    damus,
+    // damus,
     wirednet,
+    "wss://welcome.nostr.wine",
 ];

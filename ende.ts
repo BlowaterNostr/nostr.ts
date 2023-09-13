@@ -64,14 +64,17 @@ export async function decrypt_with_shared_secret(
         return e;
     }
 
-    const plaintext = await crypto.subtle.decrypt(
-        { name: "AES-CBC", iv },
-        cryptoKey,
-        ciphertext,
-    );
-
-    const text = utf8Decode(plaintext);
-    return text;
+    try {
+        const plaintext = await crypto.subtle.decrypt(
+            { name: "AES-CBC", iv },
+            cryptoKey,
+            ciphertext,
+        );
+        const text = utf8Decode(plaintext);
+        return text;
+    } catch (e) {
+        return e as Error;
+    }
 }
 
 export function utf8Encode(str: string) {

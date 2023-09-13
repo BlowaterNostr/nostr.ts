@@ -284,11 +284,15 @@ export class InMemoryAccountContext implements NostrAccountContext {
     encrypt = (pubkey: string, plaintext: string): Promise<string> => {
         return encrypt(pubkey, plaintext, this.privateKey.hex);
     };
-    decrypt = (pubkey: string, ciphertext: string): Promise<string | Error> => {
-        let key = this.sharedSecretsMap.get(pubkey);
+    decrypt = async (decryptionPublicKey: string, ciphertext: string): Promise<string | Error> => {
+        let key = this.sharedSecretsMap.get(decryptionPublicKey);
         if (key == undefined) {
-            key = getSharedSecret(this.privateKey.hex, "02" + pubkey) as Uint8Array;
-            this.sharedSecretsMap.set(pubkey, key);
+            try {
+                key = getSharedSecret(this.privateKey.hex, "02" + decryptionPublicKey) as Uint8Array;
+            } catch (e) {
+                return e as Error;
+            }
+            this.sharedSecretsMap.set(decryptionPublicKey, key);
         }
         return decrypt_with_shared_secret(ciphertext, key);
     };
