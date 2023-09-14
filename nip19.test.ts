@@ -134,30 +134,35 @@ Deno.test("nip19 naddr", async () => {
     assertEquals(naddr_decoded.addr, addressPointer);
 });
 
-Deno.test("nip19 nprofile", async () => {
-    const pubkey = PrivateKey.Generate().toPublicKey();
-    const nProfile = new NostrProfile(pubkey, relays);
-    const randomnProfile = 'nprofilexxxxxxxx'
-    const encoded_nProfile = nProfile.encode();
-    if (encoded_nProfile instanceof Error) {
-        fail(encoded_nProfile.message);
-    }
+Deno.test("nip19 nprofile", async (t) => {
+    await t.step("success case", () => {
+        const pubkey = PrivateKey.Generate().toPublicKey();
+        const nProfile = new NostrProfile(pubkey, relays);
 
-    const decoded_nProfile = NostrProfile.decode(encoded_nProfile);
-    if (decoded_nProfile instanceof Error) {
-        fail(decoded_nProfile.message);
-    }
+        const encoded_nProfile = nProfile.encode();
+        if (encoded_nProfile instanceof Error) {
+            fail(encoded_nProfile.message);
+        }
 
-    
-    const decode_random = NostrProfile.decode(randomnProfile);
-    if (decode_random instanceof Error) {
-        assertEquals(decode_random.message, `failed to decode ${randomnProfile}, Letter "1" must be present between prefix and data only`);
-    }
-    else{
-        fail()
-    }
+        const decoded_nProfile = NostrProfile.decode(encoded_nProfile);
+        if (decoded_nProfile instanceof Error) {
+            fail(decoded_nProfile.message);
+        }
 
+        assertEquals(decoded_nProfile.pubkey.hex, nProfile.pubkey.hex);
+        assertEquals(decoded_nProfile.relays, nProfile.relays);
+    });
 
-    assertEquals(decoded_nProfile.pubkey.hex, nProfile.pubkey.hex);
-    assertEquals(decoded_nProfile.relays, nProfile.relays);
+    await t.step("failure case", () => {
+        const randomnProfile = "nprofilexxxxxxxx";
+        const decode_random = NostrProfile.decode(randomnProfile);
+        if (decode_random instanceof Error) {
+            assertEquals(
+                decode_random.message,
+                `failed to decode ${randomnProfile}, Letter "1" must be present between prefix and data only`,
+            );
+        } else {
+            fail();
+        }
+    });
 });
