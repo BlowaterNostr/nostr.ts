@@ -108,7 +108,14 @@ export class NostrAddress {
         return bech32.encode("naddr", words, 1500);
     }
     static decode(naddr: string) {
-        const { prefix, words } = bech32.decode(naddr, 1500);
+        let words;
+        try {
+            const res = bech32.decode(naddr, 1500);
+            words = res.words;
+        } catch (e) {
+            return new Error(`failed to decode ${naddr}, ${e.message}`);
+        }
+
         const data = new Uint8Array(bech32.fromWords(words));
         const tlv = parseTLV(data);
         if (tlv instanceof Error) return tlv;
