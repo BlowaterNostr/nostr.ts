@@ -137,7 +137,7 @@ Deno.test("nip19 naddr", async () => {
 Deno.test("nip19 nprofile", async () => {
     const pubkey = PrivateKey.Generate().toPublicKey();
     const nProfile = new NostrProfile(pubkey, relays);
-
+    const randomnProfile = 'nprofilexxxxxxxx'
     const encoded_nProfile = nProfile.encode();
     if (encoded_nProfile instanceof Error) {
         fail(encoded_nProfile.message);
@@ -147,6 +147,16 @@ Deno.test("nip19 nprofile", async () => {
     if (decoded_nProfile instanceof Error) {
         fail(decoded_nProfile.message);
     }
+
+    
+    const decode_random = NostrProfile.decode(randomnProfile);
+    if (decode_random instanceof Error) {
+        assertEquals(decode_random.message, `failed to decode ${randomnProfile}, Letter "1" must be present between prefix and data only`);
+    }
+    else{
+        fail()
+    }
+
 
     assertEquals(decoded_nProfile.pubkey.hex, nProfile.pubkey.hex);
     assertEquals(decoded_nProfile.relays, nProfile.relays);

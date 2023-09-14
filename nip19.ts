@@ -110,8 +110,8 @@ export class NostrAddress {
     static decode(naddr: string) {
         let words;
         try {
-            const { prefix, res } = bech32.decode(naddr, 1500);
-            words = res;
+            const res  = bech32.decode(naddr, 1500);
+            words = res.words;
         } catch (e) {
             return new Error(`failed to decode ${naddr}, ${e.message}`);
         }
