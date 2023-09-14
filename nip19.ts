@@ -160,7 +160,7 @@ export class NostrProfile {
         const data = new Uint8Array(bech32.fromWords(words));
         const tlv = parseTLV(data);
         if (tlv instanceof Error) {
-            return new Error("tlv format error");
+            return tlv;
         }
         if (!tlv[0][0]) {
             return new Error("missing TLV 0 for nprofile");
