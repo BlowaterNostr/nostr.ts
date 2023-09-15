@@ -3,7 +3,6 @@ import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0
 import { utf8Decode, utf8Encode } from "./ende.ts";
 import { PrivateKey } from "./key.ts";
 import { InMemoryAccountContext } from "./nostr.ts";
-import { getSharedSecret } from "./vendor/secp256k1.js";
 import { prepareCustomAppDataEvent } from "./event.ts";
 
 Deno.test("utf8 encrypt & decrypt", async (t) => {
@@ -58,11 +57,13 @@ Deno.test("decryption performance", async (t) => {
         type: "whatever",
     });
     assertNotInstanceOf(event, Error);
-    const key = getSharedSecret(ctx.privateKey.hex, "02" + ctx.publicKey.hex);
 
     await t.step("", async () => {
         for (let i = 0; i < 100; i++) {
-            await ende.decrypt_with_shared_secret(event.content, key);
+            const err = await ctx.decrypt(ctx.publicKey.hex, event.content);
+            if (err instanceof Error) {
+                fail(err.message);
+            }
         }
     });
 });
