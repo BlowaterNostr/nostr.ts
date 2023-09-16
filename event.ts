@@ -27,21 +27,21 @@ export async function prepareEncryptedNostrEvent(
     );
 }
 
-export async function prepareNormalNostrEvent(
+export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind>(
     sender: NostrAccountContext,
-    kind: NostrKind,
+    kind: Kind,
     tags: Tag[],
     content: string,
-): Promise<NostrEvent> {
+): Promise<NostrEvent<Kind>> {
     // prepare nostr event
-    const event: UnsignedNostrEvent = {
+    const event: UnsignedNostrEvent<Kind> = {
         created_at: Math.floor(Date.now() / 1000),
         kind: kind,
         pubkey: sender.publicKey.hex,
         tags: tags,
         content,
     };
-    return sender.signEvent(event);
+    return sender.signEvent<Kind>(event);
 }
 
 export type CustomAppData = {
