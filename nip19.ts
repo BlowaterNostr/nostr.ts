@@ -3,6 +3,7 @@ import { bech32 } from "./scure.js";
 import { utf8Decode, utf8Encode } from "./ende.ts";
 import { PublicKey } from "./key.ts";
 import { NostrKind } from "./nostr.ts";
+import { Int } from "https://deno.land/x/automerge@2.1.0-alpha.12/types.ts";
 
 export class NoteID {
     static FromBech32(id: string): NoteID | Error {
@@ -180,5 +181,61 @@ export class NostrProfile {
     public constructor(
         public readonly pubkey: PublicKey,
         public readonly relays?: string[],
+    ) {}
+}
+
+
+export class NostrEvent {
+    encode(): string | Error {
+        const data = encodeTLV({
+            0: [utils.hexToBytes(this.pubkey.hex)],
+            1: (this.relays || []).map((url) => utf8Encode(url)),
+        });
+        const words = bech32.toWords(data);
+        return bech32.encode("nevent", words, 1500);
+    }
+    static decode(nevent: string) {
+        let words;
+        try {
+            const res = bech32.decode(nevent, 1500);
+            words = res.words;
+        } catch (e) {
+            return new Error(`failed to decode ${nevent}, ${e.message}`);
+        }
+
+        const data = new Uint8Array(bech32.fromWords(words));
+        const tlv = parseTLV(data);
+        if (tlv instanceof Error) {
+            return tlv;
+        }
+        if (!tlv[0][0]) {
+            return new Error("missing TLV 0 for nevent");
+        }
+        if (tlv[0][0].length !== 32) {
+            return new Error("TLV 0 should be 32 bytes");
+        }
+        if (tlv[2] && tlv[2][0].length !== 32) {
+            return new Error("TLV 2 should be 32 bytes")
+        }
+        if (tlv[3] && tlv[3][0].length !== 4) {
+            return new Error("TLV 3 should be 4 bytes")
+        }
+        const pubkey = PublicKey.FromHex(utils.bytesToHex(tlv[0][0]));
+        if (pubkey instanceof Error) {
+            return pubkey;
+        }
+        return new NostrEvent(
+            utils.bytesToHex(tlv[0][0]),
+            tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
+            tlv[2]?.[0] ? utils.bytesToHex(tlv[2][0]) : undefined,
+            parseInt(utils.bytesToHex(tlv[3][0]), 16),
+        );
+    }
+    public constructor(
+        public readonly id: string,
+        public readonly relays?: string[],
+        public readonly pubkey?: string,
+        public readonly kind?: Int,
+       
     ) {}
 }
