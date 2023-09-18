@@ -263,6 +263,10 @@ export class InMemoryAccountContext implements NostrAccountContext {
         return new InMemoryAccountContext(privateKey);
     }
 
+    static Generate() {
+        return new InMemoryAccountContext(PrivateKey.Generate());
+    }
+
     readonly publicKey: PublicKey;
 
     private readonly sharedSecretsMap = new Map<string, Uint8Array>();
