@@ -238,13 +238,12 @@ export class NostrEvent {
         }
 
         return new NostrEvent({
-            id:utils.bytesToHex(tlv[0][0]),
-            relays:tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
-            pubkey:pubkey,
-            kind:parseInt(utils.bytesToHex(tlv[3][0]), 16),
-         } );
-        }
+            id: utils.bytesToHex(tlv[0][0]),
+            relays: tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
+            pubkey: pubkey,
+            kind: parseInt(utils.bytesToHex(tlv[3][0]), 16),
+        });
+    }
 
     public constructor(public readonly event: EventPointer) {}
-
 }
