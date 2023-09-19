@@ -188,16 +188,22 @@ export type EventPointer = {
     id: string;
     relays?: string[];
     pubkey?: PublicKey;
-    kind?: Number;
+    kind?: number;
 };
 
 export class NostrEvent {
+
     encode(): string | Error {
+        let kindArray = null
+        if (this.event.kind) {
+            kindArray = new ArrayBuffer(4)
+            new DataView(kindArray).setUint32(0, this.event.kind, false)
+        }
         const data = encodeTLV({
             0: [utils.hexToBytes(this.event.id)],
             1: (this.event.relays || []).map((url) => utf8Encode(url)),
-            2: (this.event.pubkey ? [this.event.pubkey.hex] : []).map((url) => utf8Encode(url)),
-            3: (this.event.kind ? [this.event.kind.toString()] : []).map((url) => utf8Encode(url)),
+            2: (this.event.pubkey ? [this.event.pubkey.hex] : []).map((url) => utils.hexToBytes(url)),
+            3: kindArray ? [new Uint8Array(kindArray)] : []
         });
 
         const words = bech32.toWords(data);

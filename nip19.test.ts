@@ -1,6 +1,6 @@
 import { assertEquals, assertIsError, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { PrivateKey, PublicKey } from "./key.ts";
-import { AddressPointer, NostrAddress, NostrProfile, NoteID } from "./nip19.ts";
+import { AddressPointer, EventPointer, NostrAddress, NostrEvent, NostrProfile, NoteID } from "./nip19.ts";
 import { relays } from "./relay-list.test.ts";
 import { NostrKind } from "./nostr.ts";
 
@@ -134,40 +134,33 @@ Deno.test("nip19 naddr", async () => {
     assertEquals(naddr_decoded.addr, addressPointer);
 });
 
-// Deno.test("nip19 event", async () => {
-//     await t.step("success case", () => {
-//         const pubkey = PrivateKey.Generate().toPublicKey();
-//         const kind = 1
-//         const
-//         const nProfile = new NostrProfile(pubkey, relays);
+Deno.test("nip19 event", async () => {
+    const kind = 1;
+    const relays: string[] =  [
+        "wss://yabu.me",
+    ];
+    const pubkeyhex = PublicKey.FromHex("b3e43e8cc7e6dff23a33d9213a3e912d895b1c3e4250240e0c99dbefe3068b5f")
+    const eventPointer: EventPointer = {
+        id: "25524798c2182d1b20c87ba208aa5085a7ba34c9b54eb851977f7206591ab407",
+        kind: kind,
+        relays: relays,
+        pubkey: pubkeyhex as PublicKey,
+    };
 
-//         const encoded_nEvent = nProfile.encode();
-//         if (encoded_nProfile instanceof Error) {
-//             fail(encoded_nProfile.message);
-//         }
+    const nostrevent = new NostrEvent(eventPointer);
+    const nevent_encoded = nostrevent.encode();
+    if (nevent_encoded instanceof Error) {
+        fail(nevent_encoded.message);
+    }
 
-//         const decoded_nProfile = NostrProfile.decode(encoded_nProfile);
-//         if (decoded_nProfile instanceof Error) {
-//             fail(decoded_nProfile.message);
-//         }
+    const nevent_decoded = NostrEvent.decode(nevent_encoded);
+    if (nevent_decoded instanceof Error) {
+        fail(nevent_decoded.message);
+    }
 
-//         assertEquals(decoded_nProfile.pubkey.hex, nProfile.pubkey.hex);
-//         assertEquals(decoded_nProfile.relays, nProfile.relays);
-//     });
+    assertEquals(nevent_decoded.event, eventPointer);
+});
 
-//     await t.step("failure case", () => {
-//         const randomnProfile = "nprofilexxxxxxxx";
-//         const decode_random = NostrProfile.decode(randomnProfile);
-//         if (decode_random instanceof Error) {
-//             assertEquals(
-//                 decode_random.message,
-//                 `failed to decode ${randomnProfile}, Letter "1" must be present between prefix and data only`,
-//             );
-//         } else {
-//             fail();
-//         }
-//     });
-// });
 
 Deno.test("nip19 nprofile", async (t) => {
     await t.step("success case", () => {
