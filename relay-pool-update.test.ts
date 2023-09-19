@@ -88,7 +88,7 @@ Deno.test("updateSub 2 times & add relay url later", async (t) => {
         }
 
         const stream2 = await pool.updateSub("profilesStream", {
-            kinds: [NostrKind.CustomAppData],
+            kinds: [NostrKind.Custom_App_Data],
             limit: 1,
         });
         if (stream2 instanceof Error) {
@@ -107,7 +107,7 @@ Deno.test("updateSub 2 times & add relay url later", async (t) => {
         if (res1 == csp.closed || res2 == csp.closed) {
             fail();
         }
-        if (res1.res.type != "EVENT" || res1.res.event.kind != NostrKind.CustomAppData) {
+        if (res1.res.type != "EVENT" || res1.res.event.kind != NostrKind.Custom_App_Data) {
             fail(JSON.stringify(res1.res));
         }
         assertEquals(res2.res.type, "EOSE");

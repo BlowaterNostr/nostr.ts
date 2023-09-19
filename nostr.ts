@@ -10,7 +10,6 @@ export enum NostrKind {
     CONTACTS = 3,
     DIRECT_MESSAGE = 4,
     DELETE = 5,
-    CustomAppData = 1078, // not parameterized
     Custom_App_Data = 30078, // https://github.com/nostr-protocol/nips/blob/master/78.md
     Long_Form = 30023, // https://github.com/nostr-protocol/nips/blob/master/23.md
 }
@@ -308,15 +307,4 @@ export async function verifyEvent(event: NostrEvent) {
     } catch (err) {
         return false;
     }
-}
-
-////////////
-// NIP 78 //
-////////////
-export interface Signed_CustomAppData_Decrypted_Raw_Event extends NostrEvent {
-    readonly pubkey: string;
-    readonly kind: NostrKind.CustomAppData;
-    readonly created_at: number;
-    readonly tags: Tag[];
-    readonly content: string;
 }

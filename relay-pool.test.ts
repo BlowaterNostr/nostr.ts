@@ -158,7 +158,7 @@ Deno.test("newSub 2 times & add relay url later", async (t) => {
             fail(stream1.message);
         }
         const stream2 = await pool.newSub("sub2", {
-            kinds: [NostrKind.CustomAppData],
+            kinds: [NostrKind.Custom_App_Data],
             limit: 1,
         });
         if (stream2 instanceof Error) {
