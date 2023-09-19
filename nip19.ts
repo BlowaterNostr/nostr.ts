@@ -139,8 +139,6 @@ export class NostrAddress {
     public constructor(public readonly addr: AddressPointer) {}
 }
 
-
-
 // https://github.com/nostr-protocol/nips/blob/master/19.md#shareable-identifiers-with-extra-metadata
 export class NostrProfile {
     encode(): string | Error {
@@ -197,10 +195,10 @@ export class NostrEvent {
         const data = encodeTLV({
             0: [utils.hexToBytes(this.event.id)],
             1: (this.event.relays || []).map((url) => utf8Encode(url)),
-            2: ((this.event.pubkey ? [this.event.pubkey.hex] : [])).map((url) => utf8Encode(url)),
-            3: ((this.event.kind ? [this.event.kind.toString()] : [])).map((url) => utf8Encode(url))
+            2: (this.event.pubkey ? [this.event.pubkey.hex] : []).map((url) => utf8Encode(url)),
+            3: (this.event.kind ? [this.event.kind.toString()] : []).map((url) => utf8Encode(url)),
         });
-        
+
         const words = bech32.toWords(data);
         return bech32.encode("nevent", words, 1500);
     }
@@ -225,28 +223,27 @@ export class NostrEvent {
             return new Error("TLV 0 should be 32 bytes");
         }
         if (tlv[2] && tlv[2][0].length !== 32) {
-            return new Error("TLV 2 should be 32 bytes")
+            return new Error("TLV 2 should be 32 bytes");
         }
         if (tlv[3] && tlv[3][0].length !== 4) {
-            return new Error("TLV 3 should be 4 bytes")
+            return new Error("TLV 3 should be 4 bytes");
         }
         let pubkey;
-        if (tlv[2]){
-         pubkey = PublicKey.FromHex(utils.bytesToHex(tlv[2][0]));
+        if (tlv[2]) {
+            pubkey = PublicKey.FromHex(utils.bytesToHex(tlv[2][0]));
             if (pubkey instanceof Error) {
                 return pubkey;
             }
         }
 
         return new NostrEvent({
-            id:utils.bytesToHex(tlv[0][0]),
-            relays:tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
-            pubkey:pubkey,
-            kind:parseInt(utils.bytesToHex(tlv[3][0]), 16),}
-        );
+            id: utils.bytesToHex(tlv[0][0]),
+            relays: tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
+            pubkey: pubkey,
+            kind: parseInt(utils.bytesToHex(tlv[3][0]), 16),
+        });
     }
     public constructor(
-public readonly event:EventsPointer
-       
+        public readonly event: EventsPointer,
     ) {}
 }
