@@ -8,12 +8,7 @@ import {
     RelayResponse_REQ_Message,
     verifyEvent,
 } from "./nostr.ts";
-import {
-    prepareCustomAppDataEvent,
-    prepareEncryptedNostrEvent,
-    prepareNormalNostrEvent,
-    prepareParameterizedEvent,
-} from "./event.ts";
+import { prepareEncryptedNostrEvent, prepareNormalNostrEvent, prepareParameterizedEvent } from "./event.ts";
 import { SingleRelayConnection } from "./relay.ts";
 import { relays } from "./relay-list.test.ts";
 import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
@@ -42,15 +37,17 @@ Deno.test("Encrypt & Decript Event", async () => {
     let ctx = InMemoryAccountContext.New(PrivateKey.Generate());
     let event = await prepareEncryptedNostrEvent(
         ctx,
-        ctx.publicKey,
-        1,
-        [
-            ["p", "some pubkey 1"],
-            ["p", "some pubkey 2"],
-            ["e", "some event id 1"],
-            ["e", "some event id 2"],
-        ],
-        "test",
+        {
+            encryptKey: ctx.publicKey,
+            kind: 1,
+            tags: [
+                ["p", "some pubkey 1"],
+                ["p", "some pubkey 2"],
+                ["e", "some event id 1"],
+                ["e", "some event id 2"],
+            ],
+            content: "test",
+        },
     );
     assertNotInstanceOf(event, Error);
     let ok = await verifyEvent(event);
@@ -68,19 +65,6 @@ Deno.test("Encrypt & Decript Event", async () => {
     assertEquals(decrypted.content, "test");
 });
 
-Deno.test("Custom Event", async () => {
-    let ctx = InMemoryAccountContext.New(PrivateKey.Generate());
-    const event = await prepareCustomAppDataEvent(ctx, { type: "whatever" });
-    assertNotInstanceOf(event, Error);
-
-    const decrypted = await decryptNostrEvent(event, ctx, ctx.publicKey.hex);
-    assertNotInstanceOf(decrypted, Error);
-
-    assertEquals(decrypted.content, `{"type":"whatever"}`);
-
-    assertEquals(getTags(event).p, []);
-});
-
 Deno.test("Parameterized Event", async () => {
     const ctx = InMemoryAccountContext.New(PrivateKey.Generate());
 
@@ -96,13 +80,13 @@ Deno.test("Parameterized Event", async () => {
         content: "v2",
         d: identifier,
         kind: NostrKind.Custom_App_Data,
-        created_at: now + 1,
+        created_at: now + 10,
     });
     const event_v3 = await prepareParameterizedEvent(ctx, {
         content: "v3",
         d: identifier,
         kind: NostrKind.Custom_App_Data,
-        created_at: now + 2,
+        created_at: now + 20,
     });
 
     const relay = SingleRelayConnection.New(relays[1]);
@@ -112,7 +96,7 @@ Deno.test("Parameterized Event", async () => {
         if (err instanceof Error) fail(err.message);
         const err2 = await relay.sendEvent(event_v2);
         if (err2 instanceof Error) fail(err2.message);
-        await sleep(500);
+        await sleep(1000);
 
         const stream = await relay.newSub("sub", {
             "#d": [identifier],
@@ -150,9 +134,14 @@ Deno.test("Parameterized Event", async () => {
 Deno.test("wrong encryption key causing decryption failure", async () => {
     const ctx = InMemoryAccountContext.New(PrivateKey.Generate());
     const key = PrivateKey.Generate().hex;
-    const event = await prepareEncryptedNostrEvent(ctx, ctx.publicKey, NostrKind.DIRECT_MESSAGE, [
-        ["p", key],
-    ], "123");
+    const event = await prepareEncryptedNostrEvent(ctx, {
+        encryptKey: ctx.publicKey,
+        kind: NostrKind.DIRECT_MESSAGE,
+        tags: [
+            ["p", key],
+        ],
+        content: "123",
+    });
     if (event instanceof Error) fail(event.message);
     const err = await ctx.decrypt(key, event.content);
     if (err instanceof Error) {

@@ -10,19 +10,21 @@ import {
 
 export async function prepareEncryptedNostrEvent(
     sender: NostrAccountContext,
-    pubkeyKey: PublicKey, /* used to encrypt*/
-    kind: NostrKind,
-    tags: Tag[],
-    content: string,
+    args: {
+        encryptKey: PublicKey;
+        kind: NostrKind;
+        tags: Tag[];
+        content: string;
+    },
 ): Promise<NostrEvent | Error> {
-    const encrypted = await sender.encrypt(pubkeyKey.hex, content);
+    const encrypted = await sender.encrypt(args.encryptKey.hex, args.content);
     if (encrypted instanceof Error) {
         return encrypted;
     }
     return prepareNormalNostrEvent(
         sender,
-        kind,
-        tags,
+        args.kind,
+        args.tags,
         encrypted,
     );
 }
@@ -42,29 +44,6 @@ export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind
         content,
     };
     return sender.signEvent<Kind>(event);
-}
-
-export type CustomAppData = {
-    type: string;
-    client?: string;
-};
-export async function prepareCustomAppDataEvent<T extends CustomAppData>(
-    sender: NostrAccountContext,
-    data: T,
-) {
-    const hex = sender.publicKey.hex;
-    const encrypted = await sender.encrypt(hex, JSON.stringify(data));
-    if (encrypted instanceof Error) {
-        return encrypted;
-    }
-    const event: UnsignedNostrEvent<NostrKind.CustomAppData> = {
-        created_at: Math.floor(Date.now() / 1000),
-        content: encrypted,
-        kind: NostrKind.CustomAppData,
-        pubkey: hex,
-        tags: [],
-    };
-    return sender.signEvent(event);
 }
 
 export function prepareParameterizedEvent<Kind extends NostrKind>(author: NostrAccountContext, args: {

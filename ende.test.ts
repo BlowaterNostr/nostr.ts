@@ -2,8 +2,8 @@ import * as ende from "./ende.ts";
 import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { utf8Decode, utf8Encode } from "./ende.ts";
 import { PrivateKey } from "./key.ts";
-import { InMemoryAccountContext } from "./nostr.ts";
-import { prepareCustomAppDataEvent } from "./event.ts";
+import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
+import { prepareEncryptedNostrEvent } from "./event.ts";
 
 Deno.test("utf8 encrypt & decrypt", async (t) => {
     let pri1 = PrivateKey.Generate();
@@ -53,9 +53,15 @@ Deno.test("utf8 encrypt & decrypt", async (t) => {
 
 Deno.test("decryption performance", async (t) => {
     let ctx = InMemoryAccountContext.New(PrivateKey.Generate());
-    const event = await prepareCustomAppDataEvent(ctx, {
-        type: "whatever",
-    });
+    const event = await prepareEncryptedNostrEvent(
+        ctx,
+        {
+            encryptKey: ctx.publicKey,
+            kind: NostrKind.DIRECT_MESSAGE,
+            tags: [],
+            content: "whatever",
+        },
+    );
     assertNotInstanceOf(event, Error);
 
     await t.step("", async () => {
