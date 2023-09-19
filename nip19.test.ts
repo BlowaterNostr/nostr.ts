@@ -136,10 +136,10 @@ Deno.test("nip19 naddr", async () => {
 
 Deno.test("nip19 event", async () => {
     const kind = 1;
-    const relays: string[] =  [
+    const relays: string[] = [
         "wss://yabu.me",
     ];
-    const pubkeyhex = PublicKey.FromHex("b3e43e8cc7e6dff23a33d9213a3e912d895b1c3e4250240e0c99dbefe3068b5f")
+    const pubkeyhex = PublicKey.FromHex("b3e43e8cc7e6dff23a33d9213a3e912d895b1c3e4250240e0c99dbefe3068b5f");
     const eventPointer: EventPointer = {
         id: "25524798c2182d1b20c87ba208aa5085a7ba34c9b54eb851977f7206591ab407",
         kind: kind,
@@ -160,7 +160,6 @@ Deno.test("nip19 event", async () => {
 
     assertEquals(nevent_decoded.event, eventPointer);
 });
-
 
 Deno.test("nip19 nprofile", async (t) => {
     await t.step("success case", () => {
