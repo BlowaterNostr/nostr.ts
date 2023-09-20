@@ -186,7 +186,7 @@ export class NostrProfile {
 
 export type EventPointer = {
     id: string;
-    kind: number;
+    kind?: number;
     relays?: string[];
     pubkey?: PublicKey;
 };
