@@ -241,12 +241,16 @@ export class Nevent {
                 return pubkey;
             }
         }
+        let Kind;
+        if (tlv[3]) {
+            Kind = parseInt(utils.bytesToHex(tlv[3][0]), 16);
+        }
 
         return new Nevent({
             id: utils.bytesToHex(tlv[0][0]),
             relays: tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
             pubkey: pubkey,
-            kind: parseInt(utils.bytesToHex(tlv[3][0]), 16),
+            kind: Kind,
         });
     }
 
