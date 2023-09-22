@@ -1,6 +1,6 @@
 import { assertEquals, assertIsError, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { PrivateKey, PublicKey } from "./key.ts";
-import { AddressPointer, NostrAddress, NostrProfile, NoteID } from "./nip19.ts";
+import { AddressPointer, EventPointer, Nevent, NostrAddress, NostrProfile, NoteID } from "./nip19.ts";
 import { relays } from "./relay-list.test.ts";
 import { NostrKind } from "./nostr.ts";
 
@@ -132,6 +132,43 @@ Deno.test("nip19 naddr", async () => {
     }
 
     assertEquals(naddr_decoded.addr, addressPointer);
+});
+
+Deno.test("nevent", async () => {
+    const relays: string[] = [
+        "wss://yabu.me",
+    ];
+    const pubkeyhex = PrivateKey.Generate().toPublicKey();
+
+    {
+        const eventPointer: EventPointer = {
+            id: "25524798c2182d1b20c87ba208aa5085a7ba34c9b54eb851977f7206591ab407",
+            kind: NostrKind.META_DATA, // 0
+            relays: relays,
+            pubkey: pubkeyhex,
+        };
+
+        const nostrevent = new Nevent(eventPointer);
+        const nevent_encoded = nostrevent.encode();
+        const nevent_decoded = Nevent.decode(nevent_encoded);
+        if (nevent_decoded instanceof Error) fail(nevent_decoded.message);
+
+        assertEquals(nevent_decoded.pointer, eventPointer);
+    }
+    {
+        const eventPointer: EventPointer = {
+            id: "25524798c2182d1b20c87ba208aa5085a7ba34c9b54eb851977f7206591ab407",
+            relays: relays,
+            pubkey: pubkeyhex,
+        };
+
+        const nostrevent = new Nevent(eventPointer);
+        const nevent_encoded = nostrevent.encode();
+        const nevent_decoded = Nevent.decode(nevent_encoded);
+        if (nevent_decoded instanceof Error) fail(nevent_decoded.message);
+
+        assertEquals(nevent_decoded.pointer, eventPointer);
+    }
 });
 
 Deno.test("nip19 nprofile", async (t) => {
