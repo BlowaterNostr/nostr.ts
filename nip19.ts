@@ -191,13 +191,26 @@ export type EventPointer = {
     pubkey?: PublicKey;
 };
 
+function integerToUint8Array(number: number) {
+    // Create a Uint8Array with enough space to hold a 32-bit integer (4 bytes).
+    const uint8Array = new Uint8Array(4);
+
+    // Use bitwise operations to extract the bytes.
+    uint8Array[0] = (number >> 24) & 0xFF; // Most significant byte (MSB)
+    uint8Array[1] = (number >> 16) & 0xFF;
+    uint8Array[2] = (number >> 8) & 0xFF;
+    uint8Array[3] = number & 0xFF; // Least significant byte (LSB)
+
+    return uint8Array;
+}
+
 export class Nevent {
-    encode(): string | Error {
-        let kindArray = null;
-        if (this.pointer.kind) {
-            kindArray = new ArrayBuffer(4);
-            new DataView(kindArray).setUint32(0, this.pointer.kind, false);
+    encode(): string {
+        let kindArray;
+        if (this.pointer.kind != undefined) {
+            kindArray = integerToUint8Array(this.pointer.kind);
         }
+
         const data = encodeTLV({
             0: [utils.hexToBytes(this.pointer.id)],
             1: (this.pointer.relays || []).map((url) => utf8Encode(url)),
@@ -241,17 +254,16 @@ export class Nevent {
                 return pubkey;
             }
         }
-        let Kind;
-        if (tlv[3]) {
-            Kind = parseInt(utils.bytesToHex(tlv[3][0]), 16);
-        }
 
-        return new Nevent({
+        const pointer: EventPointer = {
             id: utils.bytesToHex(tlv[0][0]),
             relays: tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
             pubkey: pubkey,
-            kind: Kind,
-        });
+        };
+        if (tlv[3]) {
+            pointer.kind = parseInt(utils.bytesToHex(tlv[3][0]), 16);
+        }
+        return new Nevent(pointer);
     }
 
     public constructor(public readonly pointer: EventPointer) {}

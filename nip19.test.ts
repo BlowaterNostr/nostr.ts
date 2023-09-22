@@ -134,30 +134,41 @@ Deno.test("nip19 naddr", async () => {
     assertEquals(naddr_decoded.addr, addressPointer);
 });
 
-Deno.test("nip19 event", async () => {
-    const kind = 1;
+Deno.test("nevent", async () => {
     const relays: string[] = [
         "wss://yabu.me",
     ];
-    const pubkeyhex = PublicKey.FromHex("b3e43e8cc7e6dff23a33d9213a3e912d895b1c3e4250240e0c99dbefe3068b5f");
-    const eventPointer: EventPointer = {
-        id: "25524798c2182d1b20c87ba208aa5085a7ba34c9b54eb851977f7206591ab407",
-        kind: kind,
-        relays: relays,
-        pubkey: pubkeyhex as PublicKey,
-    };
+    const pubkeyhex = PrivateKey.Generate().toPublicKey();
 
-    const nostrevent = new Nevent(eventPointer);
-    const nevent_encoded = nostrevent.encode();
-    if (nevent_encoded instanceof Error) {
-        fail(nevent_encoded.message);
-    }
+    {
+        const eventPointer: EventPointer = {
+            id: "25524798c2182d1b20c87ba208aa5085a7ba34c9b54eb851977f7206591ab407",
+            kind: NostrKind.META_DATA, // 0
+            relays: relays,
+            pubkey: pubkeyhex,
+        };
 
-    const nevent_decoded = Nevent.decode(nevent_encoded);
-    if (nevent_decoded instanceof Error) {
-        fail(nevent_decoded.message);
+        const nostrevent = new Nevent(eventPointer);
+        const nevent_encoded = nostrevent.encode();
+        const nevent_decoded = Nevent.decode(nevent_encoded);
+        if (nevent_decoded instanceof Error) fail(nevent_decoded.message);
+
+        assertEquals(nevent_decoded.pointer, eventPointer);
     }
-    assertEquals(nevent_decoded.pointer, eventPointer);
+    {
+        const eventPointer: EventPointer = {
+            id: "25524798c2182d1b20c87ba208aa5085a7ba34c9b54eb851977f7206591ab407",
+            relays: relays,
+            pubkey: pubkeyhex,
+        };
+
+        const nostrevent = new Nevent(eventPointer);
+        const nevent_encoded = nostrevent.encode();
+        const nevent_decoded = Nevent.decode(nevent_encoded);
+        if (nevent_decoded instanceof Error) fail(nevent_decoded.message);
+
+        assertEquals(nevent_decoded.pointer, eventPointer);
+    }
 });
 
 Deno.test("nip19 nprofile", async (t) => {
