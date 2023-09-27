@@ -158,11 +158,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         if (subscription === undefined) {
             return;
         }
-        // do not remove the channel from the map yet
-        // because the relay might have send additional data before
-        // we, as the client, send "CLOSE"
-        // we still need to channel these data in
-        // csp.select -> ws.onMessage
+
         try {
             await subscription.chan.close();
         } catch (e) {
