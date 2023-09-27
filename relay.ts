@@ -138,19 +138,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return { filter, chan };
     };
 
-    // updateSub = async (subID: string, filter: NostrFilters) => {
-    //     console.log(this.url, "updateSub", subID, filter);
-    //     {
-    //         const sub = this.subscriptionMap.get(subID);
-    //         if (sub == undefined) {
-    //             return this.newSub(subID, filter);
-    //         }
-    //     }
-    //     await this.closeSub(subID)
-    //     const sub = await this.newSub(subID, filter)
-    //     return sub;
-    // };
-
     // todo: add waitForOk back
     sendEvent = async (nostrEvent: NostrEvent) => {
         return await this.ws.send(JSON.stringify([
@@ -362,22 +349,6 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         this.subscriptionMap.set(subID, sub);
         return sub;
     }
-
-    // async updateSub(subID: string, filter: NostrFilters) {
-    //     const sub = this.subscriptionMap.get(subID);
-    //     if (sub == undefined) {
-    //         return this.newSub(subID, filter);
-    //     }
-    //     await this.closeSub(subID)
-    //     sub.filter = filter;
-    //     for (const relay of this.connections.values()) {
-    //         const err = await relay.updateSub(subID, filter);
-    //         if (err instanceof Error) {
-    //             return err;
-    //         }
-    //     }
-    //     return sub;
-    // }
 
     async sendEvent(nostrEvent: NostrEvent) {
         if (this.connections.size === 0) {
