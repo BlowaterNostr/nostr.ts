@@ -10,15 +10,6 @@ export type Subscriber = {
     >;
 };
 
-export type SubscriptionUpdater = {
-    updateSub: (subID: string, filter: NostrFilters) => Promise<
-        Error | {
-            filter: NostrFilters;
-            chan: Channel<RelayResponse_REQ_Message>;
-        }
-    >;
-};
-
 export type SubscriptionCloser = {
     closeSub: (subID: string) => Promise<void>;
 };
