@@ -6,13 +6,7 @@ import {
     NostrFilters,
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
-import {
-    Closer,
-    EventSender,
-    Subscriber,
-    SubscriptionCloser,
-    SubscriptionUpdater,
-} from "./relay.interface.ts";
+import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
 import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
@@ -37,8 +31,7 @@ export class RelayAlreadyRegistered extends Error {
     }
 }
 
-export class SingleRelayConnection
-    implements Subscriber, SubscriptionUpdater, SubscriptionCloser, EventSender, Closer {
+export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
     isClosedByClient = false;
     private subscriptionMap = new Map<
         string,
@@ -145,38 +138,18 @@ export class SingleRelayConnection
         return { filter, chan };
     };
 
-    updateSub = async (subID: string, filter: NostrFilters) => {
-        const err = await this.untilOpen();
-        if (err instanceof Error) {
-            return err;
-        }
-        console.log(this.url, "updateSub", subID, filter);
-        const sub = this.subscriptionMap.get(subID);
-        if (sub == undefined) {
-            return this.newSub(subID, filter);
-        }
-        {
-            const err = await this.ws.send(JSON.stringify([
-                "CLOSE",
-                subID, // multiplex marker / channel
-            ]));
-            if (err) {
-                return err;
-            }
-        }
-        {
-            const err = await this.ws.send(JSON.stringify([
-                "REQ",
-                subID,
-                filter,
-            ]));
-            if (err) {
-                return err;
-            }
-        }
-        console.log(this.url, "updateSub", subID, filter);
-        return sub;
-    };
+    // updateSub = async (subID: string, filter: NostrFilters) => {
+    //     console.log(this.url, "updateSub", subID, filter);
+    //     {
+    //         const sub = this.subscriptionMap.get(subID);
+    //         if (sub == undefined) {
+    //             return this.newSub(subID, filter);
+    //         }
+    //     }
+    //     await this.closeSub(subID)
+    //     const sub = await this.newSub(subID, filter)
+    //     return sub;
+    // };
 
     // todo: add waitForOk back
     sendEvent = async (nostrEvent: NostrEvent) => {
@@ -196,9 +169,7 @@ export class SingleRelayConnection
         }
         const subscription = this.subscriptionMap.get(subID);
         if (subscription === undefined) {
-            throw Error(
-                `sub '${subID}' has been closed already`,
-            );
+            return;
         }
         // do not remove the channel from the map yet
         // because the relay might have send additional data before
@@ -206,12 +177,13 @@ export class SingleRelayConnection
         // we still need to channel these data in
         // csp.select -> ws.onMessage
         try {
-            await subscription.chan.close(`close sub ${subID}`);
+            await subscription.chan.close();
         } catch (e) {
             if (!(e instanceof csp.CloseChannelTwiceError)) {
                 throw e;
             }
         }
+        this.subscriptionMap.delete(subID);
     };
 
     close = async () => {
@@ -373,9 +345,7 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         if (this.subscriptionMap.has(subID)) {
             return new SubscriptionAlreadyExist(subID, filter, "relay pool");
         }
-        let results = csp.chan<{ res: RelayResponse_REQ_Message; url: string }>();
-        // @ts-ignore
-        results.name = `${Math.floor(Math.random() * 10)}`;
+        const results = csp.chan<{ res: RelayResponse_REQ_Message; url: string }>();
         for (let conn of this.connections.values()) {
             (async (relay: SingleRelayConnection) => {
                 const sub = await relay.newSub(subID, filter);
@@ -393,20 +363,21 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         return sub;
     }
 
-    async updateSub(subID: string, filter: NostrFilters) {
-        const sub = this.subscriptionMap.get(subID);
-        if (sub == undefined) {
-            return this.newSub(subID, filter);
-        }
-        sub.filter = filter;
-        for (const relay of this.connections.values()) {
-            const err = await relay.updateSub(subID, filter);
-            if (err instanceof Error) {
-                return err;
-            }
-        }
-        return sub;
-    }
+    // async updateSub(subID: string, filter: NostrFilters) {
+    //     const sub = this.subscriptionMap.get(subID);
+    //     if (sub == undefined) {
+    //         return this.newSub(subID, filter);
+    //     }
+    //     await this.closeSub(subID)
+    //     sub.filter = filter;
+    //     for (const relay of this.connections.values()) {
+    //         const err = await relay.updateSub(subID, filter);
+    //         if (err instanceof Error) {
+    //             return err;
+    //         }
+    //     }
+    //     return sub;
+    // }
 
     async sendEvent(nostrEvent: NostrEvent) {
         if (this.connections.size === 0) {
@@ -452,6 +423,7 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         if (subscription && subscription.chan.closed() == false) {
             await subscription.chan.close();
         }
+        this.subscriptionMap.delete(subID);
     }
     async close(): Promise<void> {
         this.closed = true;

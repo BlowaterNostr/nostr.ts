@@ -73,16 +73,24 @@ Deno.test("ConnectionPool newSub & close", async () => {
     );
 });
 
-Deno.test("ConnectionPool subscription already exist", async () => {
+Deno.test("ConnectionPool: open,close,open again | no relay", async () => {
     const pool = new ConnectionPool();
-    const subID = "1";
-    const chan = await pool.newSub(subID, { kinds: [0], limit: 1 });
-    if (chan instanceof Error) {
-        fail();
+    {
+        // open
+        const subID = "1";
+        const sub = await pool.newSub(subID, { kinds: [0], limit: 1 });
+        if (sub instanceof Error) fail(sub.message);
+        assertEquals(sub.chan.closed(), false);
+
+        // close
+        await pool.closeSub(subID);
+        assertEquals(sub.chan.closed(), true);
+
+        // open again
+        const sub2 = await pool.newSub(subID, { kinds: [0], limit: 1 });
+        if (sub2 instanceof Error) fail(sub2.message);
+        assertEquals(sub2.chan.closed(), false);
     }
-    await pool.closeSub(subID);
-    const chan2 = await pool.newSub(subID, { kinds: [0], limit: 1 });
-    assertInstanceOf(chan2, SubscriptionAlreadyExist);
     await pool.close();
 });
 
