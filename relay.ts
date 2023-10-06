@@ -1,4 +1,3 @@
-import { parseJSON } from "../../features/profile.ts";
 import {
     _RelayResponse,
     _RelayResponse_OK,
@@ -410,5 +409,13 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         for (const [subID, { chan }] of this.subscriptionMap.entries()) {
             await this.closeSub(subID);
         }
+    }
+}
+
+function parseJSON<T>(content: string): T | Error {
+    try {
+        return JSON.parse(content) as T;
+    } catch (e) {
+        return e as Error;
     }
 }
