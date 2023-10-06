@@ -1,3 +1,4 @@
+import { parseJSON } from "../../features/profile.ts";
 import {
     _RelayResponse,
     _RelayResponse_OK,
@@ -63,9 +64,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 for (; relay.isClosed() === false;) {
                     await csp.select([
                         [relay.ws.onMessage, async (wsMessage: MessageEvent) => {
-                            let relayResponse: _RelayResponse = JSON.parse(
+                            let relayResponse = parseJSON<_RelayResponse>(
                                 wsMessage.data,
                             );
+                            if (relayResponse instanceof Error) {
+                                console.error(relayResponse.message);
+                                return;
+                            }
 
                             if (
                                 relayResponse[0] === "EVENT" ||
