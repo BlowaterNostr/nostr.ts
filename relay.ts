@@ -63,9 +63,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 for (; relay.isClosed() === false;) {
                     await csp.select([
                         [relay.ws.onMessage, async (wsMessage: MessageEvent) => {
-                            let relayResponse: _RelayResponse = JSON.parse(
+                            let relayResponse = parseJSON<_RelayResponse>(
                                 wsMessage.data,
                             );
+                            if (relayResponse instanceof Error) {
+                                console.error(relayResponse.message);
+                                return;
+                            }
 
                             if (
                                 relayResponse[0] === "EVENT" ||
@@ -405,5 +409,13 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         for (const [subID, { chan }] of this.subscriptionMap.entries()) {
             await this.closeSub(subID);
         }
+    }
+}
+
+function parseJSON<T>(content: string): T | Error {
+    try {
+        return JSON.parse(content) as T;
+    } catch (e) {
+        return e as Error;
     }
 }

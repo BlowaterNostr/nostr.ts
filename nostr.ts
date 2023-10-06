@@ -12,7 +12,7 @@ export enum NostrKind {
     DELETE = 5,
     Custom_App_Data = 30078, // https://github.com/nostr-protocol/nips/blob/master/78.md
     Long_Form = 30023, // https://github.com/nostr-protocol/nips/blob/master/23.md
-    Group_Creation = 1000,
+    Group_Message = 1000,
 }
 
 export interface NostrFilters {
