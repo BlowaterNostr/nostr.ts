@@ -50,7 +50,7 @@ Deno.test("utf8 encrypt & decrypt", async (t) => {
         );
         const invalidIv64 = await ende.decrypt(pri2.hex, pub1.hex, "5l2hCloJ8iFAHpfr2UkuYg==");
         assertEquals(invalidIv64 instanceof Error, true);
-        assertEquals(invalidIv64.toString(), "Error: join.decode input should be string");
+        assertEquals(invalidIv64.toString(), "Error: failed to decode, Error: join.decode input should be string");
     });
 });
 
