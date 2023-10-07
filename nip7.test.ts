@@ -8,7 +8,10 @@ Deno.test("nip07", async () => {
 
     const f = await ctx.decrypt(ctx.publicKey.hex, "{}");
     if (f instanceof Error) {
-        assertEquals(f.message, "Invalid padding: string should have whole number of bytes");
+        assertEquals(
+            f.message,
+            "failed to decode, Error: Invalid padding: string should have whole number of bytes",
+        );
     } else {
         fail(`${f} should be an error`);
     }

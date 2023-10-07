@@ -44,7 +44,10 @@ Deno.test("utf8 encrypt & decrypt", async (t) => {
     await t.step("decrpt invalid content", async () => {
         const err = await ende.decrypt(pri2.hex, pub1.hex, "a random string");
         assertEquals(err instanceof Error, true);
-        assertEquals(err.toString(), "Error: Invalid padding: string should have whole number of bytes");
+        assertEquals(
+            err.toString(),
+            "Error: failed to decode, Error: Invalid padding: string should have whole number of bytes",
+        );
         const invalidIv64 = await ende.decrypt(pri2.hex, pub1.hex, "5l2hCloJ8iFAHpfr2UkuYg==");
         assertEquals(invalidIv64 instanceof Error, true);
         assertEquals(invalidIv64.toString(), "Error: join.decode input should be string");
