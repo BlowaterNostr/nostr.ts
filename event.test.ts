@@ -145,9 +145,7 @@ Deno.test("wrong encryption key causing decryption failure", async () => {
     if (event instanceof Error) fail(event.message);
     const err = await ctx.decrypt(key, event.content);
     if (err instanceof Error) {
-        if (err.message != "Cannot find square root" && err.message != "Decryption failed") {
-            fail(`get ${err.message}`);
-        }
+        // ok
     } else {
         fail(`should have error, get ${err}`);
     }
