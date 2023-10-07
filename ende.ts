@@ -61,7 +61,7 @@ export async function decrypt_with_shared_secret(
         ciphertext = base64.decode(ctb64);
         iv = base64.decode(ivb64);
     } catch (e) {
-        return e;
+        return new Error(`failed to decode, ${e}`);
     }
 
     try {
@@ -73,7 +73,7 @@ export async function decrypt_with_shared_secret(
         const text = utf8Decode(plaintext);
         return text;
     } catch (e) {
-        return e as Error;
+        return new Error(`failed to decrypt, ${e}`);
     }
 }
 
