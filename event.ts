@@ -8,15 +8,15 @@ import {
     UnsignedNostrEvent,
 } from "./nostr.ts";
 
-export async function prepareEncryptedNostrEvent(
+export async function prepareEncryptedNostrEvent<T extends NostrKind>(
     sender: NostrAccountContext,
     args: {
         encryptKey: PublicKey;
-        kind: NostrKind;
+        kind: T;
         tags: Tag[];
         content: string;
     },
-): Promise<NostrEvent | Error> {
+): Promise<NostrEvent<T> | Error> {
     const encrypted = await sender.encrypt(args.encryptKey.hex, args.content);
     if (encrypted instanceof Error) {
         return encrypted;
