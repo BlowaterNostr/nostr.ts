@@ -287,7 +287,7 @@ export class InMemoryAccountContext implements NostrAccountContext {
 
     async encrypt(pubkey: string, plaintext: string): Promise<string> {
         return encrypt(pubkey, plaintext, this.privateKey.hex);
-    };
+    }
 
     async decrypt(decryptionPublicKey: string, ciphertext: string): Promise<string | Error> {
         let key = this.sharedSecretsMap.get(decryptionPublicKey);
@@ -300,7 +300,7 @@ export class InMemoryAccountContext implements NostrAccountContext {
             this.sharedSecretsMap.set(decryptionPublicKey, key);
         }
         return decrypt_with_shared_secret(ciphertext, key);
-    };
+    }
 }
 
 export async function verifyEvent(event: NostrEvent) {
