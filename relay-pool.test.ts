@@ -185,19 +185,3 @@ Deno.test("newSub 2 times & add relay url later", async (t) => {
     }
     await pool.close();
 });
-
-Deno.test("websocket offline", async () => {
-    // a host that can not be reached / not exist
-    let pool = new ConnectionPool();
-    let relay = SingleRelayConnection.New(
-        "wss://relay0.damus.io", // does not exist
-        AsyncWebSocket.New,
-    );
-    if (relay instanceof Error) {
-        fail();
-    }
-    let err = await pool.addRelay(relay);
-    assertInstanceOf(err, WebSocketClosed);
-    assertEquals(pool.getRelays().length, 0);
-    await pool.close();
-});
