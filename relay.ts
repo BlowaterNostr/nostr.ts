@@ -80,10 +80,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                                     subID,
                                 );
                                 if (subscription === undefined) {
-                                    // possible solution: could close the sub
-                                    throw Error(
-                                        `${subID} should not exist in the relay or the client forgot to send ["Close", ${subID}]`,
-                                    );
+                                    return; // the subscription has been closed locally before receiving remote messages
                                 }
                                 const chan = subscription.chan;
                                 if (chan.closed()) {
@@ -381,7 +378,7 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
             this.connections.delete(relay.url);
             const err = await this.addRelay(relay);
             if (err instanceof Error) {
-                throw err; // should never happen
+                return err; // should never happen
             }
         }
     }

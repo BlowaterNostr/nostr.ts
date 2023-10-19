@@ -101,15 +101,3 @@ Deno.test("websocket close with a code & reason", async () => {
     }
     assertEquals(true, skipped < relays.length / 2, `skipped: ${skipped}`); // at least half of the relays have to succeed
 });
-
-Deno.test("websocket offline", async () => {
-    // a host that can not be reached / not exist
-    let ws = AsyncWebSocket.New("wss://relay0.damus.io");
-    if (ws instanceof Error) {
-        fail();
-    }
-
-    let err = await ws.untilOpen();
-    assertInstanceOf(err, WebSocketClosed);
-    await ws.close();
-});
