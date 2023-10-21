@@ -11,7 +11,6 @@ import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 export class SubscriptionAlreadyExist extends Error {
-    // breaking-todo: remove filter
     constructor(public subID: string, public filter: NostrFilters, public url: string) {
         super(`subscription '${subID}' already exists for ${url}`);
     }
