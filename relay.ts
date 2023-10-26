@@ -14,14 +14,11 @@ import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master
 export class WebSocketClosed extends Error {}
 
 export type AsyncWebSocketInterface = {
-    onMessage: Channel<MessageEvent>;
+    nextMessage(): Promise<MessageEvent | WebSocketClosed>;
     onError: Channel<Event>;
     onClose: Channel<CloseEvent>;
     send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
-    close: (
-        code?: number,
-        reason?: string,
-    ) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
+    close: (code?: number, reason?: string) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
     isClosedOrClosing(): boolean;
     untilOpen(): Promise<WebSocketClosed | undefined>;
     status(): WebSocketReadyState;
@@ -76,7 +73,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
             let relay = new SingleRelayConnection(url, ws);
             (async () => {
-                for await (const wsMessage of relay.ws.onMessage) {
+                for (;;) {
+                    const wsMessage = await relay.ws.nextMessage();
+                    if (wsMessage instanceof WebSocketClosed) {
+                        console.log(wsMessage); // todo: reconnection logic here
+                        return;
+                    }
                     let relayResponse = parseJSON<_RelayResponse>(
                         wsMessage.data,
                     );

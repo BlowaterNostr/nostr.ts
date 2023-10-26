@@ -8,7 +8,7 @@ export enum CloseReason {
 
 export class AsyncWebSocket implements AsyncWebSocketInterface {
     public readonly isSocketOpen = csp.chan<Event>();
-    public readonly onMessage = csp.chan<MessageEvent>();
+    private readonly onMessage = csp.chan<MessageEvent>();
     public readonly onError = csp.chan<Event>();
     public readonly onClose = csp.chan<CloseEvent>();
 
@@ -46,6 +46,14 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
             await this.onClose.put(event);
             await this.onClose.close(`ws ${this.url} is closed`);
         };
+    }
+
+    async nextMessage(): Promise<WebSocketClosed | MessageEvent> {
+        const msg = await this.onMessage.pop();
+        if (msg == csp.closed) {
+            return new WebSocketClosed();
+        }
+        return msg;
     }
 
     send = async (str: string | ArrayBufferLike | Blob | ArrayBufferView) => {
