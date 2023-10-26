@@ -118,10 +118,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                                 console.log(url, wsMessage.data); // NOTICE, OK and other non-standard response types
                             }
                         }],
-                        [relay.ws.onError, async (event: Event) => {
-                            console.log(url, "error");
-                        }],
                     ]);
+                }
+            })();
+            (async () => {
+                for await (const event of relay.ws.onError) {
+                    console.log(url, "error", event);
                 }
             })();
             return relay;
