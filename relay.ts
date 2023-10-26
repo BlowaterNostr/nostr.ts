@@ -1,3 +1,4 @@
+import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import {
     _RelayResponse,
     _RelayResponse_OK,
@@ -7,8 +8,23 @@ import {
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
-import { AsyncWebSocket, AsyncWebSocketInterface, WebSocketClosed } from "./websocket.ts";
+import { AsyncWebSocket, CloseTwice } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+
+export class WebSocketClosed extends Error {}
+
+export type AsyncWebSocketInterface = {
+    onMessage: Channel<MessageEvent>;
+    onError: Channel<Event>;
+    onClose: Channel<CloseEvent>;
+    send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
+    close: (
+        code?: number,
+        reason?: string,
+    ) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
+    isClosedOrClosing(): boolean;
+    untilOpen(): Promise<WebSocketClosed | undefined>;
+};
 
 export class SubscriptionAlreadyExist extends Error {
     constructor(public subID: string, public filter: NostrFilters, public url: string) {
