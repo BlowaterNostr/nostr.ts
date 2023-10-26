@@ -118,7 +118,7 @@ Deno.test("auto reconnection", async () => {
 Deno.test("send event", async () => {
     const relay = SingleRelayConnection.New(blowater);
     if (relay instanceof Error) fail(relay.message);
-    
+
     {
         const err = relay.sendEvent(
             await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
