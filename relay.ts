@@ -19,7 +19,6 @@ export type AsyncWebSocketInterface = {
     onClose: Channel<CloseEvent>;
     send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
     close: (code?: number, reason?: string) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
-    isClosedOrClosing(): boolean;
     untilOpen(): Promise<WebSocketClosed | undefined>;
     status(): WebSocketReadyState;
 };
@@ -198,7 +197,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     isClosed(): boolean {
-        return this.ws.isClosedOrClosing();
+        return this.ws.status() == "Closed" || this.ws.status() == "Closing";
     }
 
     untilOpen = async () => {

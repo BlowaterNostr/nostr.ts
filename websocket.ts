@@ -83,11 +83,6 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
         return await this.onClose.pop();
     };
 
-    public isClosedOrClosing(): boolean {
-        return this.ws.readyState == WebSocket.CLOSED ||
-            this.ws.readyState == WebSocket.CLOSING;
-    }
-
     // only unblocks when the socket is open
     // if the socket is closed or closing, blocks forever
     async untilOpen() {
