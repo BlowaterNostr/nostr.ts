@@ -15,20 +15,19 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
     static New(url: string): AsyncWebSocket | Error {
         try {
             const ws = new WebSocket(url); // could throw, caller should catch it, not part of the MDN doc
-            return new AsyncWebSocket(url, ws);
+            return new AsyncWebSocket(ws);
         } catch (err) {
             return err;
         }
     }
 
     private constructor(
-        public readonly url: string,
         private readonly ws: WebSocket,
     ) {
         this.ws.onopen = async (event: Event) => {
-            console.log(url, "openned");
+            console.log(ws.url, "openned");
             await this.isSocketOpen.put(event);
-            await this.isSocketOpen.close(`ws ${url} is open`);
+            await this.isSocketOpen.close(`ws ${ws.url} is open`);
         };
 
         this.ws.onmessage = (event: MessageEvent) => {
@@ -37,14 +36,14 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
 
         // @ts-ignore para type should be ErrorEvent
         this.ws.onerror = (event: ErrorEvent) => {
-            console.log(url, "error", event.message);
+            console.log(ws.url, "error", event.message);
             this.onError.put(event);
         };
 
         this.ws.onclose = async (event: CloseEvent) => {
-            console.log(url, "closed", event.code, event.reason);
+            console.log(ws.url, "closed", event.code, event.reason);
             await this.onClose.put(event);
-            await this.onClose.close(`ws ${this.url} is closed`);
+            await this.onClose.close(`ws ${ws.url} is closed`);
         };
     }
 
@@ -76,9 +75,9 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
             this.ws.readyState == WebSocket.CLOSED ||
             this.ws.readyState == WebSocket.CLOSING
         ) {
-            return new CloseTwice(this.url);
+            return new CloseTwice(this.ws.url);
         }
-        console.log("closing", this.url);
+        console.log("closing", this.ws.url);
         this.ws.close(code, reason);
         return await this.onClose.pop();
     };
@@ -91,7 +90,7 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
             this.ws.readyState === WebSocket.CLOSING
         ) {
             return new WebSocketClosed(
-                `${this.url} has been closed, can't wait for it to open`,
+                `${this.ws.url} has been closed, can't wait for it to open`,
             );
         } else if (this.ws.readyState === WebSocket.OPEN) {
             return;
@@ -102,7 +101,7 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
             ]);
             if (!isOpen) {
                 return new WebSocketClosed(
-                    `${this.url} has been closed, can't wait for it to open`,
+                    `${this.ws.url} has been closed, can't wait for it to open`,
                 );
             }
             return;

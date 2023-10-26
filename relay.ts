@@ -74,7 +74,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 for (;;) {
                     const wsMessage = await relay.ws.nextMessage();
                     if (wsMessage instanceof WebSocketClosed) {
-                        console.log(wsMessage); // todo: reconnection logic here
+                        if (relay.ws.status() != "Closed") {
+                            console.log(wsMessage);
+                        }
+                        // todo: reconnection logic here
                         return;
                     }
                     let relayResponse = parseJSON<_RelayResponse>(
@@ -120,7 +123,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             })();
             (async () => {
                 for await (const event of relay.ws.onError) {
-                    console.log(url, "error", event);
+                    console.log(url, event);
                 }
             })();
             return relay;
