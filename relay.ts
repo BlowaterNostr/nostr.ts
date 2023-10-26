@@ -1,3 +1,4 @@
+import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import {
     _RelayResponse,
     _RelayResponse_OK,
@@ -7,8 +8,24 @@ import {
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
-import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
+import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+
+export class WebSocketClosed extends Error {}
+
+export type AsyncWebSocketInterface = {
+    onMessage: Channel<MessageEvent>;
+    onError: Channel<Event>;
+    onClose: Channel<CloseEvent>;
+    send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
+    close: (
+        code?: number,
+        reason?: string,
+    ) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
+    isClosedOrClosing(): boolean;
+    untilOpen(): Promise<WebSocketClosed | undefined>;
+    status(): WebSocketReadyState;
+};
 
 export class SubscriptionAlreadyExist extends Error {
     constructor(public subID: string, public filter: NostrFilters, public url: string) {
@@ -39,12 +56,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private constructor(
         readonly url: string,
-        readonly ws: AsyncWebSocket,
+        readonly ws: AsyncWebSocketInterface,
     ) {}
 
     public static New(
         url: string,
-        wsCreator?: (url: string) => AsyncWebSocket | Error,
+        wsCreator?: (url: string) => AsyncWebSocketInterface | Error,
     ): SingleRelayConnection | Error {
         try {
             if (!url.startsWith("wss://") && !url.startsWith("ws://")) {
@@ -59,53 +76,51 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
             let relay = new SingleRelayConnection(url, ws);
             (async () => {
-                for (; relay.isClosed() === false;) {
-                    await csp.select([
-                        [relay.ws.onMessage, async (wsMessage: MessageEvent) => {
-                            let relayResponse = parseJSON<_RelayResponse>(
-                                wsMessage.data,
-                            );
-                            if (relayResponse instanceof Error) {
-                                console.error(relayResponse.message);
-                                return;
-                            }
+                for await (const wsMessage of relay.ws.onMessage) {
+                    let relayResponse = parseJSON<_RelayResponse>(
+                        wsMessage.data,
+                    );
+                    if (relayResponse instanceof Error) {
+                        console.error(relayResponse.message);
+                        return;
+                    }
 
-                            if (
-                                relayResponse[0] === "EVENT" ||
-                                relayResponse[0] === "EOSE"
-                            ) {
-                                let subID = relayResponse[1];
-                                let subscription = relay.subscriptionMap.get(
-                                    subID,
-                                );
-                                if (subscription === undefined) {
-                                    return; // the subscription has been closed locally before receiving remote messages
-                                }
-                                const chan = subscription.chan;
-                                if (chan.closed()) {
-                                    console.log(url, subID, "has been closed", chan.closed());
-                                } else {
-                                    if (relayResponse[0] === "EOSE") {
-                                        chan.put({
-                                            type: relayResponse[0],
-                                            subID: relayResponse[1],
-                                        });
-                                    } else {
-                                        chan.put({
-                                            type: relayResponse[0],
-                                            subID: relayResponse[1],
-                                            event: relayResponse[2],
-                                        });
-                                    }
-                                }
+                    if (
+                        relayResponse[0] === "EVENT" ||
+                        relayResponse[0] === "EOSE"
+                    ) {
+                        let subID = relayResponse[1];
+                        let subscription = relay.subscriptionMap.get(
+                            subID,
+                        );
+                        if (subscription === undefined) {
+                            return; // the subscription has been closed locally before receiving remote messages
+                        }
+                        const chan = subscription.chan;
+                        if (chan.closed()) {
+                            console.log(url, subID, "has been closed", chan.closed());
+                        } else {
+                            if (relayResponse[0] === "EOSE") {
+                                chan.put({
+                                    type: relayResponse[0],
+                                    subID: relayResponse[1],
+                                });
                             } else {
-                                console.log(url, wsMessage.data); // NOTICE, OK and other non-standard response types
+                                chan.put({
+                                    type: relayResponse[0],
+                                    subID: relayResponse[1],
+                                    event: relayResponse[2],
+                                });
                             }
-                        }],
-                        [relay.ws.onError, async (event: Event) => {
-                            console.log(url, "error");
-                        }],
-                    ]);
+                        }
+                    } else {
+                        console.log(url, wsMessage.data); // NOTICE, OK and other non-standard response types
+                    }
+                }
+            })();
+            (async () => {
+                for await (const event of relay.ws.onError) {
+                    console.log(url, "error", event);
                 }
             })();
             return relay;

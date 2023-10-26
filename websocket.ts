@@ -1,25 +1,10 @@
 // deno-lint-ignore-file no-explicit-any no-unused-vars require-await ban-unused-ignore
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { AsyncWebSocketInterface, WebSocketClosed } from "./relay.ts";
 
 export enum CloseReason {
     ByClient = 4000,
 }
-
-export class WebSocketClosed extends Error {}
-
-export type AsyncWebSocketInterface = {
-    isSocketOpen: Channel<Event>;
-    onMessage: Channel<MessageEvent>;
-    onError: Channel<Event>;
-    onClose: Channel<CloseEvent>;
-    send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | void>;
-    close: (
-        code?: number,
-        reason?: string,
-    ) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
-    isClosedOrClosing(): boolean;
-};
 
 export class AsyncWebSocket implements AsyncWebSocketInterface {
     public readonly isSocketOpen = csp.chan<Event>();
@@ -97,7 +82,7 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
 
     // only unblocks when the socket is open
     // if the socket is closed or closing, blocks forever
-    untilOpen = async () => {
+    async untilOpen() {
         if (
             this.ws.readyState === WebSocket.CLOSED ||
             this.ws.readyState === WebSocket.CLOSING
@@ -124,7 +109,7 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
         throw new Error(
             `readyState:${this.ws.readyState}, should be ${WebSocket.CONNECTING}`,
         );
-    };
+    }
 
     status = (): WebSocketReadyState => {
         switch (this.ws.readyState) {

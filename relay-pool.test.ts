@@ -12,7 +12,7 @@ import {
     SingleRelayConnection,
     SubscriptionAlreadyExist,
 } from "./relay.ts";
-import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
+import { AsyncWebSocket } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {

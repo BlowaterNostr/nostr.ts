@@ -1,4 +1,4 @@
-import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import { assertEquals, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { NostrEvent } from "./nostr.ts";
 import { relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay.ts";
