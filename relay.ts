@@ -75,50 +75,46 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
             let relay = new SingleRelayConnection(url, ws);
             (async () => {
-                for (; relay.isClosed() === false;) {
-                    await csp.select([
-                        [relay.ws.onMessage, async (wsMessage: MessageEvent) => {
-                            let relayResponse = parseJSON<_RelayResponse>(
-                                wsMessage.data,
-                            );
-                            if (relayResponse instanceof Error) {
-                                console.error(relayResponse.message);
-                                return;
-                            }
+                for await (const wsMessage of relay.ws.onMessage) {
+                    let relayResponse = parseJSON<_RelayResponse>(
+                        wsMessage.data,
+                    );
+                    if (relayResponse instanceof Error) {
+                        console.error(relayResponse.message);
+                        return;
+                    }
 
-                            if (
-                                relayResponse[0] === "EVENT" ||
-                                relayResponse[0] === "EOSE"
-                            ) {
-                                let subID = relayResponse[1];
-                                let subscription = relay.subscriptionMap.get(
-                                    subID,
-                                );
-                                if (subscription === undefined) {
-                                    return; // the subscription has been closed locally before receiving remote messages
-                                }
-                                const chan = subscription.chan;
-                                if (chan.closed()) {
-                                    console.log(url, subID, "has been closed", chan.closed());
-                                } else {
-                                    if (relayResponse[0] === "EOSE") {
-                                        chan.put({
-                                            type: relayResponse[0],
-                                            subID: relayResponse[1],
-                                        });
-                                    } else {
-                                        chan.put({
-                                            type: relayResponse[0],
-                                            subID: relayResponse[1],
-                                            event: relayResponse[2],
-                                        });
-                                    }
-                                }
+                    if (
+                        relayResponse[0] === "EVENT" ||
+                        relayResponse[0] === "EOSE"
+                    ) {
+                        let subID = relayResponse[1];
+                        let subscription = relay.subscriptionMap.get(
+                            subID,
+                        );
+                        if (subscription === undefined) {
+                            return; // the subscription has been closed locally before receiving remote messages
+                        }
+                        const chan = subscription.chan;
+                        if (chan.closed()) {
+                            console.log(url, subID, "has been closed", chan.closed());
+                        } else {
+                            if (relayResponse[0] === "EOSE") {
+                                chan.put({
+                                    type: relayResponse[0],
+                                    subID: relayResponse[1],
+                                });
                             } else {
-                                console.log(url, wsMessage.data); // NOTICE, OK and other non-standard response types
+                                chan.put({
+                                    type: relayResponse[0],
+                                    subID: relayResponse[1],
+                                    event: relayResponse[2],
+                                });
                             }
-                        }],
-                    ]);
+                        }
+                    } else {
+                        console.log(url, wsMessage.data); // NOTICE, OK and other non-standard response types
+                    }
                 }
             })();
             (async () => {
