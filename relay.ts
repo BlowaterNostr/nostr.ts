@@ -14,13 +14,12 @@ import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master
 export class WebSocketClosed extends Error {}
 
 export type AsyncWebSocketInterface = {
+    status(): WebSocketReadyState;
+    untilOpen(): Promise<WebSocketClosed | undefined>;
     nextMessage(): Promise<MessageEvent | WebSocketClosed>;
     onError: Channel<Event>;
-    onClose: Channel<CloseEvent>;
     send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
     close: (code?: number, reason?: string) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
-    untilOpen(): Promise<WebSocketClosed | undefined>;
-    status(): WebSocketReadyState;
 };
 
 export class SubscriptionAlreadyExist extends Error {

@@ -7,10 +7,10 @@ export enum CloseReason {
 }
 
 export class AsyncWebSocket implements AsyncWebSocketInterface {
-    public readonly isSocketOpen = csp.chan<Event>();
-    private readonly onMessage = csp.chan<MessageEvent>();
     public readonly onError = csp.chan<Event>();
-    public readonly onClose = csp.chan<CloseEvent>();
+    private readonly isSocketOpen = csp.chan<Event>();
+    private readonly onMessage = csp.chan<MessageEvent>();
+    private readonly onClose = csp.chan<CloseEvent>();
 
     static New(url: string): AsyncWebSocket | Error {
         try {
