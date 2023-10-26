@@ -15,7 +15,10 @@ import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/maste
 
 Deno.test("Verify Event", async (t) => {
     let pri = PrivateKey.Generate();
-    let event = await prepareNormalNostrEvent(InMemoryAccountContext.New(pri), 1, [], "");
+    let event = await prepareNormalNostrEvent(InMemoryAccountContext.New(pri), {
+        kind: NostrKind.TEXT_NOTE,
+        content: "",
+    });
     let ok = await verifyEvent(event);
     assertEquals(ok, true);
 

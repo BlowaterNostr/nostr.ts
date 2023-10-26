@@ -14,17 +14,12 @@ import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master
 export class WebSocketClosed extends Error {}
 
 export type AsyncWebSocketInterface = {
-    onMessage: Channel<MessageEvent>;
-    onError: Channel<Event>;
-    onClose: Channel<CloseEvent>;
-    send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
-    close: (
-        code?: number,
-        reason?: string,
-    ) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
-    isClosedOrClosing(): boolean;
-    untilOpen(): Promise<WebSocketClosed | undefined>;
     status(): WebSocketReadyState;
+    untilOpen(): Promise<WebSocketClosed | undefined>;
+    nextMessage(): Promise<MessageEvent | WebSocketClosed>;
+    onError: Channel<Event>;
+    send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
+    close: (code?: number, reason?: string) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
 };
 
 export class SubscriptionAlreadyExist extends Error {
@@ -76,7 +71,15 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
             let relay = new SingleRelayConnection(url, ws);
             (async () => {
-                for await (const wsMessage of relay.ws.onMessage) {
+                for (;;) {
+                    const wsMessage = await relay.ws.nextMessage();
+                    if (wsMessage instanceof WebSocketClosed) {
+                        if (relay.ws.status() != "Closed") {
+                            console.log(wsMessage);
+                        }
+                        // todo: reconnection logic here
+                        return;
+                    }
                     let relayResponse = parseJSON<_RelayResponse>(
                         wsMessage.data,
                     );
@@ -120,7 +123,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             })();
             (async () => {
                 for await (const event of relay.ws.onError) {
-                    console.log(url, "error", event);
+                    console.log(url, event);
                 }
             })();
             return relay;
@@ -196,7 +199,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     isClosed(): boolean {
-        return this.ws.isClosedOrClosing();
+        return this.ws.status() == "Closed" || this.ws.status() == "Closing";
     }
 
     untilOpen = async () => {

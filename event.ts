@@ -23,25 +23,29 @@ export async function prepareEncryptedNostrEvent<T extends NostrKind>(
     }
     return prepareNormalNostrEvent(
         sender,
-        args.kind,
-        args.tags,
-        encrypted,
+        {
+            kind: args.kind,
+            tags: args.tags,
+            content: encrypted,
+        },
     );
 }
 
 export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind>(
     sender: NostrAccountContext,
-    kind: Kind,
-    tags: Tag[],
-    content: string,
+    args: {
+        kind: Kind;
+        content: string;
+        tags?: Tag[];
+        created_at?: number;
+    },
 ): Promise<NostrEvent<Kind>> {
-    // prepare nostr event
     const event: UnsignedNostrEvent<Kind> = {
-        created_at: Math.floor(Date.now() / 1000),
-        kind: kind,
+        created_at: args.created_at ? args.created_at : Math.floor(Date.now() / 1000),
+        kind: args.kind,
         pubkey: sender.publicKey.hex,
-        tags: tags,
-        content,
+        tags: args.tags || [],
+        content: args.content,
     };
     return sender.signEvent<Kind>(event);
 }

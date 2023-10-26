@@ -1,8 +1,15 @@
 import { assertEquals, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
-import { NostrEvent } from "./nostr.ts";
-import { relays } from "./relay-list.test.ts";
-import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay.ts";
-import { AsyncWebSocket } from "./websocket.ts";
+import { InMemoryAccountContext, NostrEvent, NostrKind } from "./nostr.ts";
+import { blowater, relays } from "./relay-list.test.ts";
+import {
+    AsyncWebSocketInterface,
+    SingleRelayConnection,
+    SubscriptionAlreadyExist,
+    WebSocketClosed,
+} from "./relay.ts";
+import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
+import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { prepareNormalNostrEvent } from "./event.ts";
 
 Deno.test("SingleRelayConnection open & close", async () => {
     const ps = [];
@@ -73,6 +80,53 @@ Deno.test("SingleRelayConnection: close subscription and keep reading", async ()
         }
         await relay.closeSub(subID);
         assertEquals(sub.chan.closed(), true);
+    }
+    await relay.close();
+});
+
+Deno.test("auto reconnection", async () => {
+    let _state: WebSocketReadyState = "Open";
+    const ws: AsyncWebSocketInterface = {
+        async close() {
+            _state = "Closed";
+            return new CloseTwice("");
+        },
+        async nextMessage() {
+            return new WebSocketClosed();
+        },
+        onError: new Channel(),
+        async send() {
+            return new WebSocketClosed();
+        },
+        status() {
+            return _state;
+        },
+        async untilOpen() {
+            return new WebSocketClosed();
+        },
+    };
+    const relay = SingleRelayConnection.New("", () => {
+        return ws;
+    });
+    if (relay instanceof Error) fail(relay.message);
+    assertEquals(relay.isClosed(), false);
+    await ws.close();
+    assertEquals(relay.isClosed(), true);
+    assertEquals(relay.isClosedByClient, false);
+});
+
+Deno.test("send event", async () => {
+    const relay = SingleRelayConnection.New(blowater);
+    if (relay instanceof Error) fail(relay.message);
+
+    {
+        const err = relay.sendEvent(
+            await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+                content: "",
+                kind: NostrKind.TEXT_NOTE,
+            }),
+        );
+        if (err instanceof Error) fail(err.message);
     }
     await relay.close();
 });
