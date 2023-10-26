@@ -24,7 +24,7 @@ export type AsyncWebSocketInterface = {
     ) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
     isClosedOrClosing(): boolean;
     untilOpen(): Promise<WebSocketClosed | undefined>;
-    status(): WebSocketReadyState
+    status(): WebSocketReadyState;
 };
 
 export class SubscriptionAlreadyExist extends Error {
