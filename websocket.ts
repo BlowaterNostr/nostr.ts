@@ -11,6 +11,7 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
     private readonly isSocketOpen = csp.chan<Event>();
     private readonly onMessage = csp.chan<MessageEvent>();
     private readonly onClose = csp.chan<CloseEvent>();
+    public readonly url: string;
 
     static New(url: string): AsyncWebSocket | Error {
         try {
@@ -24,8 +25,9 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
     private constructor(
         private readonly ws: WebSocket,
     ) {
+        this.url = ws.url
         this.ws.onopen = async (event: Event) => {
-            console.log(ws.url, "openned");
+            console.log(ws.url, "openned", event);
             await this.isSocketOpen.put(event);
             await this.isSocketOpen.close(`ws ${ws.url} is open`);
         };
