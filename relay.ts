@@ -8,7 +8,7 @@ import {
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
-import { AsyncWebSocket, CloseTwice } from "./websocket.ts";
+import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 export class WebSocketClosed extends Error {}
@@ -24,6 +24,7 @@ export type AsyncWebSocketInterface = {
     ) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
     isClosedOrClosing(): boolean;
     untilOpen(): Promise<WebSocketClosed | undefined>;
+    status(): WebSocketReadyState
 };
 
 export class SubscriptionAlreadyExist extends Error {
