@@ -1,6 +1,5 @@
 // deno-lint-ignore-file no-explicit-any no-unused-vars require-await ban-unused-ignore
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { AsyncWebSocketInterface, WebSocketClosed } from "./relay.ts";
 
 export enum CloseReason {
