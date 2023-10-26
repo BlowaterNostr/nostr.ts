@@ -7,7 +7,7 @@ import {
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
-import { AsyncWebSocket, WebSocketClosed } from "./websocket.ts";
+import { AsyncWebSocket, AsyncWebSocketInterface, WebSocketClosed } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 export class SubscriptionAlreadyExist extends Error {
@@ -39,12 +39,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private constructor(
         readonly url: string,
-        readonly ws: AsyncWebSocket,
+        readonly ws: AsyncWebSocketInterface,
     ) {}
 
     public static New(
         url: string,
-        wsCreator?: (url: string) => AsyncWebSocket | Error,
+        wsCreator?: (url: string) => AsyncWebSocketInterface | Error,
     ): SingleRelayConnection | Error {
         try {
             if (!url.startsWith("wss://") && !url.startsWith("ws://")) {

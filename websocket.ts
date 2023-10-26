@@ -9,16 +9,16 @@ export enum CloseReason {
 export class WebSocketClosed extends Error {}
 
 export type AsyncWebSocketInterface = {
-    isSocketOpen: Channel<Event>;
     onMessage: Channel<MessageEvent>;
     onError: Channel<Event>;
     onClose: Channel<CloseEvent>;
-    send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | void>;
+    send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
     close: (
         code?: number,
         reason?: string,
     ) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
     isClosedOrClosing(): boolean;
+    untilOpen(): Promise<WebSocketClosed | undefined>;
 };
 
 export class AsyncWebSocket implements AsyncWebSocketInterface {
@@ -97,7 +97,7 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
 
     // only unblocks when the socket is open
     // if the socket is closed or closing, blocks forever
-    untilOpen = async () => {
+    async untilOpen() {
         if (
             this.ws.readyState === WebSocket.CLOSED ||
             this.ws.readyState === WebSocket.CLOSING
@@ -124,7 +124,7 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
         throw new Error(
             `readyState:${this.ws.readyState}, should be ${WebSocket.CONNECTING}`,
         );
-    };
+    }
 
     status = (): WebSocketReadyState => {
         switch (this.ws.readyState) {
