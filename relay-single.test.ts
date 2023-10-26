@@ -1,6 +1,6 @@
 import { assertEquals, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
-import { NostrEvent } from "./nostr.ts";
-import { relays } from "./relay-list.test.ts";
+import { InMemoryAccountContext, NostrEvent, NostrKind } from "./nostr.ts";
+import { blowater, relays } from "./relay-list.test.ts";
 import {
     AsyncWebSocketInterface,
     SingleRelayConnection,
@@ -9,6 +9,7 @@ import {
 } from "./relay.ts";
 import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { prepareNormalNostrEvent } from "./event.ts";
 
 Deno.test("SingleRelayConnection open & close", async () => {
     const ps = [];
@@ -112,4 +113,19 @@ Deno.test("auto reconnection", async () => {
     await ws.close();
     assertEquals(relay.isClosed(), true);
     assertEquals(relay.isClosedByClient, false);
+});
+
+Deno.test("send event", async () => {
+    const relay = SingleRelayConnection.New(blowater);
+    if (relay instanceof Error) fail(relay.message);
+
+    {
+        const err = relay.sendEvent(
+            await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+                content: "",
+                kind: NostrKind.TEXT_NOTE,
+            }),
+        );
+    }
+    await relay.close();
 });
