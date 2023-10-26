@@ -25,7 +25,7 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
     private constructor(
         private readonly ws: WebSocket,
     ) {
-        this.url = ws.url
+        this.url = ws.url;
         this.ws.onopen = async (event: Event) => {
             console.log(ws.url, "openned", event);
             await this.isSocketOpen.put(event);
