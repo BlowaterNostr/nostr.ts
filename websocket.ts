@@ -24,10 +24,13 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
 
     private constructor(
         private readonly ws: WebSocket,
+        public log?: boolean,
     ) {
         this.url = ws.url;
         this.ws.onopen = async (event: Event) => {
-            console.log(ws.url, "openned", event);
+            if (log) {
+                console.log(ws.url, "openned", event);
+            }
             await this.isSocketOpen.put(event);
             await this.isSocketOpen.close(`ws ${ws.url} is open`);
         };
@@ -43,7 +46,9 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
         };
 
         this.ws.onclose = async (event: CloseEvent) => {
-            console.log(ws.url, "closed", event.code, event.reason);
+            if (this.log) {
+                console.log(ws.url, "closed", event.code, event.reason);
+            }
             await this.onClose.put(event);
             await this.onClose.close(`ws ${ws.url} is closed`);
         };
@@ -79,7 +84,6 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
         ) {
             return new CloseTwice(this.ws.url);
         }
-        console.log("closing", this.ws.url);
         this.ws.close(code, reason);
         return await this.onClose.pop();
     };

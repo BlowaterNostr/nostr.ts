@@ -32,7 +32,8 @@ async function main() {
         if (err instanceof Error) {
             return err;
         }
-        // todo: getEventByID()
+        const event = await pool.getEvent(eventID.hex);
+        console.log(event);
         await pool.close();
     } else if (["h", "help", "-h", "-help", "--help"]) {
         console.log("nostr keygen - generate key pairs");

@@ -1,6 +1,7 @@
 A strongly typed, fast nostr client protocol implementation.
 
 #### CLI
+
 ```
 deno install https://raw.githubusercontent.com/BlowaterNostr/nostr.ts/main/cli/nostr.ts
 ```

@@ -10,6 +10,7 @@ import {
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
 import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { NoteID } from "./nip19.ts";
 
 export class WebSocketClosed extends Error {}
 
@@ -52,11 +53,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     private constructor(
         readonly url: string,
         readonly ws: AsyncWebSocketInterface,
+        public log: boolean,
     ) {}
 
     public static New(
         url: string,
         wsCreator?: (url: string) => AsyncWebSocketInterface | Error,
+        log?: boolean,
     ): SingleRelayConnection | Error {
         try {
             if (!url.startsWith("wss://") && !url.startsWith("ws://")) {
@@ -69,7 +72,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (ws instanceof Error) {
                 return ws;
             }
-            let relay = new SingleRelayConnection(url, ws);
+            let relay = new SingleRelayConnection(url, ws, log || false);
             (async () => {
                 for (;;) {
                     const wsMessage = await relay.ws.nextMessage();
@@ -101,7 +104,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         }
                         const chan = subscription.chan;
                         if (chan.closed()) {
-                            console.log(url, subID, "has been closed", chan.closed());
+                            if (log) {
+                                console.log(url, subID, "has been closed", chan.closed());
+                            }
                         } else {
                             if (relayResponse[0] === "EOSE") {
                                 chan.put({
@@ -117,24 +122,27 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             }
                         }
                     } else {
-                        console.log(url, wsMessage.data); // NOTICE, OK and other non-standard response types
+                        if (log) {
+                            console.log(url, wsMessage.data); // NOTICE, OK and other non-standard response types
+                        }
                     }
                 }
             })();
             (async () => {
                 for await (const event of relay.ws.onError) {
-                    console.log(url, event);
+                    console.error(url, event);
                 }
             })();
             return relay;
         } catch (e) {
-            console.log("failed to create WebSocket connection for", url);
             return e;
         }
     }
 
     newSub = async (subID: string, filter: NostrFilters) => {
-        console.info(this.url, "newSub", subID, filter);
+        if (this.log) {
+            console.log(this.url, "newSub", subID, filter);
+        }
         let subscription = this.subscriptionMap.get(subID);
         if (subscription !== undefined) {
             return new SubscriptionAlreadyExist(subID, filter, this.url);
@@ -224,6 +232,7 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         private args?: {
             ws: (url: string) => AsyncWebSocket | Error;
         },
+        public log?: boolean,
     ) {
         if (!args) {
             this.wsCreator = AsyncWebSocket.New;
@@ -312,7 +321,6 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
             // pipe the channel
             (async () => {
                 for await (let msg of sub.chan) {
-                    // console.log(subID, filter, msg)
                     let err = await chan.put({ res: msg, url: relay.url });
                     if (err instanceof csp.PutToClosedChannelError) {
                         if (this.closed === true) {
@@ -362,6 +370,30 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         const sub = { filter, chan: results };
         this.subscriptionMap.set(subID, sub);
         return sub;
+    }
+
+    async getEvent(id: NoteID | string) {
+        if (id instanceof NoteID) {
+            id = id.hex;
+        }
+        const stream = await this.newSub(id, {
+            "#e": [id],
+        });
+        if (stream instanceof Error) {
+            return stream;
+        }
+        const url_set = new Set();
+        for await (const msg of stream.chan) {
+            if (msg.res.type == "EOSE") {
+                url_set.add(msg.url);
+            } else if (msg.res.type == "EVENT") {
+                await this.closeSub(id);
+                return msg.res.event;
+            }
+            if (url_set.size >= this.connections.size) {
+                return undefined;
+            }
+        }
     }
 
     async sendEvent(nostrEvent: NostrEvent) {
