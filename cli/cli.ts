@@ -1,7 +1,17 @@
-import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.3/command/mod.ts";
+import { PrivateKey } from "../key.ts";
 
-await new Command()
-    .name("nostr")
-    .version("3.0.0")
-    .description("nostr command line")
-    .parse(Deno.args);
+if(Deno.args.length == 0) {
+    console.log("")
+}
+
+const command = Deno.args[0]
+if(command == "keygen") {
+    const pri = PrivateKey.Generate();
+    console.log("Private Key:")
+    console.log(pri.hex)
+    console.log(pri.bech32)
+    const pub = pri.toPublicKey()
+    console.log("\nPublic Key:")
+    console.log(pub.hex)
+    console.log(pub.bech32())
+}
