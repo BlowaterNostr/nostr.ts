@@ -1,5 +1,6 @@
 import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { NostrEvent, NostrFilters, RelayResponse_REQ_Message } from "./nostr.ts";
+import { WebSocketClosed } from "./relay.ts";
 
 export type Subscriber = {
     newSub: (subID: string, filter: NostrFilters) => Promise<
@@ -11,7 +12,7 @@ export type Subscriber = {
 };
 
 export type SubscriptionCloser = {
-    closeSub: (subID: string) => Promise<void>;
+    closeSub: (subID: string) => Promise<WebSocketClosed | undefined>;
 };
 
 export type EventSender = {

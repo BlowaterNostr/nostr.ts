@@ -28,7 +28,7 @@ async function main() {
         }
         const eventID = NoteID.FromString(id);
         const pool = new ConnectionPool();
-        const err = await pool.addRelayURL("wss://nos.lol");
+        const err = await pool.addRelayURL("wss://relay.blowater.app");
         if (err instanceof Error) {
             return err;
         }

@@ -103,11 +103,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             return; // the subscription has been closed locally before receiving remote messages
                         }
                         const chan = subscription.chan;
-                        if (chan.closed()) {
-                            if (log) {
-                                console.log(url, subID, "has been closed", chan.closed());
-                            }
-                        } else {
+                        if (!chan.closed()) {
                             if (relayResponse[0] === "EOSE") {
                                 chan.put({
                                     type: relayResponse[0],
@@ -173,13 +169,11 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     closeSub = async (subID: string) => {
-        let err = await this.ws.send(JSON.stringify([
+        const err = await this.ws.send(JSON.stringify([
             "CLOSE",
             subID, // multiplex marker / channel
         ]));
-        if (err) {
-            console.error(err); // do not return because we still need to close sub map channels
-        }
+
         const subscription = this.subscriptionMap.get(subID);
         if (subscription === undefined) {
             return;
@@ -193,6 +187,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
         }
         this.subscriptionMap.delete(subID);
+        return err;
     };
 
     close = async () => {
@@ -385,6 +380,7 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         const url_set = new Set();
         for await (const msg of stream.chan) {
             if (msg.res.type == "EOSE") {
+                console.log(msg);
                 url_set.add(msg.url);
             } else if (msg.res.type == "EVENT") {
                 await this.closeSub(id);
@@ -441,6 +437,7 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
             await subscription.chan.close();
         }
         this.subscriptionMap.delete(subID);
+        return undefined;
     }
     async close(): Promise<void> {
         this.closed = true;
