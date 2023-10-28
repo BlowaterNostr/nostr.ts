@@ -1,17 +1,21 @@
 import { PrivateKey } from "../key.ts";
 
-if(Deno.args.length == 0) {
-    console.log("")
+let command: string;
+if (Deno.args.length == 0) {
+    command = "h"
+} else {
+    command = Deno.args[0].toLowerCase();
 }
 
-const command = Deno.args[0]
-if(command == "keygen") {
+if (command == "keygen") {
     const pri = PrivateKey.Generate();
-    console.log("Private Key:")
-    console.log(pri.hex)
-    console.log(pri.bech32)
-    const pub = pri.toPublicKey()
-    console.log("\nPublic Key:")
-    console.log(pub.hex)
-    console.log(pub.bech32())
+    console.log("Private Key:");
+    console.log(pri.hex);
+    console.log(pri.bech32);
+    const pub = pri.toPublicKey();
+    console.log("\nPublic Key:");
+    console.log(pub.hex);
+    console.log(pub.bech32());
+} else if(["h", "help", "-h", "-help", "--help"]) {
+    console.log("nostr keygen - generate key pairs")
 }
