@@ -1,5 +1,10 @@
 A strongly typed, fast nostr client protocol implementation.
 
+#### CLI
+```
+deno install https://raw.githubusercontent.com/BlowaterNostr/nostr.ts/main/cli/nostr.ts
+```
+
 #### Copilot Bot Nostr Pubkey
 
 npub1dd56gu2v8cvc9nn8ne0u7az48zel62t59cc3shv32n6g6zutmcesvrhf83
