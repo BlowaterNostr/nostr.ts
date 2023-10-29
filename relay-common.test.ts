@@ -8,7 +8,6 @@ Deno.test("url acceptance", async (t) => {
         if (relay instanceof Error) {
             fail(relay.message);
         }
-        await relay.untilOpen();
         await relay.close();
     }
     {
@@ -16,7 +15,6 @@ Deno.test("url acceptance", async (t) => {
         if (relay instanceof Error) {
             fail(relay.message);
         }
-        await relay.untilOpen();
         await relay.close();
     }
     {

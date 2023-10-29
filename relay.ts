@@ -204,10 +204,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     isClosed(): boolean {
         return this.ws.status() == "Closed" || this.ws.status() == "Closing";
     }
-
-    untilOpen = async () => {
-        return this.ws.untilOpen();
-    };
 }
 
 export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
@@ -301,7 +297,7 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
 
         this.connections.set(relay.url, relay);
 
-        const err = await relay.untilOpen();
+        const err = await relay.ws.untilOpen();
         if (err) {
             this.connections.delete(relay.url);
             return err;
