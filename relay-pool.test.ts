@@ -26,7 +26,6 @@ Deno.test("ConnectionPool close gracefully 2", async () => {
     if (relay instanceof Error) {
         fail(relay.message);
     }
-    await relay.untilOpen();
 
     const pool = new ConnectionPool();
     const err = await pool.addRelay(relay);

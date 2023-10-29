@@ -19,7 +19,6 @@ Deno.test("SingleRelayConnection open & close", async () => {
             if (relay instanceof Error) {
                 fail(relay.message);
             }
-            await relay.untilOpen();
             await relay.sendEvent({ id: "test id" } as NostrEvent);
             await relay.close();
         })();
@@ -35,7 +34,6 @@ Deno.test("SingleRelayConnection newSub & close", async () => {
     if (relay instanceof Error) {
         fail(relay.message);
     }
-    await relay.untilOpen();
     const sub = await relay.newSub("1", { kinds: [0], limit: 1 });
     if (sub instanceof Error) fail(sub.message);
 
