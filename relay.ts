@@ -372,7 +372,7 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
             id = id.hex;
         }
         const stream = await this.newSub(id, {
-            "#e": [id],
+            "ids": [id],
         });
         if (stream instanceof Error) {
             return stream;

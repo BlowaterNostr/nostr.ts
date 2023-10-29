@@ -1,5 +1,6 @@
-import { PrivateKey, PublicKey } from "../key.ts";
+import { PrivateKey } from "../key.ts";
 import { NoteID } from "../nip19.ts";
+import { relays } from "../relay-list.test.ts";
 import { ConnectionPool } from "../relay.ts";
 
 async function main() {
@@ -28,7 +29,7 @@ async function main() {
         }
         const eventID = NoteID.FromString(id);
         const pool = new ConnectionPool();
-        const err = await pool.addRelayURL("wss://relay.damus.io");
+        const err = await pool.addRelayURLs(relays);
         if (err instanceof Error) {
             return err;
         }
@@ -37,6 +38,7 @@ async function main() {
         await pool.close();
     } else if (["h", "help", "-h", "-help", "--help"]) {
         console.log("nostr keygen - generate key pairs");
+        console.log("nostr get [event id] - get event from relays");
     }
 }
 
