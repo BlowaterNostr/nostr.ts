@@ -40,9 +40,11 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
         };
 
         // @ts-ignore para type should be ErrorEvent
-        this.ws.onerror = (event: ErrorEvent) => {
-            console.log(ws.url, "error", event.message);
-            this.onError.put(event);
+        this.ws.onerror = async (event: ErrorEvent) => {
+            const err = await this.onError.put(event);
+            if (err instanceof Error) {
+                console.error(err);
+            }
         };
 
         this.ws.onclose = async (event: CloseEvent) => {

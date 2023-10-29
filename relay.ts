@@ -126,7 +126,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             })();
             (async () => {
                 for await (const event of relay.ws.onError) {
-                    console.error(url, event);
+                    console.log(url, event);
                 }
             })();
             return relay;
@@ -380,7 +380,6 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         const url_set = new Set();
         for await (const msg of stream.chan) {
             if (msg.res.type == "EOSE") {
-                console.log(msg);
                 url_set.add(msg.url);
             } else if (msg.res.type == "EVENT") {
                 await this.closeSub(id);

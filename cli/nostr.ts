@@ -28,7 +28,7 @@ async function main() {
         }
         const eventID = NoteID.FromString(id);
         const pool = new ConnectionPool();
-        const err = await pool.addRelayURL("wss://relay.blowater.app");
+        const err = await pool.addRelayURL("wss://relay.damus.io");
         if (err instanceof Error) {
             return err;
         }
@@ -42,5 +42,5 @@ async function main() {
 
 const err = await main();
 if (err instanceof Error) {
-    console.log(err.message);
+    console.error(err);
 }
