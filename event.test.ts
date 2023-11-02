@@ -9,7 +9,7 @@ import {
     verifyEvent,
 } from "./nostr.ts";
 import { prepareEncryptedNostrEvent, prepareNormalNostrEvent, prepareParameterizedEvent } from "./event.ts";
-import { SingleRelayConnection } from "./relay.ts";
+import { SingleRelayConnection } from "./relay-single.ts";
 import { relays } from "./relay-list.test.ts";
 import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 

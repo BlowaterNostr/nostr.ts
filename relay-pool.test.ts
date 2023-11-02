@@ -6,14 +6,10 @@ import {
 } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { NostrKind } from "./nostr.ts";
 import { relays } from "./relay-list.test.ts";
-import {
-    ConnectionPool,
-    RelayAlreadyRegistered,
-    SingleRelayConnection,
-    SubscriptionAlreadyExist,
-} from "./relay.ts";
+import { RelayAlreadyRegistered, SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { ConnectionPool } from "./relay-pool.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
     const pool = new ConnectionPool();

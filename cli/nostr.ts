@@ -1,7 +1,7 @@
 import { PrivateKey } from "../key.ts";
 import { NoteID } from "../nip19.ts";
 import { relays } from "../relay-list.test.ts";
-import { ConnectionPool } from "../relay.ts";
+import { ConnectionPool } from "../relay-single.ts";
 
 async function main() {
     let command: string;
