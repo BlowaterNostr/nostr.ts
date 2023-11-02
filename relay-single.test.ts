@@ -6,7 +6,7 @@ import {
     SingleRelayConnection,
     SubscriptionAlreadyExist,
     WebSocketClosed,
-} from "./relay.ts";
+} from "./relay-single.ts";
 import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
