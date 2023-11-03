@@ -51,7 +51,10 @@ export class SubscriptionAlreadyExist extends Error {
 }
 
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
-    private isClosedByClient = false;
+    private _isClosedByClient = false;
+    isClosedByClient() {
+        return this._isClosedByClient;
+    }
     private subscriptionMap = new Map<
         string,
         { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
@@ -172,7 +175,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     private async send(data: string) {
         const err = await this.ws.send(data);
         if (err instanceof WebSocketClosed) {
-            if (this.isClosedByClient) {
+            if (this.isClosedByClient()) {
                 return new WebSocketClosedByClient();
             } else {
                 // todo: reconnection
@@ -213,7 +216,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     close = async () => {
-        this.isClosedByClient = true;
+        this._isClosedByClient = true;
         for (const [subID, { chan }] of this.subscriptionMap.entries()) {
             if (chan.closed()) {
                 continue;
