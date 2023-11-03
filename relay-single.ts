@@ -1,4 +1,3 @@
-import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import {
     _RelayResponse,
     _RelayResponse_OK,
@@ -12,13 +11,18 @@ import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts"
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 export class WebSocketClosed extends Error {}
+type NetworkCloseEvent = {
+    readonly code: number;
+    readonly reason: string;
+    readonly wasClean: boolean;
+};
 
 export type BidirectionalNetwork = {
     status(): WebSocketReadyState;
     untilOpen(): Promise<WebSocketClosed | undefined>;
     nextMessage(): Promise<string | WebSocketClosed>;
     send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
-    close: (code?: number, reason?: string) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
+    close: (code?: number, reason?: string) => Promise<NetworkCloseEvent | CloseTwice | typeof csp.closed>;
 };
 
 export class SubscriptionAlreadyExist extends Error {
