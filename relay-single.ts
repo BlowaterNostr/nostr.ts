@@ -17,7 +17,6 @@ export type BidirectionalNetwork = {
     status(): WebSocketReadyState;
     untilOpen(): Promise<WebSocketClosed | undefined>;
     nextMessage(): Promise<string | WebSocketClosed>;
-    onError: Channel<Event>;
     send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
     close: (code?: number, reason?: string) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
 };
@@ -119,11 +118,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             console.log(url, wsMessage); // NOTICE, OK and other non-standard response types
                         }
                     }
-                }
-            })();
-            (async () => {
-                for await (const event of relay.ws.onError) {
-                    console.log(url, event);
                 }
             })();
             return relay;

@@ -8,7 +8,6 @@ import {
     WebSocketClosed,
 } from "./relay-single.ts";
 import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
-import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 
 Deno.test("SingleRelayConnection open & close", async () => {
@@ -92,7 +91,6 @@ Deno.test("auto reconnection", async () => {
         async nextMessage() {
             return new WebSocketClosed();
         },
-        onError: new Channel(),
         async send() {
             return new WebSocketClosed();
         },
