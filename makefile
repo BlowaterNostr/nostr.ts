@@ -14,5 +14,8 @@ fmt:
 fmt-check:
 	deno fmt  --check --options-indent-width 4 --options-line-width 110
 
+check: fmt-check
+	deno compile cli/nostr.ts
+
 install:
 	deno install --allow-net --allow-read https://deno.land/std@0.191.0/http/file_server.ts
