@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any no-unused-vars require-await ban-unused-ignore
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import { BidirectionalNetwork, WebSocketClosed } from "./relay-single.ts";
+import { BidirectionalNetwork, NetworkCloseEvent, WebSocketClosed } from "./relay-single.ts";
 
 export enum CloseReason {
     ByClient = 4000,
@@ -8,9 +8,9 @@ export enum CloseReason {
 
 export class AsyncWebSocket implements BidirectionalNetwork {
     public readonly onError = csp.chan<Event>();
-    private readonly isSocketOpen = csp.chan<Event>();
+    private readonly isSocketOpen = csp.chan<never>();
     private readonly onMessage = csp.chan<string>();
-    private readonly onClose = csp.chan<CloseEvent>();
+    private readonly onClose = csp.chan<NetworkCloseEvent>();
     public readonly url: string;
 
     static New(url: string): AsyncWebSocket | Error {
@@ -27,11 +27,10 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         public log?: boolean,
     ) {
         this.url = ws.url;
-        this.ws.onopen = async (event: Event) => {
+        this.ws.onopen = async (_: Event) => {
             if (log) {
-                console.log(ws.url, "openned", event);
+                console.log(ws.url, "openned");
             }
-            await this.isSocketOpen.put(event);
             await this.isSocketOpen.close(`ws ${ws.url} is open`);
         };
 
@@ -79,7 +78,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
     close = async (
         code?: number | undefined,
         reason?: string | undefined,
-    ): Promise<CloseEvent | CloseTwice | typeof csp.closed> => {
+    ): Promise<NetworkCloseEvent | CloseTwice | typeof csp.closed> => {
         if (
             this.ws.readyState == WebSocket.CLOSED ||
             this.ws.readyState == WebSocket.CLOSING
@@ -105,7 +104,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         if (this.ws.readyState === WebSocket.CONNECTING) {
             let isClosed = await csp.select([
                 [this.isSocketOpen, async () => false],
-                [this.onClose, async (reason) => true],
+                [this.onClose, async (reason) => reason],
             ]);
             if (isClosed) {
                 return new WebSocketClosed(this.url, this.status());

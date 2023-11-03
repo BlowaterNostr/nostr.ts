@@ -19,7 +19,7 @@ export class WebSocketClosed extends Error {
         this.name = WebSocketClosed.name;
     }
 }
-type NetworkCloseEvent = {
+export type NetworkCloseEvent = {
     readonly code: number;
     readonly reason: string;
     readonly wasClean: boolean;
