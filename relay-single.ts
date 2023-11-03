@@ -10,7 +10,14 @@ import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.int
 import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
-export class WebSocketClosed extends Error {}
+export class WebSocketClosed extends Error {
+    constructor(
+        public url: string,
+        public state: WebSocketReadyState,
+    ) {
+        super(`${url} is in state ${state}`);
+    }
+}
 type NetworkCloseEvent = {
     readonly code: number;
     readonly reason: string;
@@ -21,7 +28,9 @@ export type BidirectionalNetwork = {
     status(): WebSocketReadyState;
     untilOpen(): Promise<WebSocketClosed | undefined>;
     nextMessage(): Promise<string | WebSocketClosed>;
-    send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
+    send: (
+        str: string | ArrayBufferLike | Blob | ArrayBufferView,
+    ) => Promise<WebSocketClosed | Error | undefined>;
     close: (code?: number, reason?: string) => Promise<NetworkCloseEvent | CloseTwice | typeof csp.closed>;
 };
 

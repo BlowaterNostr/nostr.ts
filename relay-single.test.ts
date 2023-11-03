@@ -65,16 +65,13 @@ Deno.test("SingleRelayConnection subscription already exists", async () => {
 });
 
 Deno.test("SingleRelayConnection: close subscription and keep reading", async () => {
-    const relay = SingleRelayConnection.New(relays[0], AsyncWebSocket.New);
-    if (relay instanceof Error) {
-        fail();
-    }
+    const relay = SingleRelayConnection.New(blowater, AsyncWebSocket.New);
+    if (relay instanceof Error) fail(relay.message);
+
     {
         const subID = "1";
         const sub = await relay.newSub(subID, { limit: 1 });
-        if (sub instanceof Error) {
-            fail();
-        }
+        if (sub instanceof Error) fail(sub.message);
         await relay.closeSub(subID);
         assertEquals(sub.chan.closed(), true);
     }
@@ -89,16 +86,16 @@ Deno.test("auto reconnection", async () => {
             return new CloseTwice("");
         },
         async nextMessage() {
-            return new WebSocketClosed();
+            return new WebSocketClosed("", "Closed");
         },
         async send() {
-            return new WebSocketClosed();
+            return new WebSocketClosed("", "Closing");
         },
         status() {
             return _state;
         },
         async untilOpen() {
-            return new WebSocketClosed();
+            return new WebSocketClosed("", "Closed");
         },
     };
     const relay = SingleRelayConnection.New("", () => {

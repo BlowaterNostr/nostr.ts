@@ -59,7 +59,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
     async nextMessage(): Promise<WebSocketClosed | string> {
         const msg = await this.onMessage.pop();
         if (msg == csp.closed) {
-            return new WebSocketClosed();
+            return new WebSocketClosed(this.url, this.status());
         }
         return msg;
     }
@@ -94,13 +94,18 @@ export class AsyncWebSocket implements BidirectionalNetwork {
     // if the socket is closed or closing, blocks forever
     async untilOpen() {
         if (
-            this.ws.readyState === WebSocket.CLOSED ||
+            this.ws.readyState === WebSocket.CLOSED
+        ) {
+            return new WebSocketClosed(this.url, this.status());
+        } //
+        //
+        else if (
             this.ws.readyState === WebSocket.CLOSING
         ) {
-            return new WebSocketClosed(
-                `${this.ws.url} has been closed, can't wait for it to open`,
-            );
-        } else if (this.ws.readyState === WebSocket.OPEN) {
+            return new WebSocketClosed(this.url, this.status());
+        } //
+        //
+        else if (this.ws.readyState === WebSocket.OPEN) {
             return;
         } else if (this.ws.readyState === WebSocket.CONNECTING) {
             let isOpen = await csp.select([
@@ -108,9 +113,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
                 [this.onClose, async () => false],
             ]);
             if (!isOpen) {
-                return new WebSocketClosed(
-                    `${this.ws.url} has been closed, can't wait for it to open`,
-                );
+                return new WebSocketClosed(this.url, this.status());
             }
             return;
         }
