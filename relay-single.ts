@@ -20,6 +20,14 @@ export class WebSocketClosed extends Error {
         this.name = WebSocketClosed.name;
     }
 }
+
+export class WebSocketClosedByClient extends Error {
+    constructor() {
+        super();
+        this.name = WebSocketClosedByClient.name;
+    }
+}
+
 export type NetworkCloseEvent = {
     readonly code: number;
     readonly reason: string;
@@ -152,9 +160,21 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return { filter, chan };
     };
 
+    private async send(data: string) {
+        const err = await this.ws.send(data);
+        if (err instanceof WebSocketClosed) {
+            if (this.isClosedByClient) {
+                return new WebSocketClosedByClient();
+            } else {
+                // todo: reconnection
+            }
+        }
+        return err;
+    }
+
     // todo: add waitForOk back
     sendEvent = async (nostrEvent: NostrEvent) => {
-        return await this.ws.send(JSON.stringify([
+        return this.send(JSON.stringify([
             "EVENT",
             nostrEvent,
         ]));
