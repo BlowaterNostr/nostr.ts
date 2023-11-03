@@ -42,20 +42,6 @@ export class SubscriptionAlreadyExist extends Error {
     }
 }
 
-export class ConnectionPoolClosed extends Error {}
-export class NoRelayRegistered extends Error {
-    constructor() {
-        super();
-        this.name = "NoRelayRegistered";
-    }
-}
-
-export class RelayAlreadyRegistered extends Error {
-    constructor(public url: string) {
-        super(`relay ${url} has been registered already`);
-    }
-}
-
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
     isClosedByClient = false;
     private subscriptionMap = new Map<
