@@ -51,7 +51,7 @@ export class SubscriptionAlreadyExist extends Error {
 }
 
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
-    isClosedByClient = false;
+    private isClosedByClient = false;
     private subscriptionMap = new Map<
         string,
         { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
