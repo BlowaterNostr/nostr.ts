@@ -102,10 +102,15 @@ Deno.test("auto reconnection", async () => {
         return ws;
     });
     if (relay instanceof Error) fail(relay.message);
-    assertEquals(relay.isClosed(), false);
-    await ws.close();
-    assertEquals(relay.isClosed(), true);
-    assertEquals(relay.isClosedByClient(), false);
+    {
+        relay.log = true;
+        assertEquals(relay.isClosed(), false);
+        await ws.close();
+        assertEquals(relay.isClosed(), true);
+        assertEquals(relay.isClosedByClient(), false);
+    }
+    await relay.close();
+    console.log(5);
 });
 
 Deno.test("send event", async () => {

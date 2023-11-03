@@ -100,6 +100,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     } else if (messsage instanceof WebSocketClosedByClient) {
                         // exit the coroutine
                         relay.error = messsage;
+                        if (relay.log) {
+                            console.log(`exiting the relay coroutine of ${relay.url}`);
+                        }
                         return;
                     }
                     let relayResponse = parseJSON<_RelayResponse>(messsage);
