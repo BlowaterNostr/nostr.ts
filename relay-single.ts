@@ -63,7 +63,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private constructor(
         readonly url: string,
-        private ws: BidirectionalNetwork,
+        public ws: BidirectionalNetwork,
         readonly wsCreator: (url: string) => BidirectionalNetwork | Error,
         public log: boolean,
     ) {}
@@ -178,8 +178,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (this.isClosedByClient()) {
                 return new WebSocketClosedByClient();
             } else {
-                // todo: reconnection
-                // this.ws = re construct the web socket connection
+                return this.reconnect();
             }
         }
         return err;
@@ -231,6 +230,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 
     private reconnect() {
+        if (this.log) {
+            console.log("reconnecting", this.url);
+        }
         const ws = this.wsCreator(this.url);
         if (ws instanceof Error) {
             return ws;
