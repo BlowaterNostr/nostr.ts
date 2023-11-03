@@ -2,7 +2,6 @@ import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.17
 import { AsyncWebSocket, CloseReason, CloseTwice } from "./websocket.ts";
 import { relays } from "./relay-list.test.ts";
 import { WebSocketClosed } from "./relay-single.ts";
-import { closed } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 Deno.test("websocket open & close", async () => {
     let ps = [];
