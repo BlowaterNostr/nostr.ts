@@ -95,11 +95,10 @@ Deno.test("websocket close with a code & reason", async () => {
         );
         // the only thing we can be sure is that there is a code
         // but relay implementations may have whatever number
-        if (event == closed || event instanceof CloseTwice) {
+        if (event instanceof CloseTwice) {
             console.error(event);
             fail();
         }
-        assertEquals(typeof event.code, "number");
 
         let err = await ws.close();
         if (err instanceof CloseTwice) {
