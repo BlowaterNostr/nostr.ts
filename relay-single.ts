@@ -16,6 +16,7 @@ export class WebSocketClosed extends Error {
         public state: WebSocketReadyState,
     ) {
         super(`${url} is in state ${state}`);
+        this.name = WebSocketClosed.name;
     }
 }
 type NetworkCloseEvent = {
