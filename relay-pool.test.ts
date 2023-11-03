@@ -38,7 +38,12 @@ Deno.test("ConnectionPool open multiple relays concurrently & close", async () =
     const pool = new ConnectionPool();
     const errs = await pool.addRelayURLs(relays);
     if (errs != undefined) {
-        assertEquals(errs.length < relays.length / 2, true); // as long as 50%+ relays are available
+        if (errs.length >= relays.length / 2) { // as long as 50%+ relays are available
+            for (const err of errs) {
+                console.error(err);
+            }
+            fail();
+        }
     }
     await pool.close();
 });
