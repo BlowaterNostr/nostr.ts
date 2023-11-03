@@ -1,4 +1,3 @@
-import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import {
     _RelayResponse,
     _RelayResponse_OK,
@@ -11,15 +10,30 @@ import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.int
 import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
-export class WebSocketClosed extends Error {}
+export class WebSocketClosed extends Error {
+    constructor(
+        public url: string,
+        public state: WebSocketReadyState,
+        public reason?: NetworkCloseEvent,
+    ) {
+        super(`${url} is in state ${state}, code ${reason?.code}`);
+        this.name = WebSocketClosed.name;
+    }
+}
+export type NetworkCloseEvent = {
+    readonly code: number;
+    readonly reason: string;
+    readonly wasClean: boolean;
+};
 
-export type AsyncWebSocketInterface = {
+export type BidirectionalNetwork = {
     status(): WebSocketReadyState;
     untilOpen(): Promise<WebSocketClosed | undefined>;
-    nextMessage(): Promise<MessageEvent | WebSocketClosed>;
-    onError: Channel<Event>;
-    send: (str: string | ArrayBufferLike | Blob | ArrayBufferView) => Promise<WebSocketClosed | undefined>;
-    close: (code?: number, reason?: string) => Promise<CloseEvent | CloseTwice | typeof csp.closed>;
+    nextMessage(): Promise<string | WebSocketClosed>;
+    send: (
+        str: string | ArrayBufferLike | Blob | ArrayBufferView,
+    ) => Promise<WebSocketClosed | Error | undefined>;
+    close: (code?: number, reason?: string) => Promise<NetworkCloseEvent | CloseTwice | typeof csp.closed>;
 };
 
 export class SubscriptionAlreadyExist extends Error {
@@ -51,13 +65,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private constructor(
         readonly url: string,
-        readonly ws: AsyncWebSocketInterface,
+        readonly ws: BidirectionalNetwork,
         public log: boolean,
     ) {}
 
     public static New(
         url: string,
-        wsCreator?: (url: string) => AsyncWebSocketInterface | Error,
+        wsCreator?: (url: string) => BidirectionalNetwork | Error,
         log?: boolean,
     ): SingleRelayConnection | Error {
         try {
@@ -82,9 +96,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         // todo: reconnection logic here
                         return;
                     }
-                    let relayResponse = parseJSON<_RelayResponse>(
-                        wsMessage.data,
-                    );
+                    let relayResponse = parseJSON<_RelayResponse>(wsMessage);
                     if (relayResponse instanceof Error) {
                         console.error(relayResponse.message);
                         return;
@@ -118,14 +130,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         }
                     } else {
                         if (log) {
-                            console.log(url, wsMessage.data); // NOTICE, OK and other non-standard response types
+                            console.log(url, wsMessage); // NOTICE, OK and other non-standard response types
                         }
                     }
-                }
-            })();
-            (async () => {
-                for await (const event of relay.ws.onError) {
-                    console.log(url, event);
                 }
             })();
             return relay;

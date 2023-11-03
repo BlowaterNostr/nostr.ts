@@ -2,13 +2,12 @@ import { assertEquals, fail } from "https://deno.land/std@0.176.0/testing/assert
 import { InMemoryAccountContext, NostrEvent, NostrKind } from "./nostr.ts";
 import { blowater, relays } from "./relay-list.test.ts";
 import {
-    AsyncWebSocketInterface,
+    BidirectionalNetwork,
     SingleRelayConnection,
     SubscriptionAlreadyExist,
     WebSocketClosed,
 } from "./relay-single.ts";
 import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
-import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 
 Deno.test("SingleRelayConnection open & close", async () => {
@@ -66,16 +65,13 @@ Deno.test("SingleRelayConnection subscription already exists", async () => {
 });
 
 Deno.test("SingleRelayConnection: close subscription and keep reading", async () => {
-    const relay = SingleRelayConnection.New(relays[0], AsyncWebSocket.New);
-    if (relay instanceof Error) {
-        fail();
-    }
+    const relay = SingleRelayConnection.New(blowater, AsyncWebSocket.New);
+    if (relay instanceof Error) fail(relay.message);
+
     {
         const subID = "1";
         const sub = await relay.newSub(subID, { limit: 1 });
-        if (sub instanceof Error) {
-            fail();
-        }
+        if (sub instanceof Error) fail(sub.message);
         await relay.closeSub(subID);
         assertEquals(sub.chan.closed(), true);
     }
@@ -84,23 +80,22 @@ Deno.test("SingleRelayConnection: close subscription and keep reading", async ()
 
 Deno.test("auto reconnection", async () => {
     let _state: WebSocketReadyState = "Open";
-    const ws: AsyncWebSocketInterface = {
+    const ws: BidirectionalNetwork = {
         async close() {
             _state = "Closed";
             return new CloseTwice("");
         },
         async nextMessage() {
-            return new WebSocketClosed();
+            return new WebSocketClosed("", "Closed");
         },
-        onError: new Channel(),
         async send() {
-            return new WebSocketClosed();
+            return new WebSocketClosed("", "Closing");
         },
         status() {
             return _state;
         },
         async untilOpen() {
-            return new WebSocketClosed();
+            return new WebSocketClosed("", "Closed");
         },
     };
     const relay = SingleRelayConnection.New("", () => {

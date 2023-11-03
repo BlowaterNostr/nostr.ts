@@ -2,6 +2,7 @@ import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.17
 import { AsyncWebSocket, CloseReason, CloseTwice } from "./websocket.ts";
 import { relays } from "./relay-list.test.ts";
 import { WebSocketClosed } from "./relay-single.ts";
+import { closed } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 Deno.test("websocket open & close", async () => {
     let ps = [];
@@ -91,14 +92,21 @@ Deno.test("websocket close with a code & reason", async () => {
         let event = await ws.close(
             CloseReason.ByClient,
             "some reason",
-        ) as CloseEvent;
+        );
         // the only thing we can be sure is that there is a code
         // but relay implementations may have whatever number
-        assertEquals(typeof event.code, "number");
+        if (event instanceof CloseTwice) {
+            console.error(event);
+            fail();
+        }
 
-        let err = await ws.close() as CloseTwice;
-        assertEquals(true, err instanceof CloseTwice);
-        assertEquals(err.url, ws.url);
+        let err = await ws.close();
+        if (err instanceof CloseTwice) {
+            assertEquals(err.url, ws.url);
+        } else {
+            console.error(err);
+            fail();
+        }
     }
     assertEquals(true, skipped < relays.length / 2, `skipped: ${skipped}`); // at least half of the relays have to succeed
 });

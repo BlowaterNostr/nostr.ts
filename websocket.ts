@@ -1,16 +1,16 @@
 // deno-lint-ignore-file no-explicit-any no-unused-vars require-await ban-unused-ignore
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import { AsyncWebSocketInterface, WebSocketClosed } from "./relay-single.ts";
+import { BidirectionalNetwork, NetworkCloseEvent, WebSocketClosed } from "./relay-single.ts";
 
 export enum CloseReason {
     ByClient = 4000,
 }
 
-export class AsyncWebSocket implements AsyncWebSocketInterface {
+export class AsyncWebSocket implements BidirectionalNetwork {
     public readonly onError = csp.chan<Event>();
-    private readonly isSocketOpen = csp.chan<Event>();
-    private readonly onMessage = csp.chan<MessageEvent>();
-    private readonly onClose = csp.chan<CloseEvent>();
+    private readonly isSocketOpen = csp.chan<never>();
+    private readonly onMessage = csp.chan<string>();
+    private readonly onClose = csp.chan<NetworkCloseEvent>();
     public readonly url: string;
 
     static New(url: string): AsyncWebSocket | Error {
@@ -27,16 +27,15 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
         public log?: boolean,
     ) {
         this.url = ws.url;
-        this.ws.onopen = async (event: Event) => {
+        this.ws.onopen = async (_: Event) => {
             if (log) {
-                console.log(ws.url, "openned", event);
+                console.log(ws.url, "openned");
             }
-            await this.isSocketOpen.put(event);
             await this.isSocketOpen.close(`ws ${ws.url} is open`);
         };
 
         this.ws.onmessage = (event: MessageEvent) => {
-            this.onMessage.put(event);
+            this.onMessage.put(event.data);
         };
 
         // @ts-ignore para type should be ErrorEvent
@@ -56,15 +55,15 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
         };
     }
 
-    async nextMessage(): Promise<WebSocketClosed | MessageEvent> {
+    async nextMessage(): Promise<WebSocketClosed | string> {
         const msg = await this.onMessage.pop();
         if (msg == csp.closed) {
-            return new WebSocketClosed();
+            return new WebSocketClosed(this.url, this.status());
         }
         return msg;
     }
 
-    send = async (str: string | ArrayBufferLike | Blob | ArrayBufferView) => {
+    async send(str: string | ArrayBufferLike | Blob | ArrayBufferView) {
         let err = await this.untilOpen();
         if (err) {
             return err;
@@ -74,12 +73,12 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
         } catch (e) {
             return e as Error;
         }
-    };
+    }
 
     close = async (
         code?: number | undefined,
         reason?: string | undefined,
-    ): Promise<CloseEvent | CloseTwice | typeof csp.closed> => {
+    ): Promise<NetworkCloseEvent | CloseTwice | typeof csp.closed> => {
         if (
             this.ws.readyState == WebSocket.CLOSED ||
             this.ws.readyState == WebSocket.CLOSING
@@ -93,32 +92,38 @@ export class AsyncWebSocket implements AsyncWebSocketInterface {
     // only unblocks when the socket is open
     // if the socket is closed or closing, blocks forever
     async untilOpen() {
-        if (
-            this.ws.readyState === WebSocket.CLOSED ||
-            this.ws.readyState === WebSocket.CLOSING
-        ) {
-            return new WebSocketClosed(
-                `${this.ws.url} has been closed, can't wait for it to open`,
-            );
-        } else if (this.ws.readyState === WebSocket.OPEN) {
+        if (this.ws.readyState === WebSocket.CLOSED) {
+            return new WebSocketClosed(this.url, this.status());
+        }
+        if (this.ws.readyState === WebSocket.CLOSING) {
+            return new WebSocketClosed(this.url, this.status());
+        }
+        if (this.ws.readyState === WebSocket.OPEN) {
             return;
-        } else if (this.ws.readyState === WebSocket.CONNECTING) {
-            let isOpen = await csp.select([
-                [this.isSocketOpen, async () => true],
-                [this.onClose, async () => false],
-            ]);
-            if (!isOpen) {
-                return new WebSocketClosed(
-                    `${this.ws.url} has been closed, can't wait for it to open`,
-                );
+        }
+        if (this.ws.readyState === WebSocket.CONNECTING) {
+            const signal = csp.chan<undefined | NetworkCloseEvent | typeof csp.closed>();
+            (async () => {
+                await this.isSocketOpen.pop();
+                await signal.put(undefined);
+            })();
+            (async () => {
+                const close = await this.onClose.pop();
+                await signal.put(close);
+            })();
+            const sig = await signal.pop();
+            if (sig != undefined) {
+                if (sig != csp.closed) {
+                    return new WebSocketClosed(this.url, this.status(), sig);
+                } else {
+                    // todo: implement non closable channels
+                    throw new Error("unreachable");
+                }
             }
             return;
         }
-        // should be unreachable
-        console.log(this.ws.url, "readyState:", this.ws.readyState);
-        throw new Error(
-            `readyState:${this.ws.readyState}, should be ${WebSocket.CONNECTING}`,
-        );
+        // unreachable
+        throw new Error(`readyState:${this.ws.readyState}`);
     }
 
     status = (): WebSocketReadyState => {
