@@ -102,20 +102,28 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             return;
         }
         if (this.ws.readyState === WebSocket.CONNECTING) {
-            let isClosed = await csp.select([
-                [this.isSocketOpen, async () => false],
-                [this.onClose, async (reason) => reason],
-            ]);
-            if (isClosed) {
-                return new WebSocketClosed(this.url, this.status());
+            const signal = csp.chan<undefined | NetworkCloseEvent | typeof csp.closed>();
+            (async () => {
+                await this.isSocketOpen.pop();
+                await signal.put(undefined);
+            })();
+            (async () => {
+                const close = await this.onClose.pop();
+                await signal.put(close);
+            })();
+            const sig = await signal.pop();
+            if (sig != undefined) {
+                if (sig != csp.closed) {
+                    return new WebSocketClosed(this.url, this.status(), sig);
+                } else {
+                    // todo: implement non closable channels
+                    throw new Error("unreachable");
+                }
             }
             return;
         }
-        // should be unreachable
-        console.log(this.ws.url, "readyState:", this.ws.readyState);
-        throw new Error(
-            `readyState:${this.ws.readyState}, should be ${WebSocket.CONNECTING}`,
-        );
+        // unreachable
+        throw new Error(`readyState:${this.ws.readyState}`);
     }
 
     status = (): WebSocketReadyState => {
