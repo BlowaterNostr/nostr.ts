@@ -144,7 +144,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             return new SubscriptionAlreadyExist(subID, filter, this.url);
         }
 
-        const err = await this.ws.send(JSON.stringify([
+        const err = await this.send(JSON.stringify([
             "REQ",
             subID,
             filter,
@@ -167,6 +167,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 return new WebSocketClosedByClient();
             } else {
                 // todo: reconnection
+                // this.ws = re construct the web socket connection
             }
         }
         return err;
@@ -181,7 +182,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     closeSub = async (subID: string) => {
-        const err = await this.ws.send(JSON.stringify([
+        const err = await this.send(JSON.stringify([
             "CLOSE",
             subID, // multiplex marker / channel
         ]));
