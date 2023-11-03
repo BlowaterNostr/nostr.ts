@@ -9,7 +9,7 @@ export enum CloseReason {
 export class AsyncWebSocket implements BidirectionalNetwork {
     public readonly onError = csp.chan<Event>();
     private readonly isSocketOpen = csp.chan<Event>();
-    private readonly onMessage = csp.chan<MessageEvent>();
+    private readonly onMessage = csp.chan<string>();
     private readonly onClose = csp.chan<CloseEvent>();
     public readonly url: string;
 
@@ -36,7 +36,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         };
 
         this.ws.onmessage = (event: MessageEvent) => {
-            this.onMessage.put(event);
+            this.onMessage.put(event.data);
         };
 
         // @ts-ignore para type should be ErrorEvent
@@ -56,7 +56,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         };
     }
 
-    async nextMessage(): Promise<WebSocketClosed | MessageEvent> {
+    async nextMessage(): Promise<WebSocketClosed | string> {
         const msg = await this.onMessage.pop();
         if (msg == csp.closed) {
             return new WebSocketClosed();
