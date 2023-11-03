@@ -110,7 +110,6 @@ Deno.test("auto reconnection", async () => {
         assertEquals(relay.isClosedByClient(), false);
     }
     await relay.close();
-    console.log(5);
 });
 
 Deno.test("send event", async () => {

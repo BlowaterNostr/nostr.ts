@@ -87,7 +87,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             let relay = new SingleRelayConnection(url, ws, wsCreator, log || false);
             (async () => {
                 for (;;) {
-                    const messsage = await relay.ws.nextMessage();
+                    const messsage = await relay.nextMessage();
                     if (messsage instanceof WebSocketClosed) {
                         if (relay.ws.status() != "Closed") {
                             console.log(messsage);
@@ -241,6 +241,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             return ws;
         }
         this.ws = ws;
+    }
+
+    private async nextMessage() {
+        if (this.isClosedByClient()) {
+            return new WebSocketClosedByClient();
+        }
+        return this.ws.nextMessage();
     }
 }
 
