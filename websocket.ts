@@ -113,11 +113,10 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             })();
             const sig = await signal.pop();
             if (sig != undefined) {
-                if (sig != csp.closed) {
-                    return new WebSocketClosed(this.url, this.status(), sig);
+                if (sig == csp.closed) {
+                    return new WebSocketClosed(this.url, this.status());
                 } else {
-                    // todo: implement non closable channels
-                    throw new Error("unreachable");
+                    return new WebSocketClosed(this.url, this.status(), sig);
                 }
             }
             return;
