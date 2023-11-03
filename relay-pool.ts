@@ -6,15 +6,22 @@ import {
 import { NoteID } from "./nip19.ts";
 import { NostrEvent, NostrFilters, RelayResponse_REQ_Message } from "./nostr.ts";
 import { Closer, EventSender, SubscriptionCloser } from "./relay.interface.ts";
-import {
-    ConnectionPoolClosed,
-    NoRelayRegistered,
-    RelayAlreadyRegistered,
-    SingleRelayConnection,
-    SubscriptionAlreadyExist,
-    WebSocketClosed,
-} from "./relay-single.ts";
+import { SingleRelayConnection, SubscriptionAlreadyExist, WebSocketClosed } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
+
+export class RelayAlreadyRegistered extends Error {
+    constructor(public url: string) {
+        super(`relay ${url} has been registered already`);
+    }
+}
+
+export class ConnectionPoolClosed extends Error {}
+export class NoRelayRegistered extends Error {
+    constructor() {
+        super();
+        this.name = "NoRelayRegistered";
+    }
+}
 
 export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
     private closed = false;

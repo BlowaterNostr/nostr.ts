@@ -20,6 +20,14 @@ export class WebSocketClosed extends Error {
         this.name = WebSocketClosed.name;
     }
 }
+
+export class WebSocketClosedByClient extends Error {
+    constructor() {
+        super();
+        this.name = WebSocketClosedByClient.name;
+    }
+}
+
 export type NetworkCloseEvent = {
     readonly code: number;
     readonly reason: string;
@@ -39,20 +47,6 @@ export type BidirectionalNetwork = {
 export class SubscriptionAlreadyExist extends Error {
     constructor(public subID: string, public filter: NostrFilters, public url: string) {
         super(`subscription '${subID}' already exists for ${url}`);
-    }
-}
-
-export class ConnectionPoolClosed extends Error {}
-export class NoRelayRegistered extends Error {
-    constructor() {
-        super();
-        this.name = "NoRelayRegistered";
-    }
-}
-
-export class RelayAlreadyRegistered extends Error {
-    constructor(public url: string) {
-        super(`relay ${url} has been registered already`);
     }
 }
 
@@ -150,7 +144,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             return new SubscriptionAlreadyExist(subID, filter, this.url);
         }
 
-        const err = await this.ws.send(JSON.stringify([
+        const err = await this.send(JSON.stringify([
             "REQ",
             subID,
             filter,
@@ -166,16 +160,29 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return { filter, chan };
     };
 
+    private async send(data: string) {
+        const err = await this.ws.send(data);
+        if (err instanceof WebSocketClosed) {
+            if (this.isClosedByClient) {
+                return new WebSocketClosedByClient();
+            } else {
+                // todo: reconnection
+                // this.ws = re construct the web socket connection
+            }
+        }
+        return err;
+    }
+
     // todo: add waitForOk back
     sendEvent = async (nostrEvent: NostrEvent) => {
-        return await this.ws.send(JSON.stringify([
+        return this.send(JSON.stringify([
             "EVENT",
             nostrEvent,
         ]));
     };
 
     closeSub = async (subID: string) => {
-        const err = await this.ws.send(JSON.stringify([
+        const err = await this.send(JSON.stringify([
             "CLOSE",
             subID, // multiplex marker / channel
         ]));

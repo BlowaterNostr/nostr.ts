@@ -1,7 +1,7 @@
 import { assertInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
-import { RelayAlreadyRegistered, SingleRelayConnection } from "./relay-single.ts";
+import { SingleRelayConnection } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
-import { ConnectionPool } from "./relay-pool.ts";
+import { ConnectionPool, RelayAlreadyRegistered } from "./relay-pool.ts";
 
 Deno.test("url acceptance", async (t) => {
     {
