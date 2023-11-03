@@ -64,7 +64,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         return msg;
     }
 
-    send = async (str: string | ArrayBufferLike | Blob | ArrayBufferView) => {
+    async send(str: string | ArrayBufferLike | Blob | ArrayBufferView) {
         let err = await this.untilOpen();
         if (err) {
             return err;
@@ -74,7 +74,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         } catch (e) {
             return e as Error;
         }
-    };
+    }
 
     close = async (
         code?: number | undefined,
@@ -93,26 +93,21 @@ export class AsyncWebSocket implements BidirectionalNetwork {
     // only unblocks when the socket is open
     // if the socket is closed or closing, blocks forever
     async untilOpen() {
-        if (
-            this.ws.readyState === WebSocket.CLOSED
-        ) {
+        if (this.ws.readyState === WebSocket.CLOSED) {
             return new WebSocketClosed(this.url, this.status());
-        } //
-        //
-        else if (
-            this.ws.readyState === WebSocket.CLOSING
-        ) {
+        }
+        if (this.ws.readyState === WebSocket.CLOSING) {
             return new WebSocketClosed(this.url, this.status());
-        } //
-        //
-        else if (this.ws.readyState === WebSocket.OPEN) {
+        }
+        if (this.ws.readyState === WebSocket.OPEN) {
             return;
-        } else if (this.ws.readyState === WebSocket.CONNECTING) {
-            let isOpen = await csp.select([
-                [this.isSocketOpen, async () => true],
-                [this.onClose, async () => false],
+        }
+        if (this.ws.readyState === WebSocket.CONNECTING) {
+            let isClosed = await csp.select([
+                [this.isSocketOpen, async () => false],
+                [this.onClose, async (reason) => true],
             ]);
-            if (!isOpen) {
+            if (isClosed) {
                 return new WebSocketClosed(this.url, this.status());
             }
             return;
