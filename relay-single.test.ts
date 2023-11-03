@@ -2,7 +2,7 @@ import { assertEquals, fail } from "https://deno.land/std@0.176.0/testing/assert
 import { InMemoryAccountContext, NostrEvent, NostrKind } from "./nostr.ts";
 import { blowater, relays } from "./relay-list.test.ts";
 import {
-    AsyncWebSocketInterface,
+    BidirectionalNetwork,
     SingleRelayConnection,
     SubscriptionAlreadyExist,
     WebSocketClosed,
@@ -84,7 +84,7 @@ Deno.test("SingleRelayConnection: close subscription and keep reading", async ()
 
 Deno.test("auto reconnection", async () => {
     let _state: WebSocketReadyState = "Open";
-    const ws: AsyncWebSocketInterface = {
+    const ws: BidirectionalNetwork = {
         async close() {
             _state = "Closed";
             return new CloseTwice("");

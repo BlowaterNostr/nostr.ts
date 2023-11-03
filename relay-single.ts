@@ -13,7 +13,7 @@ import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master
 
 export class WebSocketClosed extends Error {}
 
-export type AsyncWebSocketInterface = {
+export type BidirectionalNetwork = {
     status(): WebSocketReadyState;
     untilOpen(): Promise<WebSocketClosed | undefined>;
     nextMessage(): Promise<MessageEvent | WebSocketClosed>;
@@ -51,13 +51,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private constructor(
         readonly url: string,
-        readonly ws: AsyncWebSocketInterface,
+        readonly ws: BidirectionalNetwork,
         public log: boolean,
     ) {}
 
     public static New(
         url: string,
-        wsCreator?: (url: string) => AsyncWebSocketInterface | Error,
+        wsCreator?: (url: string) => BidirectionalNetwork | Error,
         log?: boolean,
     ): SingleRelayConnection | Error {
         try {

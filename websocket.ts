@@ -1,12 +1,12 @@
 // deno-lint-ignore-file no-explicit-any no-unused-vars require-await ban-unused-ignore
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import { AsyncWebSocketInterface, WebSocketClosed } from "./relay-single.ts";
+import { BidirectionalNetwork, WebSocketClosed } from "./relay-single.ts";
 
 export enum CloseReason {
     ByClient = 4000,
 }
 
-export class AsyncWebSocket implements AsyncWebSocketInterface {
+export class AsyncWebSocket implements BidirectionalNetwork {
     public readonly onError = csp.chan<Event>();
     private readonly isSocketOpen = csp.chan<Event>();
     private readonly onMessage = csp.chan<MessageEvent>();
