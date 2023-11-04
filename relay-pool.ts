@@ -49,17 +49,6 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         }
     }
 
-    getClosedRelaysThatShouldBeReconnected() {
-        const closed: string[] = [];
-        for (let relay of this.connections.values()) {
-            if (relay.isClosed() && !relay.isClosedByClient) {
-                console.info(relay.url, "is closed by remote");
-                closed.push(relay.url);
-            }
-        }
-        return closed;
-    }
-
     getRelays(): SingleRelayConnection[] {
         return Array.from(this.connections.values());
     }
@@ -215,27 +204,6 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
             const err = await relay.sendEvent(nostrEvent);
             if (err instanceof WebSocketClosed) {
                 console.error(err);
-            }
-        }
-        const closed = this.getClosedRelaysThatShouldBeReconnected();
-        for (let url of closed) {
-            const relay = SingleRelayConnection.New(url, AsyncWebSocket.New);
-            if (relay instanceof Error) {
-                console.error("SingleRelayConnection construction", relay);
-                continue;
-            }
-            {
-                const err = await relay.sendEvent(nostrEvent);
-                if (err) {
-                    console.error("relay.sendEvent", err);
-                    continue;
-                }
-            }
-
-            this.connections.delete(relay.url);
-            const err = await this.addRelay(relay);
-            if (err instanceof Error) {
-                return err; // should never happen
             }
         }
     }
