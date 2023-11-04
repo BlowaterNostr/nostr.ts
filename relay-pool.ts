@@ -6,7 +6,12 @@ import {
 import { NoteID } from "./nip19.ts";
 import { NostrEvent, NostrFilters, RelayResponse_REQ_Message } from "./nostr.ts";
 import { Closer, EventSender, SubscriptionCloser } from "./relay.interface.ts";
-import { SingleRelayConnection, SubscriptionAlreadyExist, WebSocketClosed } from "./relay-single.ts";
+import {
+    SingleRelayConnection,
+    SubscriptionAlreadyExist,
+    WebSocketClosed,
+    WebSocketClosedByClient,
+} from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
 
 export class RelayAlreadyRegistered extends Error {
@@ -197,13 +202,18 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         if (this.connections.size === 0) {
             return new NoRelayRegistered();
         }
+        const ps = [];
         for (let relay of this.connections.values()) {
             if (relay.isClosed() && !relay.isClosedByClient) {
                 continue;
             }
-            const err = await relay.sendEvent(nostrEvent);
-            if (err instanceof WebSocketClosed) {
-                console.error(err);
+            const p = relay.sendEvent(nostrEvent);
+            ps.push(p);
+        }
+        for (const p of ps) {
+            const err = await p;
+            if (err instanceof WebSocketClosedByClient) {
+                console.log(err);
             }
         }
     }
