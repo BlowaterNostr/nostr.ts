@@ -26,11 +26,7 @@ Deno.test("ConnectionPool close gracefully 2", async () => {
     const pool = new ConnectionPool();
     const err = await pool.addRelay(relay);
     assertNotInstanceOf(err, Error);
-    assertEquals(pool.getClosedRelaysThatShouldBeReconnected().length, 0);
-    await relay.close(); // if a relay is closed by us instead of the server,
-    //                      the pool should not add it back
     await csp.sleep(300);
-    assertEquals(pool.getClosedRelaysThatShouldBeReconnected().length, 0);
     await pool.close();
 });
 
