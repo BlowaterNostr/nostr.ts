@@ -38,8 +38,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             this.onMessage.put(event.data);
         };
 
-        // @ts-ignore para type should be ErrorEvent
-        this.ws.onerror = async (event: ErrorEvent) => {
+        this.ws.onerror = async (event: ErrorEvent | Event) => {
             const err = await this.onError.put(event);
             if (err instanceof Error) {
                 console.error(err);
