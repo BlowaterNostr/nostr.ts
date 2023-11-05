@@ -21,10 +21,10 @@ export class WebSocketClosed extends Error {
     }
 }
 
-export class WebSocketClosedByClient extends Error {
+export class RelayDisconnectedByClient extends Error {
     constructor() {
         super();
-        this.name = WebSocketClosedByClient.name;
+        this.name = RelayDisconnectedByClient.name;
     }
 }
 
@@ -37,7 +37,7 @@ export type NetworkCloseEvent = {
 export type BidirectionalNetwork = {
     status(): WebSocketReadyState;
     untilOpen(): Promise<WebSocketClosed | undefined>;
-    nextMessage(): Promise<string | WebSocketClosed | WebSocketClosedByClient>;
+    nextMessage(): Promise<string | WebSocketClosed | RelayDisconnectedByClient>;
     send: (
         str: string | ArrayBufferLike | Blob | ArrayBufferView,
     ) => Promise<WebSocketClosed | Error | undefined>;
@@ -97,7 +97,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             relay.error = err;
                         }
                         continue;
-                    } else if (messsage instanceof WebSocketClosedByClient) {
+                    } else if (messsage instanceof RelayDisconnectedByClient) {
                         // exit the coroutine
                         relay.error = messsage;
                         if (relay.log) {
@@ -169,8 +169,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
 
         const chan = csp.chan<RelayResponse_REQ_Message>();
-        // @ts-ignore debug id
-        chan.id = subID;
+
         this.subscriptionMap.set(subID, { filter, chan });
         return { filter, chan };
     };
@@ -179,7 +178,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         const err = await this.ws.send(data);
         if (err instanceof WebSocketClosed) {
             if (this.isClosedByClient()) {
-                return new WebSocketClosedByClient();
+                return new RelayDisconnectedByClient();
             } else {
                 return this.reconnect();
             }
@@ -245,7 +244,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private async nextMessage() {
         if (this.isClosedByClient()) {
-            return new WebSocketClosedByClient();
+            return new RelayDisconnectedByClient();
         }
         return this.ws.nextMessage();
     }
