@@ -53,8 +53,8 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         }
     }
 
-    getRelays(): SingleRelayConnection[] {
-        return Array.from(this.connections.values());
+    getRelays() {
+        return this.connections.values();
     }
 
     getRelay(url: string | URL): SingleRelayConnection | undefined {
