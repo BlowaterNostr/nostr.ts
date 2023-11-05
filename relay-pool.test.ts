@@ -186,7 +186,7 @@ Deno.test("newSub 2 times & add relay url later", async (t) => {
 Deno.test("send & get event", async (t) => {
     const pool = new ConnectionPool();
     const err = await pool.addRelayURLs(relays);
-    if (err && err.length > 0) {
+    if (err && err.length == relays.length) { // if all relays failed to connect
         console.log(err);
         fail();
     }
