@@ -70,21 +70,26 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     public static New(
         url: string,
-        wsCreator?: (url: string) => BidirectionalNetwork | Error,
-        log?: boolean,
+        args?: {
+            wsCreator?: (url: string) => BidirectionalNetwork | Error;
+            log?: boolean;
+        },
     ): SingleRelayConnection | Error {
+        if (args == undefined) {
+            args = {};
+        }
         try {
             if (!url.startsWith("wss://") && !url.startsWith("ws://")) {
                 url = "wss://" + url;
             }
-            if (wsCreator == undefined) {
-                wsCreator = AsyncWebSocket.New;
+            if (args.wsCreator == undefined) {
+                args.wsCreator = AsyncWebSocket.New;
             }
-            const ws = wsCreator(url);
+            const ws = args.wsCreator(url);
             if (ws instanceof Error) {
                 return ws;
             }
-            let relay = new SingleRelayConnection(url, ws, wsCreator, log || false);
+            let relay = new SingleRelayConnection(url, ws, args.wsCreator, args.log || false);
             (async () => {
                 for (;;) {
                     const messsage = await relay.nextMessage();
@@ -138,7 +143,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             }
                         }
                     } else {
-                        if (log) {
+                        if (args.log) {
                             console.log(url, messsage); // NOTICE, OK and other non-standard response types
                         }
                     }
