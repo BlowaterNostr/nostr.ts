@@ -12,7 +12,17 @@ import {
     SubscriptionAlreadyExist,
 } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
-import { RelayAdder, RelayGetter, RelayRemover } from "../../UI/relay-config.ts";
+export interface RelayAdder {
+    addRelayURL(url: string): Promise<Error | SingleRelayConnection>;
+}
+
+export interface RelayRemover {
+    removeRelay(url: string): Promise<void>;
+}
+
+export interface RelayGetter {
+    getRelay(url: string | URL): SingleRelayConnection | undefined;
+}
 
 export class ConnectionPoolClosed extends Error {}
 export class NoRelayRegistered extends Error {
