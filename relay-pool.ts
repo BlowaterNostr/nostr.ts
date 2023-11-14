@@ -12,12 +12,7 @@ import {
     SubscriptionAlreadyExist,
 } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
-
-export class RelayAlreadyRegistered extends Error {
-    constructor(public url: string) {
-        super(`relay ${url} has been registered already`);
-    }
-}
+import { RelayAdder, RelayGetter, RelayRemover } from "../../UI/relay-config.ts";
 
 export class ConnectionPoolClosed extends Error {}
 export class NoRelayRegistered extends Error {
@@ -27,7 +22,9 @@ export class NoRelayRegistered extends Error {
     }
 }
 
-export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
+export class ConnectionPool
+    implements SubscriptionCloser, EventSender, Closer, RelayAdder, RelayRemover, RelayGetter {
+    //
     private closed = false;
     private readonly connections = new Map<string, SingleRelayConnection>(); // url -> relay
     private readonly subscriptionMap = new Map<
@@ -64,9 +61,12 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         return this.connections.get(url);
     }
 
-    async addRelayURL(url: string): Promise<RelayAlreadyRegistered | Error | void> {
-        if (this.connections.has(url)) {
-            return new RelayAlreadyRegistered(url);
+    async addRelayURL(url: string): Promise<Error | SingleRelayConnection> {
+        {
+            const relay = this.connections.get(url);
+            if (relay) {
+                return relay;
+            }
         }
         const relay = SingleRelayConnection.New(url, {
             wsCreator: this.wsCreator,
@@ -74,11 +74,11 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         if (relay instanceof Error) {
             return relay;
         }
-        if (this.connections.has(relay.url)) {
-            await relay.close();
-            return new RelayAlreadyRegistered(relay.url);
+        const err = await this.addRelay(relay);
+        if (err instanceof Error) {
+            return err;
         }
-        return this.addRelay(relay);
+        return relay;
     }
 
     async addRelayURLs(urls: string[]) {
@@ -89,7 +89,7 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         const errs = await Promise.all(ps);
         const errs2 = new Array<Error>();
         for (const err of errs) {
-            if (err != undefined) {
+            if (err instanceof Error) {
                 errs2.push(err);
             }
         }
@@ -103,8 +103,13 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         if (this.closed) {
             return new ConnectionPoolClosed("connection pool has been closed");
         }
-        if (this.connections.has(relay.url)) {
-            return new RelayAlreadyRegistered(relay.url);
+        const _relay = this.connections.get(relay.url);
+        if (_relay) {
+            // should almost never happen because addRelay is not called that often
+            // addRelayURL is called usually
+            // close the new relay
+            await relay.close();
+            return _relay;
         }
 
         this.connections.set(relay.url, relay);
