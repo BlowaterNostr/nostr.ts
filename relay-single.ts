@@ -28,16 +28,37 @@ export class RelayDisconnectedByClient extends Error {
     }
 }
 
+export class FailedToLookupAddress extends Error {}
+
 export type NetworkCloseEvent = {
     readonly code: number;
     readonly reason: string;
     readonly wasClean: boolean;
 };
 
+export type NextMessageType = {
+    type: "messsage";
+    data: string;
+} | {
+    type: "WebSocketClosed";
+    error: WebSocketClosed;
+} | {
+    type: "RelayDisconnectedByClient";
+    error: RelayDisconnectedByClient;
+} | {
+    type: "FailedToLookupAddress";
+    error: string;
+} | {
+    type: "OtherError";
+    error: Error;
+};
+
 export type BidirectionalNetwork = {
     status(): WebSocketReadyState;
     untilOpen(): Promise<WebSocketClosed | undefined>;
-    nextMessage(): Promise<string | WebSocketClosed | RelayDisconnectedByClient>;
+    nextMessage(): Promise<
+        NextMessageType
+    >;
     send: (
         str: string | ArrayBufferLike | Blob | ArrayBufferView,
     ) => Promise<WebSocketClosed | Error | undefined>;
@@ -70,42 +91,56 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     public static New(
         url: string,
-        wsCreator?: (url: string) => BidirectionalNetwork | Error,
-        log?: boolean,
+        args?: {
+            wsCreator?: (url: string) => BidirectionalNetwork | Error;
+            log?: boolean;
+        },
     ): SingleRelayConnection | Error {
+        if (args == undefined) {
+            args = {};
+        }
         try {
             if (!url.startsWith("wss://") && !url.startsWith("ws://")) {
                 url = "wss://" + url;
             }
-            if (wsCreator == undefined) {
-                wsCreator = AsyncWebSocket.New;
+            if (args.wsCreator == undefined) {
+                args.wsCreator = AsyncWebSocket.New;
             }
-            const ws = wsCreator(url);
+            const ws = args.wsCreator(url);
             if (ws instanceof Error) {
                 return ws;
             }
-            let relay = new SingleRelayConnection(url, ws, wsCreator, log || false);
+            let relay = new SingleRelayConnection(url, ws, args.wsCreator, args.log || false);
             (async () => {
                 for (;;) {
                     const messsage = await relay.nextMessage();
-                    if (messsage instanceof WebSocketClosed) {
-                        if (relay.ws.status() != "Closed") {
-                            console.log(messsage);
-                        }
-                        const err = relay.reconnect();
-                        if (err instanceof Error) {
-                            relay.error = err;
-                        }
-                        continue;
-                    } else if (messsage instanceof RelayDisconnectedByClient) {
+                    if (messsage.type == "RelayDisconnectedByClient") {
                         // exit the coroutine
                         relay.error = messsage;
                         if (relay.log) {
                             console.log(`exiting the relay coroutine of ${relay.url}`);
                         }
                         return;
+                    } else if (
+                        messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress"
+                    ) {
+                        if (relay.ws.status() != "Closed") {
+                            console.log(messsage);
+                        }
+                        relay.error = messsage.error;
+                        const err = relay.reconnect();
+                        if (err instanceof Error) {
+                            relay.error = err;
+                        }
+                        continue;
+                    } else if (messsage.type == "OtherError") {
+                        // in this case, we don't know what to do, exit
+                        console.error(messsage);
+                        console.log("exiting the relay connection");
+                        relay.error = messsage;
+                        return;
                     }
-                    let relayResponse = parseJSON<_RelayResponse>(messsage);
+                    let relayResponse = parseJSON<_RelayResponse>(messsage.data);
                     if (relayResponse instanceof Error) {
                         console.error(relayResponse.message);
                         return;
@@ -138,7 +173,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             }
                         }
                     } else {
-                        if (log) {
+                        if (args.log) {
                             console.log(url, messsage); // NOTICE, OK and other non-standard response types
                         }
                     }
@@ -225,6 +260,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             await this.closeSub(subID);
         }
         await this.ws.close();
+        // the WebSocket constructor is async underneath but since it's too old,
+        // it does not have an awaitable interface so that exiting the program may cause
+        // unresolved event underneath
+        // this is a quick & dirty way for me to address it
+        // old browser API sucks
+        await csp.sleep(1);
     };
 
     isClosed(): boolean {
@@ -233,18 +274,25 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private reconnect() {
         if (this.log) {
-            console.log("reconnecting", this.url);
+            console.log("reconnecting", this.url, "reason", this.error);
         }
         const ws = this.wsCreator(this.url);
         if (ws instanceof Error) {
             return ws;
         }
         this.ws = ws;
+        if (this._isClosedByClient) {
+            console.log("close the new ws");
+            this.ws.close();
+        }
     }
 
-    private async nextMessage() {
+    private async nextMessage(): Promise<NextMessageType> {
         if (this.isClosedByClient()) {
-            return new RelayDisconnectedByClient();
+            return {
+                type: "RelayDisconnectedByClient",
+                error: new RelayDisconnectedByClient(),
+            };
         }
         return this.ws.nextMessage();
     }

@@ -9,12 +9,13 @@ import {
 } from "./relay-single.ts";
 import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
+import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 Deno.test("SingleRelayConnection open & close", async () => {
     const ps = [];
     for (let url of relays) {
         const p = (async () => {
-            const relay = SingleRelayConnection.New(url, AsyncWebSocket.New);
+            const relay = SingleRelayConnection.New(url);
             if (relay instanceof Error) {
                 fail(relay.message);
             }
@@ -29,7 +30,7 @@ Deno.test("SingleRelayConnection open & close", async () => {
 Deno.test("SingleRelayConnection newSub & close", async () => {
     // able to open & close
     const url = relays[0];
-    const relay = SingleRelayConnection.New(url, AsyncWebSocket.New);
+    const relay = SingleRelayConnection.New(url);
     if (relay instanceof Error) {
         fail(relay.message);
     }
@@ -44,7 +45,7 @@ Deno.test("SingleRelayConnection newSub & close", async () => {
 });
 
 Deno.test("SingleRelayConnection subscription already exists", async () => {
-    const relay = SingleRelayConnection.New(relays[0], AsyncWebSocket.New);
+    const relay = SingleRelayConnection.New(relays[0]);
     if (relay instanceof Error) fail(relay.message);
     {
         // open
@@ -65,7 +66,7 @@ Deno.test("SingleRelayConnection subscription already exists", async () => {
 });
 
 Deno.test("SingleRelayConnection: close subscription and keep reading", async () => {
-    const relay = SingleRelayConnection.New(blowater, AsyncWebSocket.New);
+    const relay = SingleRelayConnection.New(blowater);
     if (relay instanceof Error) fail(relay.message);
 
     {
@@ -86,7 +87,10 @@ Deno.test("auto reconnection", async () => {
             return new CloseTwice("");
         },
         async nextMessage() {
-            return new WebSocketClosed("", "Closed");
+            return {
+                type: "WebSocketClosed",
+                error: new WebSocketClosed("", "Closed"),
+            };
         },
         async send() {
             return new WebSocketClosed("", "Closing");
@@ -98,8 +102,10 @@ Deno.test("auto reconnection", async () => {
             return new WebSocketClosed("", "Closed");
         },
     };
-    const relay = SingleRelayConnection.New("", () => {
-        return ws;
+    const relay = SingleRelayConnection.New("", {
+        wsCreator: () => {
+            return ws;
+        },
     });
     if (relay instanceof Error) fail(relay.message);
     {
@@ -124,6 +130,18 @@ Deno.test("send event", async () => {
             }),
         );
         if (err instanceof Error) fail(err.message);
+    }
+    await relay.close();
+});
+
+Deno.test("auto reconnection to wrong address", async () => {
+    const relay = SingleRelayConnection.New("app.blowater.app", /*wrong address*/ { log: true });
+    if (relay instanceof Error) {
+        fail(relay.message);
+    }
+    await sleep(1000);
+    if (relay.ws.status() == "Open") {
+        fail(); // should still be closed after 1s
     }
     await relay.close();
 });

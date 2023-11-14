@@ -19,7 +19,7 @@ Deno.test("ConnectionPool close gracefully 1", async () => {
 
 Deno.test("ConnectionPool close gracefully 2", async () => {
     // able to open & close
-    const relay = SingleRelayConnection.New(relays[0], AsyncWebSocket.New);
+    const relay = SingleRelayConnection.New(relays[0]);
     if (relay instanceof Error) {
         fail(relay.message);
     }
@@ -48,7 +48,7 @@ Deno.test("ConnectionPool open multiple relays concurrently & close", async () =
 Deno.test("ConnectionPool newSub & close", async () => {
     // able to open & close
     const url = relays[0];
-    const relay = SingleRelayConnection.New(url, AsyncWebSocket.New);
+    const relay = SingleRelayConnection.New(url);
     if (relay instanceof Error) {
         fail(relay.message);
     }
@@ -110,7 +110,7 @@ Deno.test("ConnectionPool close subscription", async (t) => {
 Deno.test("ConnectionPool register the same relay twice", async () => {
     const pool = new ConnectionPool();
 
-    const relay = SingleRelayConnection.New(relays[0], AsyncWebSocket.New);
+    const relay = SingleRelayConnection.New(relays[0]);
     if (relay instanceof Error) {
         fail(relay.message);
     }
@@ -135,7 +135,7 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         fail(chan.message);
     }
 
-    const relay = SingleRelayConnection.New(relays[0], AsyncWebSocket.New);
+    const relay = SingleRelayConnection.New(relays[0]);
     if (relay instanceof Error) {
         fail(relay.message);
     }

@@ -1,15 +1,23 @@
 // deno-lint-ignore-file no-explicit-any no-unused-vars require-await ban-unused-ignore
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import { BidirectionalNetwork, NetworkCloseEvent, WebSocketClosed } from "./relay-single.ts";
+import {
+    BidirectionalNetwork,
+    FailedToLookupAddress,
+    NetworkCloseEvent,
+    NextMessageType,
+    WebSocketClosed,
+} from "./relay-single.ts";
 
 export enum CloseReason {
     ByClient = 4000,
 }
 
 export class AsyncWebSocket implements BidirectionalNetwork {
-    public readonly onError = csp.chan<Event>();
     private readonly isSocketOpen = csp.chan<never>();
-    private readonly onMessage = csp.chan<string>();
+    private readonly onMessage = csp.chan<{
+        type: "message" | "error";
+        data: string;
+    }>();
     private readonly onClose = csp.chan<NetworkCloseEvent>();
     public readonly url: string;
 
@@ -35,11 +43,18 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         };
 
         this.ws.onmessage = (event: MessageEvent) => {
-            this.onMessage.put(event.data);
+            this.onMessage.put({
+                type: "message",
+                data: event.data,
+            });
         };
 
-        this.ws.onerror = async (event: ErrorEvent | Event) => {
-            const err = await this.onError.put(event);
+        // @ts-ignore
+        this.ws.onerror = async (event: ErrorEvent) => {
+            const err = await this.onMessage.put({
+                type: "error",
+                data: event.message,
+            });
             if (err instanceof Error) {
                 console.error(err);
             }
@@ -54,12 +69,34 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         };
     }
 
-    async nextMessage(): Promise<WebSocketClosed | string> {
+    async nextMessage(): Promise<NextMessageType> {
         const msg = await this.onMessage.pop();
         if (msg == csp.closed) {
-            return new WebSocketClosed(this.url, this.status());
+            return {
+                type: "WebSocketClosed",
+                error: new WebSocketClosed(this.url, this.status()),
+            };
         }
-        return msg;
+        if (msg.type == "error") {
+            if (
+                msg.data ==
+                    "Error: failed to lookup address information: nodename nor servname provided, or not known"
+            ) {
+                return {
+                    type: "FailedToLookupAddress",
+                    error: msg.data,
+                };
+            } else {
+                return {
+                    type: "OtherError",
+                    error: new Error(msg.data),
+                };
+            }
+        }
+        return {
+            type: "messsage",
+            data: msg.data,
+        };
     }
 
     async send(str: string | ArrayBufferLike | Blob | ArrayBufferView) {
