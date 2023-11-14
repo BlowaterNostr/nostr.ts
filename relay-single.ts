@@ -114,24 +114,20 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             (async () => {
                 for (;;) {
                     const messsage = await relay.nextMessage();
-                    if (messsage.type == "WebSocketClosed") {
-                        if (relay.ws.status() != "Closed") {
-                            console.log(messsage);
-                        }
-                        const err = relay.reconnect();
-                        if (err instanceof Error) {
-                            relay.error = err;
-                        }
-                        continue;
-                    } else if (messsage.type == "RelayDisconnectedByClient") {
+                    if (messsage.type == "RelayDisconnectedByClient") {
                         // exit the coroutine
                         relay.error = messsage;
                         if (relay.log) {
                             console.log(`exiting the relay coroutine of ${relay.url}`);
                         }
                         return;
-                    } else if (messsage.type == "FailedToLookupAddress") {
-                        await csp.sleep(1000);
+                    } else if (
+                        messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress"
+                    ) {
+                        if (relay.ws.status() != "Closed") {
+                            console.log(messsage);
+                        }
+                        relay.error = messsage.error;
                         const err = relay.reconnect();
                         if (err instanceof Error) {
                             relay.error = err;
@@ -264,6 +260,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             await this.closeSub(subID);
         }
         await this.ws.close();
+        // the WebSocket constructor is async underneath but since it's too old,
+        // it does not have an awaitable interface so that exiting the program may cause
+        // unresolved event underneath
+        // this is a quick & dirty way for me to address it
+        // old browser API sucks
+        await csp.sleep(1);
     };
 
     isClosed(): boolean {
@@ -272,13 +274,17 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private reconnect() {
         if (this.log) {
-            console.log("reconnecting", this.url);
+            console.log("reconnecting", this.url, "reason", this.error);
         }
         const ws = this.wsCreator(this.url);
         if (ws instanceof Error) {
             return ws;
         }
         this.ws = ws;
+        if (this._isClosedByClient) {
+            console.log("close the new ws");
+            this.ws.close();
+        }
     }
 
     private async nextMessage(): Promise<NextMessageType> {

@@ -39,7 +39,6 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             if (log) {
                 console.log(ws.url, "openned");
             }
-            console.log("open");
             await this.isSocketOpen.close(`ws ${ws.url} is open`);
         };
 
@@ -79,7 +78,6 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             };
         }
         if (msg.type == "error") {
-            console.log(msg.data);
             if (
                 msg.data ==
                     "Error: failed to lookup address information: nodename nor servname provided, or not known"

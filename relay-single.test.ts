@@ -9,6 +9,7 @@ import {
 } from "./relay-single.ts";
 import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
+import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 Deno.test("SingleRelayConnection open & close", async () => {
     const ps = [];
@@ -129,6 +130,18 @@ Deno.test("send event", async () => {
             }),
         );
         if (err instanceof Error) fail(err.message);
+    }
+    await relay.close();
+});
+
+Deno.test("auto reconnection to wrong address", async () => {
+    const relay = SingleRelayConnection.New("app.blowater.app", /*wrong address*/ { log: true });
+    if (relay instanceof Error) {
+        fail(relay.message);
+    }
+    await sleep(1000);
+    if (relay.ws.status() == "Open") {
+        fail(); // should still be closed after 1s
     }
     await relay.close();
 });
