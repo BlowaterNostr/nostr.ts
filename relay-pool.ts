@@ -68,7 +68,9 @@ export class ConnectionPool implements SubscriptionCloser, EventSender, Closer {
         if (this.connections.has(url)) {
             return new RelayAlreadyRegistered(url);
         }
-        const relay = SingleRelayConnection.New(url, this.wsCreator);
+        const relay = SingleRelayConnection.New(url, {
+            wsCreator: this.wsCreator,
+        });
         if (relay instanceof Error) {
             return relay;
         }

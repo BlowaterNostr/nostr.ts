@@ -5,14 +5,14 @@ import { ConnectionPool, RelayAlreadyRegistered } from "./relay-pool.ts";
 
 Deno.test("url acceptance", async (t) => {
     {
-        const relay = SingleRelayConnection.New("nos.lol", AsyncWebSocket.New);
+        const relay = SingleRelayConnection.New("nos.lol");
         if (relay instanceof Error) {
             fail(relay.message);
         }
         await relay.close();
     }
     {
-        const relay = SingleRelayConnection.New("wss://nos.lol", AsyncWebSocket.New);
+        const relay = SingleRelayConnection.New("wss://nos.lol");
         if (relay instanceof Error) {
             fail(relay.message);
         }

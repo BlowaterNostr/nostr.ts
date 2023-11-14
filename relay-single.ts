@@ -28,16 +28,37 @@ export class RelayDisconnectedByClient extends Error {
     }
 }
 
+export class FailedToLookupAddress extends Error {}
+
 export type NetworkCloseEvent = {
     readonly code: number;
     readonly reason: string;
     readonly wasClean: boolean;
 };
 
+export type NextMessageType = {
+    type: "messsage";
+    data: string;
+} | {
+    type: "WebSocketClosed";
+    error: WebSocketClosed;
+} | {
+    type: "RelayDisconnectedByClient";
+    error: RelayDisconnectedByClient;
+} | {
+    type: "FailedToLookupAddress";
+    error: string;
+} | {
+    type: "OtherError";
+    error: Error;
+};
+
 export type BidirectionalNetwork = {
     status(): WebSocketReadyState;
     untilOpen(): Promise<WebSocketClosed | undefined>;
-    nextMessage(): Promise<string | WebSocketClosed | RelayDisconnectedByClient>;
+    nextMessage(): Promise<
+        NextMessageType
+    >;
     send: (
         str: string | ArrayBufferLike | Blob | ArrayBufferView,
     ) => Promise<WebSocketClosed | Error | undefined>;
@@ -93,7 +114,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             (async () => {
                 for (;;) {
                     const messsage = await relay.nextMessage();
-                    if (messsage instanceof WebSocketClosed) {
+                    if (messsage.type == "WebSocketClosed") {
                         if (relay.ws.status() != "Closed") {
                             console.log(messsage);
                         }
@@ -102,15 +123,28 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             relay.error = err;
                         }
                         continue;
-                    } else if (messsage instanceof RelayDisconnectedByClient) {
+                    } else if (messsage.type == "RelayDisconnectedByClient") {
                         // exit the coroutine
                         relay.error = messsage;
                         if (relay.log) {
                             console.log(`exiting the relay coroutine of ${relay.url}`);
                         }
                         return;
+                    } else if (messsage.type == "FailedToLookupAddress") {
+                        await csp.sleep(1000);
+                        const err = relay.reconnect();
+                        if (err instanceof Error) {
+                            relay.error = err;
+                        }
+                        continue;
+                    } else if (messsage.type == "OtherError") {
+                        // in this case, we don't know what to do, exit
+                        console.error(messsage);
+                        console.log("exiting the relay connection");
+                        relay.error = messsage;
+                        return;
                     }
-                    let relayResponse = parseJSON<_RelayResponse>(messsage);
+                    let relayResponse = parseJSON<_RelayResponse>(messsage.data);
                     if (relayResponse instanceof Error) {
                         console.error(relayResponse.message);
                         return;
@@ -247,9 +281,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         this.ws = ws;
     }
 
-    private async nextMessage() {
+    private async nextMessage(): Promise<NextMessageType> {
         if (this.isClosedByClient()) {
-            return new RelayDisconnectedByClient();
+            return {
+                type: "RelayDisconnectedByClient",
+                error: new RelayDisconnectedByClient(),
+            };
         }
         return this.ws.nextMessage();
     }
