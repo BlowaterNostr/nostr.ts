@@ -144,8 +144,8 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         fail(relay.message);
     }
 
-    const err1 = await pool.addRelay(relay);
-    assertEquals(err1, undefined);
+    const _relay = await pool.addRelay(relay);
+    assertEquals(_relay, relay);
 
     const msg = await chan.chan.pop();
     if (msg === csp.closed) {
