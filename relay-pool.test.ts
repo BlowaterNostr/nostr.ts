@@ -9,7 +9,7 @@ import { relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import { ConnectionPool, RelayAlreadyRegistered } from "./relay-pool.ts";
+import { ConnectionPool } from "./relay-pool.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
@@ -118,8 +118,12 @@ Deno.test("ConnectionPool register the same relay twice", async () => {
     const err1 = await pool.addRelay(relay);
     assertEquals(err1, undefined);
 
-    const err2 = await pool.addRelay(relay);
-    assertInstanceOf(err2, RelayAlreadyRegistered);
+    const _relay = await pool.addRelay(relay);
+    if (_relay instanceof SingleRelayConnection) {
+        assertEquals(_relay.url, relay.url);
+    } else {
+        fail(_relay?.message);
+    }
 
     await pool.close();
 });

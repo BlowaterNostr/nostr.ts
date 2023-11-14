@@ -153,6 +153,7 @@ export class ConnectionPool
                 }
             })();
         }
+        return relay;
     }
 
     async removeRelay(url: string) {
