@@ -54,8 +54,8 @@ Deno.test("ConnectionPool newSub & close", async () => {
     }
     const connectionPool = new ConnectionPool();
     {
-        const err = await connectionPool.addRelay(relay);
-        assertEquals(err, undefined);
+        const _relay = await connectionPool.addRelay(relay);
+        assertEquals(_relay, relay);
     }
     const sub = await connectionPool.newSub("1", { kinds: [0], limit: 1 });
     if (sub instanceof Error) {
