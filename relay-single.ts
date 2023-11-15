@@ -83,12 +83,14 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
     >();
     private error: any; // todo: check this error in public APIs
-    private ws: BidirectionalNetwork | Error;
-    public getWebSocket(): BidirectionalNetwork | Error {
+    private ws: BidirectionalNetwork | undefined;
+    private readonly pendingSend = new Set<string>();
+
+    public getWebSocket(): BidirectionalNetwork | undefined {
         return this.ws;
     }
     status(): WebSocketReadyState {
-        if (this.ws instanceof Error) {
+        if (this.ws == undefined) {
             return "Closed";
         }
         return this.ws.status();
@@ -99,13 +101,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         readonly wsCreator: (url: string) => BidirectionalNetwork | Error,
         public log: boolean,
     ) {
-        const ws = this.wsCreator(url);
-        if (ws instanceof Error) {
-            this.ws = ws;
-        } else {
-            this.ws = ws;
-            return;
-        }
         (async () => {
             for (;;) {
                 const ws = this.wsCreator(url);
@@ -147,7 +142,14 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     return;
                 } else if (messsage.type == "open") {
                     // the websocket is just openned
-                    // todo
+                    for (const data of this.pendingSend) {
+                        const err = await this.send(data);
+                        if (err instanceof Error) {
+                            console.error(err);
+                        } else {
+                            this.pendingSend.delete(data);
+                        }
+                    }
                 } else {
                     let relayResponse = parseJSON<_RelayResponse>(messsage.data);
                     if (relayResponse instanceof Error) {
@@ -188,7 +190,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     }
                 }
             }
-        });
+        })();
     }
 
     public static New(
@@ -240,8 +242,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     private async send(data: string) {
-        if (this.ws instanceof Error) {
-            return this.ws;
+        if (this.ws == undefined) {
+            this.pendingSend.add(data);
+            return;
         }
         const err = await this.ws.send(data);
         if (err instanceof WebSocketClosed) {
@@ -292,7 +295,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
             await this.closeSub(subID);
         }
-        if (!(this.ws instanceof Error)) {
+        if (this.ws) {
             await this.ws.close();
         }
         // the WebSocket constructor is async underneath but since it's too old,
@@ -304,7 +307,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     isClosed(): boolean {
-        if (this.ws instanceof Error) {
+        if (this.ws == undefined) {
             return true;
         }
         return this.ws.status() == "Closed" || this.ws.status() == "Closing";
