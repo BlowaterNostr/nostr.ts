@@ -148,7 +148,7 @@ Deno.test("SubscriptionAlreadyExist", async () => {
     {
         const _ = await relay.newSub("hi", { limit: 1 });
         const sub = await relay.newSub("hi", { limit: 1 });
-        assertInstanceOf(sub, SubscriptionAlreadyExist)
+        assertInstanceOf(sub, SubscriptionAlreadyExist);
     }
-    await relay.close()
+    await relay.close();
 });

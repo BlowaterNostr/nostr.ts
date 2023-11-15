@@ -1,3 +1,4 @@
+import { parseJSON } from "./_helper.ts";
 import {
     _RelayResponse,
     _RelayResponse_OK,
@@ -86,9 +87,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     private ws: BidirectionalNetwork | undefined;
     private readonly pendingSend = new Set<string>();
 
-    public getWebSocket(): BidirectionalNetwork | undefined {
-        return this.ws;
-    }
     status(): WebSocketReadyState {
         if (this.ws == undefined) {
             return "Closed";
@@ -341,13 +339,5 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             };
         }
         return ws.nextMessage();
-    }
-}
-
-function parseJSON<T>(content: string): T | Error {
-    try {
-        return JSON.parse(content) as T;
-    } catch (e) {
-        return e as Error;
     }
 }
