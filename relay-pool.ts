@@ -124,12 +124,6 @@ export class ConnectionPool
 
         this.connections.set(relay.url, relay);
 
-        const err = await relay.ws.untilOpen();
-        if (err) {
-            this.connections.delete(relay.url);
-            return err;
-        }
-
         // for this newly added relay, do all the subs
         for (let [subID, { filter, chan }] of this.subscriptionMap.entries()) {
             let sub = await relay.newSub(subID, filter);

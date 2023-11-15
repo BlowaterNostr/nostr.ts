@@ -51,6 +51,8 @@ export type NextMessageType = {
 } | {
     type: "OtherError";
     error: Error;
+} | {
+    type: "open";
 };
 
 export type BidirectionalNetwork = {
@@ -81,65 +83,74 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
     >();
     private error: any; // todo: check this error in public APIs
+    private ws: BidirectionalNetwork | undefined;
+    private readonly pendingSend = new Set<string>();
+
+    public getWebSocket(): BidirectionalNetwork | undefined {
+        return this.ws;
+    }
+    status(): WebSocketReadyState {
+        if (this.ws == undefined) {
+            return "Closed";
+        }
+        return this.ws.status();
+    }
 
     private constructor(
         readonly url: string,
-        public ws: BidirectionalNetwork,
         readonly wsCreator: (url: string) => BidirectionalNetwork | Error,
         public log: boolean,
-    ) {}
-
-    public static New(
-        url: string,
-        args?: {
-            wsCreator?: (url: string) => BidirectionalNetwork | Error;
-            log?: boolean;
-        },
-    ): SingleRelayConnection | Error {
-        if (args == undefined) {
-            args = {};
-        }
-        try {
-            if (!url.startsWith("wss://") && !url.startsWith("ws://")) {
-                url = "wss://" + url;
+    ) {
+        (async () => {
+            for (;;) {
+                const ws = this.wsCreator(url);
+                if (ws instanceof Error) {
+                    console.error(ws);
+                } else {
+                    this.ws = ws;
+                    break;
+                }
+                await csp.sleep(1000);
+                console.log("retry to connect to", url);
             }
-            if (args.wsCreator == undefined) {
-                args.wsCreator = AsyncWebSocket.New;
-            }
-            const ws = args.wsCreator(url);
-            if (ws instanceof Error) {
-                return ws;
-            }
-            let relay = new SingleRelayConnection(url, ws, args.wsCreator, args.log || false);
-            (async () => {
-                for (;;) {
-                    const messsage = await relay.nextMessage();
-                    if (messsage.type == "RelayDisconnectedByClient") {
-                        // exit the coroutine
-                        relay.error = messsage;
-                        if (relay.log) {
-                            console.log(`exiting the relay coroutine of ${relay.url}`);
-                        }
-                        return;
-                    } else if (
-                        messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress"
-                    ) {
-                        if (relay.ws.status() != "Closed") {
-                            console.log(messsage);
-                        }
-                        relay.error = messsage.error;
-                        const err = relay.reconnect();
-                        if (err instanceof Error) {
-                            relay.error = err;
-                        }
-                        continue;
-                    } else if (messsage.type == "OtherError") {
-                        // in this case, we don't know what to do, exit
-                        console.error(messsage);
-                        console.log("exiting the relay connection");
-                        relay.error = messsage;
-                        return;
+            for (;;) {
+                const messsage = await this.nextMessage(this.ws);
+                if (messsage.type == "RelayDisconnectedByClient") {
+                    // exit the coroutine
+                    this.error = messsage;
+                    if (this.log) {
+                        console.log(`exiting the relay coroutine of ${this.url}`);
                     }
+                    return;
+                } else if (
+                    messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress"
+                ) {
+                    if (this.ws.status() != "Closed") {
+                        console.log(messsage);
+                    }
+                    this.error = messsage.error;
+                    const err = this.reconnect();
+                    if (err instanceof Error) {
+                        this.error = err;
+                    }
+                    continue;
+                } else if (messsage.type == "OtherError") {
+                    // in this case, we don't know what to do, exit
+                    console.error(messsage);
+                    console.log("exiting the relay connection");
+                    this.error = messsage;
+                    return;
+                } else if (messsage.type == "open") {
+                    // the websocket is just openned
+                    for (const data of this.pendingSend) {
+                        const err = await this.send(data);
+                        if (err instanceof Error) {
+                            console.error(err);
+                        } else {
+                            this.pendingSend.delete(data);
+                        }
+                    }
+                } else {
                     let relayResponse = parseJSON<_RelayResponse>(messsage.data);
                     if (relayResponse instanceof Error) {
                         console.error(relayResponse.message);
@@ -151,7 +162,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         relayResponse[0] === "EOSE"
                     ) {
                         let subID = relayResponse[1];
-                        let subscription = relay.subscriptionMap.get(
+                        let subscription = this.subscriptionMap.get(
                             subID,
                         );
                         if (subscription === undefined) {
@@ -173,12 +184,33 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             }
                         }
                     } else {
-                        if (args.log) {
+                        if (this.log) {
                             console.log(url, messsage); // NOTICE, OK and other non-standard response types
                         }
                     }
                 }
-            })();
+            }
+        })();
+    }
+
+    public static New(
+        url: string,
+        args?: {
+            wsCreator?: (url: string) => BidirectionalNetwork | Error;
+            log?: boolean;
+        },
+    ): SingleRelayConnection {
+        if (args == undefined) {
+            args = {};
+        }
+        try {
+            if (!url.startsWith("wss://") && !url.startsWith("ws://")) {
+                url = "wss://" + url;
+            }
+            if (args.wsCreator == undefined) {
+                args.wsCreator = AsyncWebSocket.New;
+            }
+            let relay = new SingleRelayConnection(url, args.wsCreator, args.log || false);
             return relay;
         } catch (e) {
             return e;
@@ -210,6 +242,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     private async send(data: string) {
+        if (this.ws == undefined) {
+            this.pendingSend.add(data);
+            return;
+        }
         const err = await this.ws.send(data);
         if (err instanceof WebSocketClosed) {
             if (this.isClosedByClient()) {
@@ -259,7 +295,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
             await this.closeSub(subID);
         }
-        await this.ws.close();
+        if (this.ws) {
+            await this.ws.close();
+        }
         // the WebSocket constructor is async underneath but since it's too old,
         // it does not have an awaitable interface so that exiting the program may cause
         // unresolved event underneath
@@ -269,6 +307,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     isClosed(): boolean {
+        if (this.ws == undefined) {
+            return true;
+        }
         return this.ws.status() == "Closed" || this.ws.status() == "Closing";
     }
 
@@ -287,14 +328,14 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
     }
 
-    private async nextMessage(): Promise<NextMessageType> {
+    private async nextMessage(ws: BidirectionalNetwork): Promise<NextMessageType> {
         if (this.isClosedByClient()) {
             return {
                 type: "RelayDisconnectedByClient",
                 error: new RelayDisconnectedByClient(),
             };
         }
-        return this.ws.nextMessage();
+        return ws.nextMessage();
     }
 }
 
