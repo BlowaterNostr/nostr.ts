@@ -152,3 +152,17 @@ Deno.test("SubscriptionAlreadyExist", async () => {
     }
     await relay.close();
 });
+
+Deno.test("able to send event before the web socket is connected", async () => {
+    const relay = SingleRelayConnection.New(blowater, { log: true });
+    {
+        const event = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+            content: "",
+            kind: NostrKind.TEXT_NOTE,
+        });
+        const _ = await relay.sendEvent(event);
+        const err = relay.connect();
+        if(err instanceof Error) fail(err.message)
+    }
+    await relay.close();
+});

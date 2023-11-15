@@ -127,7 +127,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         console.log(messsage);
                     }
                     this.error = messsage.error;
-                    const err = this.reconnect();
+                    const err = await this.connect();
                     if (err instanceof Error) {
                         this.error = err;
                     }
@@ -254,7 +254,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (this.isClosedByClient()) {
                 return new RelayDisconnectedByClient();
             } else {
-                return this.reconnect();
+                return await this.connect();
             }
         }
         return err;
@@ -316,19 +316,24 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return this.ws.status() == "Closed" || this.ws.status() == "Closing";
     }
 
-    private reconnect() {
+    public async connect() {
         if (this.log) {
-            console.log("reconnecting", this.url, "reason", this.error);
+            console.log(`connecting ${this.url}, reason: ${this.error}`);
+        }
+        if (this._isClosedByClient) {
+            return;
+        }
+        if (this.ws) {
+            const status = this.ws.status();
+            if (status == "Connecting" || status == "Open") {
+                return;
+            }
         }
         const ws = this.wsCreator(this.url);
         if (ws instanceof Error) {
             return ws;
         }
         this.ws = ws;
-        if (this._isClosedByClient) {
-            console.log("close the new ws");
-            this.ws.close();
-        }
     }
 
     private async nextMessage(ws: BidirectionalNetwork): Promise<NextMessageType> {
