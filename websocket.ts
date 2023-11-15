@@ -1,12 +1,6 @@
 // deno-lint-ignore-file no-explicit-any no-unused-vars require-await ban-unused-ignore
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import {
-    BidirectionalNetwork,
-    FailedToLookupAddress,
-    NetworkCloseEvent,
-    NextMessageType,
-    WebSocketClosed,
-} from "./relay-single.ts";
+import { BidirectionalNetwork, NetworkCloseEvent, NextMessageType, WebSocketClosed } from "./relay-single.ts";
 
 export enum CloseReason {
     ByClient = 4000,

@@ -115,8 +115,10 @@ Deno.test("ConnectionPool register the same relay twice", async () => {
         fail(relay.message);
     }
 
-    const err1 = await pool.addRelay(relay);
-    assertEquals(err1, undefined);
+    {
+        const _relay = await pool.addRelay(relay);
+        assertEquals(_relay, undefined);
+    }
 
     const _relay = await pool.addRelay(relay);
     if (_relay instanceof SingleRelayConnection) {
