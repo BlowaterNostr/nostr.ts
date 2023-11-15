@@ -140,7 +140,7 @@ Deno.test("auto reconnection to wrong address", async () => {
         fail(relay.message);
     }
     await sleep(1000);
-    if (relay.ws.status() == "Open") {
+    if (relay.status() == "Open") {
         fail(); // should still be closed after 1s
     }
     await relay.close();

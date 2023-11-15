@@ -81,13 +81,109 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
     >();
     private error: any; // todo: check this error in public APIs
+    private ws: BidirectionalNetwork | Error;
+    public getWebSocket(): BidirectionalNetwork | Error {
+        return this.ws;
+    }
+    status(): WebSocketReadyState {
+        if (this.ws instanceof Error) {
+            return "Closed";
+        }
+        return this.ws.status();
+    }
 
     private constructor(
         readonly url: string,
-        public ws: BidirectionalNetwork,
         readonly wsCreator: (url: string) => BidirectionalNetwork | Error,
         public log: boolean,
-    ) {}
+    ) {
+        const ws = this.wsCreator(url);
+        if (ws instanceof Error) {
+            this.ws = ws;
+        } else {
+            this.ws = ws;
+            return;
+        }
+        (async () => {
+            for (;;) {
+                const ws = this.wsCreator(url);
+                if (ws instanceof Error) {
+                    console.error(ws);
+                } else {
+                    this.ws = ws;
+                    break;
+                }
+                await csp.sleep(1000);
+                console.log("retry to connect to", url);
+            }
+            for (;;) {
+                const messsage = await this.nextMessage(this.ws);
+                if (messsage.type == "RelayDisconnectedByClient") {
+                    // exit the coroutine
+                    this.error = messsage;
+                    if (this.log) {
+                        console.log(`exiting the relay coroutine of ${this.url}`);
+                    }
+                    return;
+                } else if (
+                    messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress"
+                ) {
+                    if (this.ws.status() != "Closed") {
+                        console.log(messsage);
+                    }
+                    this.error = messsage.error;
+                    const err = this.reconnect();
+                    if (err instanceof Error) {
+                        this.error = err;
+                    }
+                    continue;
+                } else if (messsage.type == "OtherError") {
+                    // in this case, we don't know what to do, exit
+                    console.error(messsage);
+                    console.log("exiting the relay connection");
+                    this.error = messsage;
+                    return;
+                }
+                let relayResponse = parseJSON<_RelayResponse>(messsage.data);
+                if (relayResponse instanceof Error) {
+                    console.error(relayResponse.message);
+                    return;
+                }
+
+                if (
+                    relayResponse[0] === "EVENT" ||
+                    relayResponse[0] === "EOSE"
+                ) {
+                    let subID = relayResponse[1];
+                    let subscription = this.subscriptionMap.get(
+                        subID,
+                    );
+                    if (subscription === undefined) {
+                        return; // the subscription has been closed locally before receiving remote messages
+                    }
+                    const chan = subscription.chan;
+                    if (!chan.closed()) {
+                        if (relayResponse[0] === "EOSE") {
+                            chan.put({
+                                type: relayResponse[0],
+                                subID: relayResponse[1],
+                            });
+                        } else {
+                            chan.put({
+                                type: relayResponse[0],
+                                subID: relayResponse[1],
+                                event: relayResponse[2],
+                            });
+                        }
+                    }
+                } else {
+                    if (this.log) {
+                        console.log(url, messsage); // NOTICE, OK and other non-standard response types
+                    }
+                }
+            }
+        });
+    }
 
     public static New(
         url: string,
@@ -95,7 +191,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             wsCreator?: (url: string) => BidirectionalNetwork | Error;
             log?: boolean;
         },
-    ): SingleRelayConnection | Error {
+    ): SingleRelayConnection {
         if (args == undefined) {
             args = {};
         }
@@ -106,79 +202,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (args.wsCreator == undefined) {
                 args.wsCreator = AsyncWebSocket.New;
             }
-            const ws = args.wsCreator(url);
-            if (ws instanceof Error) {
-                return ws;
-            }
-            let relay = new SingleRelayConnection(url, ws, args.wsCreator, args.log || false);
-            (async () => {
-                for (;;) {
-                    const messsage = await relay.nextMessage();
-                    if (messsage.type == "RelayDisconnectedByClient") {
-                        // exit the coroutine
-                        relay.error = messsage;
-                        if (relay.log) {
-                            console.log(`exiting the relay coroutine of ${relay.url}`);
-                        }
-                        return;
-                    } else if (
-                        messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress"
-                    ) {
-                        if (relay.ws.status() != "Closed") {
-                            console.log(messsage);
-                        }
-                        relay.error = messsage.error;
-                        const err = relay.reconnect();
-                        if (err instanceof Error) {
-                            relay.error = err;
-                        }
-                        continue;
-                    } else if (messsage.type == "OtherError") {
-                        // in this case, we don't know what to do, exit
-                        console.error(messsage);
-                        console.log("exiting the relay connection");
-                        relay.error = messsage;
-                        return;
-                    }
-                    let relayResponse = parseJSON<_RelayResponse>(messsage.data);
-                    if (relayResponse instanceof Error) {
-                        console.error(relayResponse.message);
-                        return;
-                    }
-
-                    if (
-                        relayResponse[0] === "EVENT" ||
-                        relayResponse[0] === "EOSE"
-                    ) {
-                        let subID = relayResponse[1];
-                        let subscription = relay.subscriptionMap.get(
-                            subID,
-                        );
-                        if (subscription === undefined) {
-                            return; // the subscription has been closed locally before receiving remote messages
-                        }
-                        const chan = subscription.chan;
-                        if (!chan.closed()) {
-                            if (relayResponse[0] === "EOSE") {
-                                chan.put({
-                                    type: relayResponse[0],
-                                    subID: relayResponse[1],
-                                });
-                            } else {
-                                chan.put({
-                                    type: relayResponse[0],
-                                    subID: relayResponse[1],
-                                    event: relayResponse[2],
-                                });
-                            }
-                        }
-                    } else {
-                        if (args.log) {
-                            console.log(url, messsage); // NOTICE, OK and other non-standard response types
-                        }
-                    }
-                }
-            })();
+            let relay = new SingleRelayConnection(url, args.wsCreator, args.log || false);
             return relay;
         } catch (e) {
             return e;
@@ -210,6 +234,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     private async send(data: string) {
+        if (this.ws instanceof Error) {
+            return this.ws;
+        }
         const err = await this.ws.send(data);
         if (err instanceof WebSocketClosed) {
             if (this.isClosedByClient()) {
@@ -259,7 +286,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
             await this.closeSub(subID);
         }
-        await this.ws.close();
+        if (!(this.ws instanceof Error)) {
+            await this.ws.close();
+        }
         // the WebSocket constructor is async underneath but since it's too old,
         // it does not have an awaitable interface so that exiting the program may cause
         // unresolved event underneath
@@ -269,6 +298,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     isClosed(): boolean {
+        if (this.ws instanceof Error) {
+            return true;
+        }
         return this.ws.status() == "Closed" || this.ws.status() == "Closing";
     }
 
@@ -287,14 +319,14 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
     }
 
-    private async nextMessage(): Promise<NextMessageType> {
+    private async nextMessage(ws: BidirectionalNetwork): Promise<NextMessageType> {
         if (this.isClosedByClient()) {
             return {
                 type: "RelayDisconnectedByClient",
                 error: new RelayDisconnectedByClient(),
             };
         }
-        return this.ws.nextMessage();
+        return ws.nextMessage();
     }
 }
 
