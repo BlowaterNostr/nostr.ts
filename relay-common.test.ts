@@ -1,7 +1,10 @@
-import { assertInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import {
+    assertInstanceOf,
+    assertNotInstanceOf,
+    fail,
+} from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { SingleRelayConnection } from "./relay-single.ts";
-import { AsyncWebSocket } from "./websocket.ts";
-import { ConnectionPool, RelayAlreadyRegistered } from "./relay-pool.ts";
+import { ConnectionPool } from "./relay-pool.ts";
 
 Deno.test("url acceptance", async (t) => {
     {
@@ -33,7 +36,7 @@ Deno.test("url acceptance", async (t) => {
             fail(err.message);
         }
         const err2 = await pool.addRelayURL("nos.lol");
-        assertInstanceOf(err2, RelayAlreadyRegistered);
+        assertNotInstanceOf(err2, Error);
         await pool.close();
     }
     {
@@ -44,7 +47,7 @@ Deno.test("url acceptance", async (t) => {
             fail(err.message);
         }
         const err2 = await pool.addRelayURL("wss://nos.lol");
-        assertInstanceOf(err2, RelayAlreadyRegistered);
+        assertNotInstanceOf(err2, Error);
         await pool.close();
     }
 });

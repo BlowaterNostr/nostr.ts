@@ -9,7 +9,7 @@ import { relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import { ConnectionPool, RelayAlreadyRegistered } from "./relay-pool.ts";
+import { ConnectionPool } from "./relay-pool.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
@@ -54,8 +54,8 @@ Deno.test("ConnectionPool newSub & close", async () => {
     }
     const connectionPool = new ConnectionPool();
     {
-        const err = await connectionPool.addRelay(relay);
-        assertEquals(err, undefined);
+        const _relay = await connectionPool.addRelay(relay);
+        assertEquals(_relay, relay);
     }
     const sub = await connectionPool.newSub("1", { kinds: [0], limit: 1 });
     if (sub instanceof Error) {
@@ -115,11 +115,17 @@ Deno.test("ConnectionPool register the same relay twice", async () => {
         fail(relay.message);
     }
 
-    const err1 = await pool.addRelay(relay);
-    assertEquals(err1, undefined);
+    {
+        const _relay = await pool.addRelay(relay);
+        assertEquals(_relay, relay);
+    }
 
-    const err2 = await pool.addRelay(relay);
-    assertInstanceOf(err2, RelayAlreadyRegistered);
+    const _relay = await pool.addRelay(relay);
+    if (_relay instanceof SingleRelayConnection) {
+        assertEquals(_relay.url, relay.url);
+    } else {
+        fail(_relay?.message);
+    }
 
     await pool.close();
 });
@@ -140,8 +146,8 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         fail(relay.message);
     }
 
-    const err1 = await pool.addRelay(relay);
-    assertEquals(err1, undefined);
+    const _relay = await pool.addRelay(relay);
+    assertEquals(_relay, relay);
 
     const msg = await chan.chan.pop();
     if (msg === csp.closed) {
