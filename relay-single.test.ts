@@ -1,4 +1,4 @@
-import { assertEquals, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { InMemoryAccountContext, NostrEvent, NostrKind } from "./nostr.ts";
 import { blowater, relays } from "./relay-list.test.ts";
 import {
@@ -136,12 +136,19 @@ Deno.test("send event", async () => {
 
 Deno.test("auto reconnection to wrong address", async () => {
     const relay = SingleRelayConnection.New("app.blowater.app", /*wrong address*/ { log: true });
-    if (relay instanceof Error) {
-        fail(relay.message);
-    }
     await sleep(1000);
     if (relay.status() == "Open") {
         fail(); // should still be closed after 1s
     }
     await relay.close();
+});
+
+Deno.test("SubscriptionAlreadyExist", async () => {
+    const relay = SingleRelayConnection.New(blowater, { log: true });
+    {
+        const _ = await relay.newSub("hi", { limit: 1 });
+        const sub = await relay.newSub("hi", { limit: 1 });
+        assertInstanceOf(sub, SubscriptionAlreadyExist)
+    }
+    await relay.close()
 });

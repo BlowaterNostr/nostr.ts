@@ -217,7 +217,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
     }
 
-    newSub = async (subID: string, filter: NostrFilters) => {
+    async newSub(subID: string, filter: NostrFilters): Promise<
+        SubscriptionAlreadyExist | RelayDisconnectedByClient | {
+            filter: NostrFilters;
+            chan: csp.Channel<RelayResponse_REQ_Message>;
+        }
+    > {
         if (this.log) {
             console.log(this.url, "newSub", subID, filter);
         }
@@ -239,7 +244,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
         this.subscriptionMap.set(subID, { filter, chan });
         return { filter, chan };
-    };
+    }
 
     private async send(data: string) {
         if (this.ws == undefined) {
