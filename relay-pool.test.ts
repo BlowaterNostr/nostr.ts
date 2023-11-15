@@ -117,7 +117,7 @@ Deno.test("ConnectionPool register the same relay twice", async () => {
 
     {
         const _relay = await pool.addRelay(relay);
-        assertEquals(_relay, undefined);
+        assertEquals(_relay, relay);
     }
 
     const _relay = await pool.addRelay(relay);
