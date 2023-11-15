@@ -143,42 +143,43 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     console.log("exiting the relay connection");
                     this.error = messsage;
                     return;
-                }
-                let relayResponse = parseJSON<_RelayResponse>(messsage.data);
-                if (relayResponse instanceof Error) {
-                    console.error(relayResponse.message);
-                    return;
-                }
-
-                if (
-                    relayResponse[0] === "EVENT" ||
-                    relayResponse[0] === "EOSE"
-                ) {
-                    let subID = relayResponse[1];
-                    let subscription = this.subscriptionMap.get(
-                        subID,
-                    );
-                    if (subscription === undefined) {
-                        return; // the subscription has been closed locally before receiving remote messages
-                    }
-                    const chan = subscription.chan;
-                    if (!chan.closed()) {
-                        if (relayResponse[0] === "EOSE") {
-                            chan.put({
-                                type: relayResponse[0],
-                                subID: relayResponse[1],
-                            });
-                        } else {
-                            chan.put({
-                                type: relayResponse[0],
-                                subID: relayResponse[1],
-                                event: relayResponse[2],
-                            });
-                        }
-                    }
                 } else {
-                    if (this.log) {
-                        console.log(url, messsage); // NOTICE, OK and other non-standard response types
+                    let relayResponse = parseJSON<_RelayResponse>(messsage.data);
+                    if (relayResponse instanceof Error) {
+                        console.error(relayResponse.message);
+                        return;
+                    }
+
+                    if (
+                        relayResponse[0] === "EVENT" ||
+                        relayResponse[0] === "EOSE"
+                    ) {
+                        let subID = relayResponse[1];
+                        let subscription = this.subscriptionMap.get(
+                            subID,
+                        );
+                        if (subscription === undefined) {
+                            return; // the subscription has been closed locally before receiving remote messages
+                        }
+                        const chan = subscription.chan;
+                        if (!chan.closed()) {
+                            if (relayResponse[0] === "EOSE") {
+                                chan.put({
+                                    type: relayResponse[0],
+                                    subID: relayResponse[1],
+                                });
+                            } else {
+                                chan.put({
+                                    type: relayResponse[0],
+                                    subID: relayResponse[1],
+                                    event: relayResponse[2],
+                                });
+                            }
+                        }
+                    } else {
+                        if (this.log) {
+                            console.log(url, messsage); // NOTICE, OK and other non-standard response types
+                        }
                     }
                 }
             }

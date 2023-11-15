@@ -92,10 +92,14 @@ Deno.test("Parameterized Event", async () => {
         created_at: now + 20,
     });
 
+    console.log(1);
     const relay = SingleRelayConnection.New(relays[1]);
+    console.log("after");
     assertNotInstanceOf(relay, Error);
     {
+        console.log(1.01);
         const err = await relay.sendEvent(event_v1);
+        console.log(1.1);
         if (err instanceof Error) fail(err.message);
         const err2 = await relay.sendEvent(event_v2);
         if (err2 instanceof Error) fail(err2.message);
@@ -106,10 +110,13 @@ Deno.test("Parameterized Event", async () => {
             authors: [ctx.publicKey.hex],
             kinds: [NostrKind.Custom_App_Data],
         });
+        console.log(2);
         assertNotInstanceOf(stream, Error);
         {
             // will only get v2
+            console.log(2.5);
             const msg = await stream.chan.pop() as RelayResponse_REQ_Message;
+            console.log(3);
             if (msg.type == "EOSE") fail(JSON.stringify(msg));
             assertEquals(msg.event, event_v2);
 
