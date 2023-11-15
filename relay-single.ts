@@ -51,6 +51,8 @@ export type NextMessageType = {
 } | {
     type: "OtherError";
     error: Error;
+} | {
+    type: "open";
 };
 
 export type BidirectionalNetwork = {
@@ -143,6 +145,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     console.log("exiting the relay connection");
                     this.error = messsage;
                     return;
+                } else if (messsage.type == "open") {
+                    // the websocket is just openned
+                    // todo
                 } else {
                     let relayResponse = parseJSON<_RelayResponse>(messsage.data);
                     if (relayResponse instanceof Error) {

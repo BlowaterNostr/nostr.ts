@@ -8,10 +8,12 @@ export enum CloseReason {
 
 export class AsyncWebSocket implements BidirectionalNetwork {
     private readonly isSocketOpen = csp.chan<never>();
-    private readonly onMessage = csp.chan<{
-        type: "message" | "error";
-        data: string;
-    }>();
+    private readonly onMessage = csp.chan<
+        {
+            type: "message" | "error";
+            data: string;
+        } | { type: "open" }
+    >();
     private readonly onClose = csp.chan<NetworkCloseEvent>();
     public readonly url: string;
 
@@ -29,11 +31,14 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         public log?: boolean,
     ) {
         this.url = ws.url;
-        this.ws.onopen = async (_: Event) => {
+        this.ws.onopen = async (event: Event) => {
             if (log) {
                 console.log(ws.url, "openned");
             }
-            await this.isSocketOpen.close(`ws ${ws.url} is open`);
+            await this.isSocketOpen.close();
+            await this.onMessage.put({
+                type: "open",
+            });
         };
 
         this.ws.onmessage = (event: MessageEvent) => {
@@ -86,6 +91,9 @@ export class AsyncWebSocket implements BidirectionalNetwork {
                     error: new Error(msg.data),
                 };
             }
+        }
+        if (msg.type == "open") {
+            return msg;
         }
         return {
             type: "messsage",
