@@ -51,7 +51,7 @@ export type NextMessageType = {
     error: string;
 } | {
     type: "OtherError";
-    error: Error;
+    error: string;
 } | {
     type: "open";
 };
@@ -117,7 +117,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     // exit the coroutine
                     this.error = messsage;
                     if (this.log) {
-                        console.log(`exiting the relay coroutine of ${this.url}`);
+                        console.log(`RelayDisconnectedByClient: exiting the relay coroutine of ${this.url}`);
                     }
                     return;
                 } else if (
@@ -135,9 +135,8 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 } else if (messsage.type == "OtherError") {
                     // in this case, we don't know what to do, exit
                     console.error(messsage);
-                    console.log("exiting the relay connection");
                     this.error = messsage;
-                    return;
+                    continue;
                 } else if (messsage.type == "open") {
                     // the websocket is just openned
                     for (const data of this.pendingSend) {
@@ -195,6 +194,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         url: string,
         args?: {
             wsCreator?: (url: string) => BidirectionalNetwork | Error;
+            connect?: boolean;
             log?: boolean;
         },
     ): SingleRelayConnection {
@@ -291,6 +291,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     close = async () => {
+        console.log(`closing relay ${this.url}, status: ${this.status()}`);
         this._isClosedByClient = true;
         for (const [subID, { chan }] of this.subscriptionMap.entries()) {
             if (chan.closed()) {
@@ -307,6 +308,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         // this is a quick & dirty way for me to address it
         // old browser API sucks
         await csp.sleep(1);
+        console.log(`relay ${this.url}, status: ${this.status()}`);
     };
 
     isClosed(): boolean {
@@ -320,7 +322,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         if (this.log) {
             console.log(`connecting ${this.url}, reason: ${this.error}`);
         }
-        if (this._isClosedByClient) {
+        if (this.isClosedByClient()) {
             return;
         }
         if (this.ws) {
