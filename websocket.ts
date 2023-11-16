@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any no-unused-vars require-await ban-unused-ignore
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import { BidirectionalNetwork, NetworkCloseEvent, NextMessageType, WebSocketClosed } from "./relay-single.ts";
+import { BidirectionalNetwork, NextMessageType, WebSocketClosed } from "./relay-single.ts";
 
 export enum CloseReason {
     ByClient = 4000,
@@ -11,18 +11,34 @@ export type WebSocketError = {
     readonly error: any;
 };
 
+export type WebSocketClosedEvent = {
+    // Returns the WebSocket connection close code provided by the server.
+    readonly code: number;
+    // Returns the WebSocket connection close reason provided by the server.
+    readonly reason: string;
+    // Returns true if the connection closed cleanly; false otherwise.
+    readonly wasClean: boolean;
+};
+
 export class AsyncWebSocket implements BidirectionalNetwork {
     private readonly isSocketOpen = csp.chan<never>();
-    private readonly onMessage = csp.chan<
-        {
+    private readonly messageChannel = csp.chan<
+        | {
             type: "message";
             data: string;
-        } | {
+        }
+        | {
             type: "error";
             error: WebSocketError;
-        } | { type: "open" }
+        }
+        | { type: "open" }
+        | {
+            type: "closed";
+            event: WebSocketClosedEvent;
+        }
     >();
-    private readonly onClose = csp.chan<NetworkCloseEvent>();
+    private readonly onClose = csp.chan<never>();
+    private closedEvent?: WebSocketClosedEvent;
     public readonly url: string;
 
     static New(url: string): AsyncWebSocket | Error {
@@ -44,13 +60,13 @@ export class AsyncWebSocket implements BidirectionalNetwork {
                 console.log(ws.url, "openned");
             }
             await this.isSocketOpen.close();
-            await this.onMessage.put({
+            await this.messageChannel.put({
                 type: "open",
             });
         };
 
         this.ws.onmessage = (event: MessageEvent) => {
-            this.onMessage.put({
+            this.messageChannel.put({
                 type: "message",
                 data: event.data,
             });
@@ -58,7 +74,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
 
         // @ts-ignore
         this.ws.onerror = async (event: ErrorEvent) => {
-            const err = await this.onMessage.put({
+            const err = await this.messageChannel.put({
                 type: "error",
                 error: event,
             });
@@ -71,13 +87,25 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             if (this.log) {
                 console.log(ws.url, "closed", event.code, event.reason);
             }
-            await this.onClose.put(event);
-            await this.onClose.close(`ws ${ws.url} is closed`);
+            this.closedEvent = {
+                code: event.code,
+                reason: event.reason,
+                wasClean: event.wasClean,
+            };
+            await this.onClose.close();
+            await this.messageChannel.put({
+                type: "closed",
+                event: {
+                    code: event.code,
+                    reason: event.reason,
+                    wasClean: event.wasClean,
+                },
+            });
         };
     }
 
     async nextMessage(): Promise<NextMessageType> {
-        const msg = await this.onMessage.pop();
+        const msg = await this.messageChannel.pop();
         if (msg == csp.closed) {
             return {
                 type: "WebSocketClosed",
@@ -103,7 +131,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
                 };
             }
         }
-        if (msg.type == "open") {
+        if (msg.type == "open" || msg.type == "closed") {
             return msg;
         }
         return {
@@ -124,19 +152,27 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         }
     }
 
-    close = async (
-        code?: number | undefined,
-        reason?: string | undefined,
-    ): Promise<NetworkCloseEvent | CloseTwice | typeof csp.closed> => {
+    async close(
+        code?: number,
+        reason?: string,
+        force?: boolean,
+    ): Promise<CloseTwice | WebSocketClosedEvent | undefined> {
         if (
             this.ws.readyState == WebSocket.CLOSED ||
             this.ws.readyState == WebSocket.CLOSING
         ) {
             return new CloseTwice(this.ws.url);
         }
+        console.log("closing Web Scoekt", this.url, this.status());
         this.ws.close(code, reason);
-        return await this.onClose.pop();
-    };
+        console.log("closing Web Scoekt", this.url, this.status());
+        if (force) {
+            return;
+        }
+        await this.onClose.pop();
+        console.log("closing Web Scoekt", this.url, this.status(), this.closedEvent);
+        return this.closedEvent;
+    }
 
     // only unblocks when the socket is open
     // if the socket is closed or closing, blocks forever
@@ -151,14 +187,14 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             return;
         }
         if (this.ws.readyState === WebSocket.CONNECTING) {
-            const signal = csp.chan<undefined | NetworkCloseEvent | typeof csp.closed>();
+            const signal = csp.chan<undefined | WebSocketClosedEvent>();
             (async () => {
                 await this.isSocketOpen.pop();
                 await signal.put(undefined);
             })();
             (async () => {
-                const close = await this.onClose.pop();
-                await signal.put(close);
+                await this.onClose.pop();
+                await signal.put(this.closedEvent);
             })();
             const sig = await signal.pop();
             if (sig != undefined) {
