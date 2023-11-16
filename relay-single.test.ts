@@ -162,7 +162,7 @@ Deno.test("able to send event before the web socket is connected", async () => {
         });
         const _ = await relay.sendEvent(event);
         const err = relay.connect();
-        if(err instanceof Error) fail(err.message)
+        if (err instanceof Error) fail(err.message);
     }
     await relay.close();
 });
