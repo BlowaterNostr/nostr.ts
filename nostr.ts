@@ -156,23 +156,6 @@ export interface NostrAccountContext {
     decrypt(pubkey: string, ciphertext: string): Promise<string | Error>;
 }
 
-export function groupBy<group, T>(
-    sequence: Iterable<T>,
-    grouper: (element: T) => group,
-): Map<group, T[]> {
-    const map = new Map<group, T[]>();
-    for (const event of sequence) {
-        const groupID = grouper(event);
-        const group = map.get(groupID);
-        if (group) {
-            group.push(event);
-        } else {
-            map.set(groupID, [event]);
-        }
-    }
-    return map;
-}
-
 export class DecryptionFailure extends Error {
     constructor(
         public event: NostrEvent,

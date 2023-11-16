@@ -1,3 +1,4 @@
+import { parseJSON } from "./_helper.ts";
 import {
     _RelayResponse,
     _RelayResponse_OK,
@@ -86,9 +87,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     private ws: BidirectionalNetwork | undefined;
     private readonly pendingSend = new Set<string>();
 
-    public getWebSocket(): BidirectionalNetwork | undefined {
-        return this.ws;
-    }
     status(): WebSocketReadyState {
         if (this.ws == undefined) {
             return "Closed";
@@ -129,7 +127,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         console.log(messsage);
                     }
                     this.error = messsage.error;
-                    const err = this.reconnect();
+                    const err = await this.connect();
                     if (err instanceof Error) {
                         this.error = err;
                     }
@@ -217,7 +215,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
     }
 
-    newSub = async (subID: string, filter: NostrFilters) => {
+    async newSub(subID: string, filter: NostrFilters): Promise<
+        SubscriptionAlreadyExist | RelayDisconnectedByClient | {
+            filter: NostrFilters;
+            chan: csp.Channel<RelayResponse_REQ_Message>;
+        }
+    > {
         if (this.log) {
             console.log(this.url, "newSub", subID, filter);
         }
@@ -239,7 +242,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
         this.subscriptionMap.set(subID, { filter, chan });
         return { filter, chan };
-    };
+    }
 
     private async send(data: string) {
         if (this.ws == undefined) {
@@ -251,7 +254,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (this.isClosedByClient()) {
                 return new RelayDisconnectedByClient();
             } else {
-                return this.reconnect();
+                return await this.connect();
             }
         }
         return err;
@@ -313,19 +316,24 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return this.ws.status() == "Closed" || this.ws.status() == "Closing";
     }
 
-    private reconnect() {
+    public async connect() {
         if (this.log) {
-            console.log("reconnecting", this.url, "reason", this.error);
+            console.log(`connecting ${this.url}, reason: ${this.error}`);
+        }
+        if (this._isClosedByClient) {
+            return;
+        }
+        if (this.ws) {
+            const status = this.ws.status();
+            if (status == "Connecting" || status == "Open") {
+                return;
+            }
         }
         const ws = this.wsCreator(this.url);
         if (ws instanceof Error) {
             return ws;
         }
         this.ws = ws;
-        if (this._isClosedByClient) {
-            console.log("close the new ws");
-            this.ws.close();
-        }
     }
 
     private async nextMessage(ws: BidirectionalNetwork): Promise<NextMessageType> {
@@ -336,13 +344,5 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             };
         }
         return ws.nextMessage();
-    }
-}
-
-function parseJSON<T>(content: string): T | Error {
-    try {
-        return JSON.parse(content) as T;
-    } catch (e) {
-        return e as Error;
     }
 }
