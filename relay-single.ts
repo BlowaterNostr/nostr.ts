@@ -8,7 +8,7 @@ import {
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
-import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
+import { AsyncWebSocket, CloseTwice, WebSocketError, WebSocketReadyState } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 export class WebSocketClosed extends Error {
@@ -51,7 +51,7 @@ export type NextMessageType = {
     error: string;
 } | {
     type: "OtherError";
-    error: string;
+    error: WebSocketError;
 } | {
     type: "open";
 };
@@ -121,23 +121,20 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     }
                     return;
                 } else if (
-                    messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress"
+                    messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress" ||
+                    messsage.type == "OtherError"
                 ) {
-                    if (this.ws.status() != "Closed") {
-                        console.log(messsage);
-                    }
+                    console.log(messsage);
                     this.error = messsage.error;
                     const err = await this.connect();
                     if (err instanceof Error) {
                         this.error = err;
                     }
                     continue;
-                } else if (messsage.type == "OtherError") {
-                    // in this case, we don't know what to do, exit
-                    console.error(messsage);
-                    this.error = messsage;
-                    continue;
                 } else if (messsage.type == "open") {
+                    if (this.log) {
+                        console.log(`relay connection ${this.url} is openned`);
+                    }
                     // the websocket is just openned
                     for (const data of this.pendingSend) {
                         const err = await this.send(data);
@@ -320,7 +317,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     public async connect() {
         if (this.log) {
-            console.log(`connecting ${this.url}, reason: ${this.error}`);
+            console.log(`(re)connecting ${this.url}, reason: ${JSON.stringify(this.error)}`);
         }
         if (this.isClosedByClient()) {
             return;
