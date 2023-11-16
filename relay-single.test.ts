@@ -7,7 +7,7 @@ import {
     SubscriptionAlreadyExist,
     WebSocketClosed,
 } from "./relay-single.ts";
-import { AsyncWebSocket, CloseTwice, WebSocketReadyState } from "./websocket.ts";
+import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
@@ -165,4 +165,11 @@ Deno.test("able to send event before the web socket is connected", async () => {
         if (err instanceof Error) fail(err.message);
     }
     await relay.close();
+});
+
+Deno.test("SingleRelayConnection.New: able to open & close immediately even for a wrong URL", async () => {
+    const relay = SingleRelayConnection.New("app.blowater.app", { log: true, connect: false });
+    assertEquals(relay.status(), "Connecting");
+    await relay.close();
+    assertEquals(relay.status(), "Closed");
 });

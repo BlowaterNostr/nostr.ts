@@ -10,8 +10,17 @@ export class AsyncWebSocket implements BidirectionalNetwork {
     private readonly isSocketOpen = csp.chan<never>();
     private readonly onMessage = csp.chan<
         {
-            type: "message" | "error";
+            type: "message";
             data: string;
+        } | {
+            type: "error";
+            error: {
+                readonly message: string;
+                readonly filename: string;
+                readonly lineno: number;
+                readonly colno: number;
+                readonly error: any;
+            };
         } | { type: "open" }
     >();
     private readonly onClose = csp.chan<NetworkCloseEvent>();
@@ -52,7 +61,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         this.ws.onerror = async (event: ErrorEvent) => {
             const err = await this.onMessage.put({
                 type: "error",
-                data: event.message,
+                error: event,
             });
             if (err instanceof Error) {
                 console.error(err);
@@ -78,17 +87,17 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         }
         if (msg.type == "error") {
             if (
-                msg.data ==
+                msg.error.message ==
                     "Error: failed to lookup address information: nodename nor servname provided, or not known"
             ) {
                 return {
                     type: "FailedToLookupAddress",
-                    error: msg.data,
+                    error: msg.error.message,
                 };
             } else {
                 return {
                     type: "OtherError",
-                    error: new Error(msg.data),
+                    error: msg.error.message,
                 };
             }
         }
