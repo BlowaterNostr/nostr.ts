@@ -246,6 +246,14 @@ export class InMemoryAccountContext implements NostrAccountContext {
         return new InMemoryAccountContext(privateKey);
     }
 
+    static FromString(prikey: string) {
+        const key = PrivateKey.FromString(prikey);
+        if (key instanceof Error) {
+            return key;
+        }
+        return new InMemoryAccountContext(key);
+    }
+
     static Generate() {
         return new InMemoryAccountContext(PrivateKey.Generate());
     }
