@@ -8,14 +8,20 @@ import {
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
-import { AsyncWebSocket, CloseTwice, WebSocketError, WebSocketReadyState } from "./websocket.ts";
+import {
+    AsyncWebSocket,
+    CloseTwice,
+    WebSocketClosedEvent,
+    WebSocketError,
+    WebSocketReadyState,
+} from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 export class WebSocketClosed extends Error {
     constructor(
         public url: string,
         public state: WebSocketReadyState,
-        public reason?: NetworkCloseEvent,
+        public reason?: WebSocketClosedEvent,
     ) {
         super(`${url} is in state ${state}, code ${reason?.code}`);
         this.name = WebSocketClosed.name;
@@ -30,12 +36,6 @@ export class RelayDisconnectedByClient extends Error {
 }
 
 export class FailedToLookupAddress extends Error {}
-
-export type NetworkCloseEvent = {
-    readonly code: number;
-    readonly reason: string;
-    readonly wasClean: boolean;
-};
 
 export type NextMessageType = {
     type: "messsage";
@@ -54,6 +54,9 @@ export type NextMessageType = {
     error: WebSocketError;
 } | {
     type: "open";
+} | {
+    type: "closed";
+    event: WebSocketClosedEvent;
 };
 
 export type BidirectionalNetwork = {
@@ -65,7 +68,11 @@ export type BidirectionalNetwork = {
     send: (
         str: string | ArrayBufferLike | Blob | ArrayBufferView,
     ) => Promise<WebSocketClosed | Error | undefined>;
-    close: (code?: number, reason?: string) => Promise<NetworkCloseEvent | CloseTwice | typeof csp.closed>;
+    close: (
+        code?: number,
+        reason?: string,
+        force?: boolean,
+    ) => Promise<CloseTwice | WebSocketClosedEvent | undefined>;
 };
 
 export class SubscriptionAlreadyExist extends Error {
@@ -122,10 +129,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     return;
                 } else if (
                     messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress" ||
-                    messsage.type == "OtherError"
+                    messsage.type == "OtherError" || messsage.type == "closed"
                 ) {
+                    if (messsage.type != "closed") {
+                        this.error = messsage.error;
+                    }
                     console.log(messsage);
-                    this.error = messsage.error;
                     const err = await this.connect();
                     if (err instanceof Error) {
                         this.error = err;
@@ -287,7 +296,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return err;
     };
 
-    close = async () => {
+    close = async (force?: boolean) => {
         console.log(`closing relay ${this.url}, status: ${this.status()}`);
         this._isClosedByClient = true;
         for (const [subID, { chan }] of this.subscriptionMap.entries()) {
@@ -297,7 +306,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             await this.closeSub(subID);
         }
         if (this.ws) {
-            await this.ws.close();
+            await this.ws.close(undefined, undefined, force ? true : false);
         }
         // the WebSocket constructor is async underneath but since it's too old,
         // it does not have an awaitable interface so that exiting the program may cause
@@ -305,7 +314,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         // this is a quick & dirty way for me to address it
         // old browser API sucks
         await csp.sleep(1);
-        console.log(`relay ${this.url}, status: ${this.status()}`);
+        console.log(`relay ${this.url} closed, status: ${this.status()}`);
     };
 
     isClosed(): boolean {

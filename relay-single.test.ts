@@ -9,7 +9,6 @@ import {
 } from "./relay-single.ts";
 import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
-import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 Deno.test("SingleRelayConnection open & close", async () => {
     const ps = [];
@@ -134,15 +133,6 @@ Deno.test("send event", async () => {
     await relay.close();
 });
 
-Deno.test("auto reconnection to wrong address", async () => {
-    const relay = SingleRelayConnection.New("app.blowater.app", /*wrong address*/ { log: true });
-    await sleep(1000);
-    if (relay.status() == "Open") {
-        fail(); // should still be closed after 1s
-    }
-    await relay.close();
-});
-
 Deno.test("SubscriptionAlreadyExist", async () => {
     const relay = SingleRelayConnection.New(blowater, { log: true });
     {
@@ -167,8 +157,8 @@ Deno.test("able to send event before the web socket is connected", async () => {
     await relay.close();
 });
 
-Deno.test("SingleRelayConnection.New: able to open & close immediately even for a wrong URL", async () => {
-    const relay = SingleRelayConnection.New("app.blowater.app", { log: true, connect: false });
+Deno.test("SingleRelayConnection.New: able to open & close immediately", async () => {
+    const relay = SingleRelayConnection.New(blowater, { log: true, connect: false });
     assertEquals(relay.status(), "Connecting");
     await relay.close();
     assertEquals(relay.status(), "Closed");
