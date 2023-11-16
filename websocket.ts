@@ -6,6 +6,11 @@ export enum CloseReason {
     ByClient = 4000,
 }
 
+export type WebSocketError = {
+    readonly message: string;
+    readonly error: any;
+};
+
 export class AsyncWebSocket implements BidirectionalNetwork {
     private readonly isSocketOpen = csp.chan<never>();
     private readonly onMessage = csp.chan<
@@ -14,13 +19,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             data: string;
         } | {
             type: "error";
-            error: {
-                readonly message: string;
-                readonly filename: string;
-                readonly lineno: number;
-                readonly colno: number;
-                readonly error: any;
-            };
+            error: WebSocketError;
         } | { type: "open" }
     >();
     private readonly onClose = csp.chan<NetworkCloseEvent>();
@@ -97,7 +96,10 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             } else {
                 return {
                     type: "OtherError",
-                    error: msg.error.message,
+                    error: {
+                        error: msg.error.error,
+                        message: msg.error.message,
+                    },
                 };
             }
         }
