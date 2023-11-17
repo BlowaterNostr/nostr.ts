@@ -86,6 +86,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     isClosedByClient() {
         return this._isClosedByClient;
     }
+
     private subscriptionMap = new Map<
         string,
         { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
@@ -94,6 +95,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     private ws: BidirectionalNetwork | undefined;
     private readonly pendingSend = new Set<string>();
     private readonly messageChannel = new csp.Channel<NextMessageType>();
+    private untilWebSocketPresent = new csp.Channel<never>();
 
     status(): WebSocketReadyState {
         if (this.ws == undefined) {
@@ -243,8 +245,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private async send(data: string) {
         if (this.ws == undefined) {
-            this.pendingSend.add(data);
-            return;
+            await this.untilWebSocketPresent.pop();
         }
 
         const err = await this.ws.send(data);

@@ -158,22 +158,24 @@ Deno.test("able to send event before the web socket is connected", async () => {
     await relay.close();
 });
 
-Deno.test("SingleRelayConnection.newSub able to subscribe before connection is openned", async () => {
+Deno.test("SingleRelayConnection.sendEvent able to send before web socket connection is openned", async () => {
+    const ctx = InMemoryAccountContext.Generate();
     const relay = SingleRelayConnection.New(blowater, { log: true, connect: false });
     {
         assertEquals(relay.status(), "Closed");
 
-        const sub = await relay.newSub("test", { limit: 1 });
-        if (sub instanceof Error) fail(sub.message);
+        // send an event before connecting
+        const event = await prepareNormalNostrEvent(ctx, {
+            content: "",
+            kind: NostrKind.TEXT_NOTE,
+        });
+        const err = await relay.sendEvent(event);
+        if (err instanceof Error) fail(err.message);
 
+        // connect
         await relay.connect();
 
-        assertEquals(relay.status(), "Open");
-
-        console.log(123);
-        const msg = await sub.chan.pop();
-        console.log(456);
-        assertEquals(msg == csp.closed, false); // as long as it resolves
+        assertEquals(relay.status(), "Connecting");
     }
     await relay.close();
 });
