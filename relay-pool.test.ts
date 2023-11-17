@@ -1,9 +1,4 @@
-import {
-    assertEquals,
-    assertInstanceOf,
-    assertNotInstanceOf,
-    fail,
-} from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
