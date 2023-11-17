@@ -145,11 +145,9 @@ Deno.test("SubscriptionAlreadyExist", async () => {
 });
 
 Deno.test("SingleRelayConnection.newSub able to sub before web socket connection is openned", async () => {
-    const ctx = InMemoryAccountContext.Generate();
     const relay = SingleRelayConnection.New(blowater, { log: true, connect: false });
     {
-        assertEquals(relay.status(), "Closed");
-
+        assertEquals(relay.status(), "Connecting");
         const stream = await relay.newSub("test", { limit: 1 });
         if (stream instanceof Error) fail(stream.message);
 

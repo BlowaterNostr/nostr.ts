@@ -93,7 +93,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     >();
     private error: any; // todo: check this error in public APIs
     private ws: BidirectionalNetwork | undefined;
-    private readonly messageChannel = new csp.Channel<NextMessageType>();
 
     status(): WebSocketReadyState {
         if (this.ws == undefined) {
@@ -108,8 +107,14 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         public log: boolean,
     ) {
         (async () => {
+            const ws = await this.connect();
+            if (ws instanceof RelayDisconnectedByClient) {
+                console.error(ws);
+                return;
+            }
+            this.ws = ws;
             for (;;) {
-                const messsage = await this.nextMessage();
+                const messsage = await this.nextMessage(this.ws);
                 if (messsage.type == "RelayDisconnectedByClient") {
                     // exit the coroutine
                     this.error = messsage;
@@ -305,50 +310,40 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 
     public async connect() {
-        let ws;
+        let ws: BidirectionalNetwork | Error | undefined;
         for (;;) {
             if (this.log) {
                 console.log(`(re)connecting ${this.url}, reason: ${JSON.stringify(this.error)}`);
             }
             if (this.isClosedByClient()) {
-                return;
+                return new RelayDisconnectedByClient();
             }
             if (this.ws) {
                 const status = this.ws.status();
                 if (status == "Connecting" || status == "Open") {
-                    return;
+                    return this.ws;
                 }
             }
 
             ws = this.wsCreator(this.url, this.log);
             if (ws instanceof Error) {
                 console.error(ws);
-                return;
+                continue;
             }
             break;
         }
         this.ws = ws;
-        // todo: complete
-        this.ws.nextMessage;
+        return this.ws;
     }
 
-    private async nextMessage(): Promise<NextMessageType> {
+    private async nextMessage(ws: BidirectionalNetwork): Promise<NextMessageType> {
         if (this.isClosedByClient()) {
             return {
                 type: "RelayDisconnectedByClient",
                 error: new RelayDisconnectedByClient(),
             };
         }
-        const message = await this.messageChannel.pop();
-        if (message == csp.closed) {
-            return {
-                type: "OtherError",
-                error: {
-                    error: message,
-                    message: "",
-                },
-            };
-        }
+        const message = await ws.nextMessage();
         return message;
     }
 }
