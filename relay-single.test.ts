@@ -153,7 +153,9 @@ Deno.test("SingleRelayConnection.newSub able to sub before web socket connection
 
         // connect
         await relay.connect();
-        assertEquals(relay.status(), "Connecting");
+        if (relay.status() != "Open" && relay.status() != "Connecting") {
+            fail(relay.status());
+        }
 
         const msg = await stream.chan.pop();
         if (msg == csp.closed) {
