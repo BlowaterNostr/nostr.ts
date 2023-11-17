@@ -93,9 +93,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     >();
     private error: any; // todo: check this error in public APIs
     private ws: BidirectionalNetwork | undefined;
-    private readonly pendingSend = new Set<string>();
     private readonly messageChannel = new csp.Channel<NextMessageType>();
-    private untilWebSocketPresent = new csp.Channel<never>();
 
     status(): WebSocketReadyState {
         if (this.ws == undefined) {
@@ -137,12 +135,15 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         console.log(`relay connection ${this.url} is openned`);
                     }
                     // the websocket is just openned
-                    for (const data of this.pendingSend) {
-                        const err = await this.send(data);
+                    // send all the subscriptions to the relay
+                    for (const [subID, data] of this.subscriptionMap.entries()) {
+                        if (this.ws == undefined) {
+                            console.error("impossible state");
+                            break;
+                        }
+                        const err = await sendSubscription(this.ws, subID, data.filter);
                         if (err instanceof Error) {
                             console.error(err);
-                        } else {
-                            this.pendingSend.delete(data);
                         }
                     }
                 } else {
@@ -220,7 +221,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
     > {
         if (this.log) {
-            // console.log(this.url, "newSub", subID, filter);
             console.log(`${this.url} registers subscription ${subID}`, filter);
         }
         let subscription = this.subscriptionMap.get(subID);
@@ -228,50 +228,37 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             return new SubscriptionAlreadyExist(subID, filter, this.url);
         }
 
-        const err = await this.send(JSON.stringify([
-            "REQ",
-            subID,
-            filter,
-        ]));
-        if (err) {
-            return err;
+        if (this.ws != undefined) {
+            const err = await sendSubscription(this.ws, subID, filter);
+            if (err instanceof Error) {
+                console.error(err);
+            }
         }
 
         const chan = csp.chan<RelayResponse_REQ_Message>();
-
         this.subscriptionMap.set(subID, { filter, chan });
         return { filter, chan };
     }
 
-    private async send(data: string) {
-        if (this.ws == undefined) {
-            await this.untilWebSocketPresent.pop();
-        }
-
-        const err = await this.ws.send(data);
-        if (err instanceof WebSocketClosed) {
-            if (this.isClosedByClient()) {
-                return new RelayDisconnectedByClient();
-            } else {
-                return this.connect();
-            }
-        }
-        return err;
-    }
-
     // todo: add waitForOk back
     async sendEvent(nostrEvent: NostrEvent) {
-        return this.send(JSON.stringify([
+        if (this.ws == undefined) {
+            return new WebSocketClosed(this.url, this.status());
+        }
+        return this.ws.send(JSON.stringify([
             "EVENT",
             nostrEvent,
         ]));
     }
 
     async closeSub(subID: string) {
-        const err = await this.send(JSON.stringify([
-            "CLOSE",
-            subID, // multiplex marker / channel
-        ]));
+        let err;
+        if (this.ws != undefined) {
+            err = await this.ws.send(JSON.stringify([
+                "CLOSE",
+                subID, // multiplex marker / channel
+            ]));
+        }
 
         const subscription = this.subscriptionMap.get(subID);
         if (subscription === undefined) {
@@ -364,16 +351,15 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
         return message;
     }
+}
 
-    private async flushPendingSend() {
-        // the websocket is just openned
-        for (const data of this.pendingSend) {
-            const err = await this.send(data);
-            if (err instanceof Error) {
-                console.error(err);
-            } else {
-                this.pendingSend.delete(data);
-            }
-        }
+async function sendSubscription(ws: BidirectionalNetwork, subID: string, filter: NostrFilters) {
+    const err = await ws.send(JSON.stringify([
+        "REQ",
+        subID,
+        filter,
+    ]));
+    if (err) {
+        return err;
     }
 }

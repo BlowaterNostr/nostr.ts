@@ -7,7 +7,7 @@ Deno.test("websocket open & close", async () => {
     let ps = [];
     for (let url of relays) {
         let p = (async () => {
-            let ws = AsyncWebSocket.New(url); // todo: maybe use a local ws server to speed up
+            let ws = AsyncWebSocket.New(url, true); // todo: maybe use a local ws server to speed up
             if (ws instanceof Error) {
                 fail();
             }
@@ -21,7 +21,7 @@ Deno.test("websocket open & close", async () => {
 });
 
 Deno.test("websocket call untilOpen N times", async () => {
-    let ws = AsyncWebSocket.New(relays[0]); // todo: maybe use a local ws server to speed up
+    let ws = AsyncWebSocket.New(relays[0], true); // todo: maybe use a local ws server to speed up
     if (ws instanceof Error) {
         fail();
     }
@@ -33,7 +33,7 @@ Deno.test("websocket call untilOpen N times", async () => {
 
 Deno.test("websocket call untilOpen after closed", async () => {
     {
-        const ws = AsyncWebSocket.New(relays[0]);
+        const ws = AsyncWebSocket.New(relays[0], true);
         if (ws instanceof Error) {
             fail();
         }
@@ -43,7 +43,7 @@ Deno.test("websocket call untilOpen after closed", async () => {
         assertInstanceOf(err2, Error);
     }
     {
-        const ws2 = AsyncWebSocket.New(relays[0]);
+        const ws2 = AsyncWebSocket.New(relays[0], true);
         if (ws2 instanceof Error) {
             fail();
         }
@@ -59,7 +59,7 @@ Deno.test("websocket close without waiting for openning", async () => {
     let ps = [];
     for (let url of relays) {
         let p = (async () => {
-            let ws = AsyncWebSocket.New(url); // todo: maybe use a local ws server to speed up
+            let ws = AsyncWebSocket.New(url, true); // todo: maybe use a local ws server to speed up
             if (ws instanceof Error) {
                 fail();
             }
@@ -75,7 +75,7 @@ Deno.test("websocket close without waiting for openning", async () => {
 Deno.test("websocket close with a code & reason", async () => {
     let skipped = 0;
     for (let url of relays) {
-        let ws = AsyncWebSocket.New(url); // todo: maybe use a local ws server to speed up
+        let ws = AsyncWebSocket.New(url, true); // todo: maybe use a local ws server to speed up
         if (ws instanceof Error) {
             fail();
         }
