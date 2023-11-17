@@ -45,11 +45,11 @@ export class ConnectionPool
         }
     >();
 
-    private readonly wsCreator: (url: string) => AsyncWebSocket | Error;
+    private readonly wsCreator: (url: string, log: boolean) => AsyncWebSocket | Error;
 
     constructor(
         private args?: {
-            ws: (url: string) => AsyncWebSocket | Error;
+            ws: (url: string, log: boolean) => AsyncWebSocket | Error;
         },
         public log?: boolean,
     ) {
