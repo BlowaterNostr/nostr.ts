@@ -41,10 +41,10 @@ export class AsyncWebSocket implements BidirectionalNetwork {
     private closedEvent?: WebSocketClosedEvent;
     public readonly url: string;
 
-    static New(url: string): AsyncWebSocket | Error {
+    static New(url: string, log: boolean): AsyncWebSocket | Error {
         try {
             const ws = new WebSocket(url); // could throw, caller should catch it, not part of the MDN doc
-            return new AsyncWebSocket(ws);
+            return new AsyncWebSocket(ws, log);
         } catch (err) {
             return err;
         }
@@ -52,7 +52,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
 
     private constructor(
         private readonly ws: WebSocket,
-        public log?: boolean,
+        public log: boolean,
     ) {
         this.url = ws.url;
         this.ws.onopen = async (event: Event) => {
@@ -163,14 +163,14 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         ) {
             return new CloseTwice(this.ws.url);
         }
-        console.log("closing Web Scoekt", this.url, this.status());
+        console.log("closing Web Socket", this.url, this.status());
         this.ws.close(code, reason);
-        console.log("closing Web Scoekt", this.url, this.status());
+        console.log("closing Web Socket", this.url, this.status());
         if (force) {
             return;
         }
         await this.onClose.pop();
-        console.log("closing Web Scoekt", this.url, this.status(), this.closedEvent);
+        console.log("closing Web Socket", this.url, this.status(), this.closedEvent);
         return this.closedEvent;
     }
 

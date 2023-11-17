@@ -12,11 +12,11 @@ export type Subscriber = {
 };
 
 export type SubscriptionCloser = {
-    closeSub: (subID: string) => Promise<WebSocketClosed | Error | undefined>;
+    closeSub: (subID: string) => Promise<WebSocketClosed | Error | void>;
 };
 
 export type EventSender = {
-    sendEvent: (nostrEvent: NostrEvent) => Promise<Error | undefined>;
+    sendEvent: (nostrEvent: NostrEvent) => Promise<Error | void>;
 };
 
 export type Closer = {

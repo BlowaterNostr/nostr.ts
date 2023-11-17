@@ -9,6 +9,7 @@ import {
 } from "./relay-single.ts";
 import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
+import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 Deno.test("SingleRelayConnection open & close", async () => {
     const ps = [];
@@ -157,9 +158,22 @@ Deno.test("able to send event before the web socket is connected", async () => {
     await relay.close();
 });
 
-Deno.test("SingleRelayConnection.New: able to open & close immediately", async () => {
+Deno.test("SingleRelayConnection.newSub able to subscribe before connection is openned", async () => {
     const relay = SingleRelayConnection.New(blowater, { log: true, connect: false });
-    assertEquals(relay.status(), "Connecting");
+    {
+        assertEquals(relay.status(), "Closed");
+
+        const sub = await relay.newSub("test", { limit: 1 });
+        if (sub instanceof Error) fail(sub.message);
+
+        await relay.connect();
+
+        assertEquals(relay.status(), "Open");
+
+        console.log(123);
+        const msg = await sub.chan.pop();
+        console.log(456);
+        assertEquals(msg == csp.closed, false); // as long as it resolves
+    }
     await relay.close();
-    assertEquals(relay.status(), "Closed");
 });
