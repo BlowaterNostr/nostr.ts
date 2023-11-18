@@ -3,7 +3,6 @@ import { bech32 } from "./scure.js";
 import { utf8Decode, utf8Encode } from "./ende.ts";
 import { PublicKey } from "./key.ts";
 import { NostrKind } from "./nostr.ts";
-import { Int } from "https://deno.land/x/automerge@2.1.0-alpha.12/types.ts";
 
 export class NoteID {
     static FromBech32(id: string): NoteID | Error {
