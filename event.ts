@@ -13,8 +13,8 @@ export async function prepareEncryptedNostrEvent<T extends NostrKind>(
     args: {
         encryptKey: PublicKey;
         kind: T;
-        tags: Tag[];
         content: string;
+        tags?: Tag[];
     },
 ): Promise<NostrEvent<T> | Error> {
     const encrypted = await sender.encrypt(args.encryptKey.hex, args.content);
