@@ -58,10 +58,8 @@ export async function decrypt_with_shared_secret(
     let ciphertext: BufferSource;
     let iv: BufferSource;
     try {
-        const t = Date.now();
         ciphertext = decodeBase64(ctb64);
         iv = decodeBase64(ivb64);
-        console.log(Date.now() - t)
     } catch (e) {
         return new Error(`failed to decode, ${e}`);
     }

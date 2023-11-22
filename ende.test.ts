@@ -82,7 +82,7 @@ Deno.test("decryption performance", async (t) => {
 
 Deno.test("decryption performance: large data", async (t) => {
     const ctx = InMemoryAccountContext.New(PrivateKey.Generate());
-    const data = "1".repeat(10 * 1024 * 1024);  // 10 MB
+    const data = "1".repeat(10 * 1024 * 1024); // 10 MB
     const event = await prepareEncryptedNostrEvent(ctx, {
         encryptKey: ctx.publicKey,
         kind: NostrKind.DIRECT_MESSAGE,
@@ -90,11 +90,10 @@ Deno.test("decryption performance: large data", async (t) => {
     });
     assertNotInstanceOf(event, Error);
 
+    let result;
     await t.step("decrypt", async () => {
-        const result = await ctx.decrypt(ctx.publicKey.hex, event.content);
-        if (result instanceof Error) {
-            fail(result.message);
-        }
-        assertEquals(result, data);
+        result = await ctx.decrypt(ctx.publicKey.hex, event.content);
+        if (result instanceof Error) fail(result.message);
     });
+    assertEquals(result, data);
 });
