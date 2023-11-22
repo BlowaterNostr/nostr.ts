@@ -2,7 +2,6 @@
 ende stands for encryption decryption
 */
 import * as secp from "./vendor/secp256k1.js";
-import { base64 } from "./scure.js";
 
 export async function encrypt(
     publicKey: string,
@@ -58,8 +57,8 @@ export async function decrypt_with_shared_secret(
     let ciphertext: BufferSource;
     let iv: BufferSource;
     try {
-        ciphertext = base64.decode(ctb64);
-        iv = base64.decode(ivb64);
+        ciphertext = decodeBase64(ctb64);
+        iv = decodeBase64(ivb64);
     } catch (e) {
         return new Error(`failed to decode, ${e}`);
     }
@@ -95,6 +94,17 @@ function toBase64(uInt8Array: Uint8Array) {
         i++;
     }
     return btoa(strChunks.join(""));
+}
+
+function decodeBase64(base64String: string) {
+    const binaryString = atob(base64String);
+    const length = binaryString.length;
+    const bytes = new Uint8Array(length);
+
+    for (let i = 0; i < length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
 }
 
 function getNormalizedX(key: Uint8Array): Uint8Array {

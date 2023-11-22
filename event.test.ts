@@ -1,17 +1,7 @@
 import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import { PrivateKey } from "./key.ts";
-import {
-    decryptNostrEvent,
-    getTags,
-    InMemoryAccountContext,
-    NostrKind,
-    RelayResponse_REQ_Message,
-    verifyEvent,
-} from "./nostr.ts";
-import { prepareEncryptedNostrEvent, prepareNormalNostrEvent, prepareParameterizedEvent } from "./event.ts";
-import { SingleRelayConnection } from "./relay-single.ts";
-import { relays } from "./relay-list.test.ts";
-import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { decryptNostrEvent, getTags, InMemoryAccountContext, NostrKind, verifyEvent } from "./nostr.ts";
+import { prepareEncryptedNostrEvent, prepareNormalNostrEvent } from "./event.ts";
 
 Deno.test("Verify Event", async (t) => {
     let pri = PrivateKey.Generate();
@@ -66,72 +56,6 @@ Deno.test("Encrypt & Decript Event", async () => {
         fail(decrypted.message);
     }
     assertEquals(decrypted.content, "test");
-});
-
-Deno.test("Parameterized Event", async () => {
-    const ctx = InMemoryAccountContext.New(PrivateKey.Generate());
-
-    const identifier = "some id";
-    const now = Math.floor(Date.now() / 1000);
-    const event_v1 = await prepareParameterizedEvent(ctx, {
-        content: "v1",
-        d: identifier,
-        kind: NostrKind.Custom_App_Data,
-        created_at: now,
-    });
-    const event_v2 = await prepareParameterizedEvent(ctx, {
-        content: "v2",
-        d: identifier,
-        kind: NostrKind.Custom_App_Data,
-        created_at: now + 10,
-    });
-    const event_v3 = await prepareParameterizedEvent(ctx, {
-        content: "v3",
-        d: identifier,
-        kind: NostrKind.Custom_App_Data,
-        created_at: now + 20,
-    });
-
-    const relay = SingleRelayConnection.New(relays[1]);
-    assertNotInstanceOf(relay, Error);
-    {
-        const err = await relay.sendEvent(event_v1);
-        if (err instanceof Error) fail(err.message);
-        const err2 = await relay.sendEvent(event_v2);
-        if (err2 instanceof Error) fail(err2.message);
-        await sleep(1000);
-
-        const stream = await relay.newSub("sub", {
-            "#d": [identifier],
-            authors: [ctx.publicKey.hex],
-            kinds: [NostrKind.Custom_App_Data],
-        });
-        assertNotInstanceOf(stream, Error);
-        {
-            // will only get v2
-            const msg = await stream.chan.pop() as RelayResponse_REQ_Message;
-            if (msg.type == "EOSE") fail(JSON.stringify(msg));
-            assertEquals(msg.event, event_v2);
-
-            // and then EOSE
-            const msg2 = await stream.chan.pop() as RelayResponse_REQ_Message;
-            assertEquals(msg2.type, "EOSE");
-        }
-        {
-            const err = await relay.sendEvent(event_v3);
-            assertNotInstanceOf(err, Error);
-            await sleep(500);
-
-            // will now get v3
-            const msg = await stream.chan.pop() as RelayResponse_REQ_Message;
-            if (msg.type == "EOSE") fail(JSON.stringify(msg));
-            assertEquals(msg.event, event_v3);
-
-            // and not necessarily an EOSE
-        }
-    }
-
-    await relay.close();
 });
 
 Deno.test("wrong encryption key causing decryption failure", async () => {

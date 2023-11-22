@@ -10,7 +10,7 @@ Deno.test("nip07", async () => {
     if (f instanceof Error) {
         assertEquals(
             f.message,
-            "failed to decode, Error: Invalid padding: string should have whole number of bytes",
+            "failed to decode, InvalidCharacterError: Failed to decode base64",
         );
     } else {
         fail(`${f} should be an error`);
