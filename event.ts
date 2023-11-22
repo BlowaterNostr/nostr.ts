@@ -49,21 +49,3 @@ export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind
     };
     return sender.signEvent<Kind>(event);
 }
-
-export function prepareParameterizedEvent<Kind extends NostrKind>(author: NostrAccountContext, args: {
-    content: string;
-    kind: Kind;
-    d: string;
-    created_at?: number;
-}) {
-    const event: UnsignedNostrEvent<Kind, TagIdentifier> = {
-        created_at: args.created_at || Math.floor(Date.now() / 1000),
-        content: args.content,
-        kind: args.kind,
-        pubkey: author.publicKey.hex,
-        tags: [
-            ["d", args.d],
-        ],
-    };
-    return author.signEvent(event);
-}
