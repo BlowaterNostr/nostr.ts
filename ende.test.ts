@@ -46,19 +46,19 @@ Deno.test("utf8 encrypt & decrypt", async (t) => {
         assertEquals(err instanceof Error, true);
         assertEquals(
             err.toString(),
-            "Error: failed to decode, Error: Invalid padding: string should have whole number of bytes",
+            "Error: failed to decode, InvalidCharacterError: Failed to decode base64",
         );
         const invalidIv64 = await ende.decrypt(pri2.hex, pub1.hex, "5l2hCloJ8iFAHpfr2UkuYg==");
         assertEquals(invalidIv64 instanceof Error, true);
         assertEquals(
             invalidIv64.toString(),
-            "Error: failed to decode, Error: join.decode input should be string",
+            "Error: failed to decode, InvalidCharacterError: Failed to decode base64",
         );
     });
 });
 
 Deno.test("decryption performance", async (t) => {
-    let ctx = InMemoryAccountContext.New(PrivateKey.Generate());
+    const ctx = InMemoryAccountContext.New(PrivateKey.Generate());
     const event = await prepareEncryptedNostrEvent(
         ctx,
         {
@@ -70,12 +70,31 @@ Deno.test("decryption performance", async (t) => {
     );
     assertNotInstanceOf(event, Error);
 
-    await t.step("", async () => {
+    await t.step("decrypt", async () => {
         for (let i = 0; i < 100; i++) {
             const err = await ctx.decrypt(ctx.publicKey.hex, event.content);
             if (err instanceof Error) {
                 fail(err.message);
             }
         }
+    });
+});
+
+Deno.test("decryption performance: large data", async (t) => {
+    const ctx = InMemoryAccountContext.New(PrivateKey.Generate());
+    const data = "1".repeat(10 * 1024 * 1024);  // 10 MB
+    const event = await prepareEncryptedNostrEvent(ctx, {
+        encryptKey: ctx.publicKey,
+        kind: NostrKind.DIRECT_MESSAGE,
+        content: data,
+    });
+    assertNotInstanceOf(event, Error);
+
+    await t.step("decrypt", async () => {
+        const result = await ctx.decrypt(ctx.publicKey.hex, event.content);
+        if (result instanceof Error) {
+            fail(result.message);
+        }
+        assertEquals(result, data);
     });
 });
