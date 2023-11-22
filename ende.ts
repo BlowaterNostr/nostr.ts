@@ -2,7 +2,6 @@
 ende stands for encryption decryption
 */
 import * as secp from "./vendor/secp256k1.js";
-import { base64 } from "./scure.js";
 
 export async function encrypt(
     publicKey: string,
