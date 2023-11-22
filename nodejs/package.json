@@ -1,6 +1,6 @@
 {
     "name": "nostr.ts",
-    "version": "3.0.1",
+    "version": "3.0.2",
     "main": "index.js",
     "repository": {
         "type": "git",
@@ -14,5 +14,6 @@
     "bugs": {
         "url": "https://github.com/BlowaterNostr/nostr.ts/issues"
     },
-    "homepage": "https://github.com/BlowaterNostr/nostr.ts#readme"
+    "homepage": "https://github.com/BlowaterNostr/nostr.ts#readme",
+    "type": "module"
 }

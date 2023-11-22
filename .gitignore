@@ -2,3 +2,4 @@ cov_profile*
 .DS_Store
 nostr
 nodejs/index.js
+nodejs/index.mjs
