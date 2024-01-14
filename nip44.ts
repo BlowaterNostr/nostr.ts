@@ -8,22 +8,14 @@ import { concatBytes, randomBytes, utf8ToBytes } from "https://esm.sh/@noble/has
 import { base64 } from "https://esm.sh/@scure/base@1.1.5";
 
 const decoder = new TextDecoder();
-const u = {
-    minPlaintextSize: 0x0001, // 1b msg => padded to 32b
-    maxPlaintextSize: 0xffff, // 65535 (64kb-1) => padded to 64kb
 
+const minPlaintextSize = 0x0001; // 1b msg => padded to 32b
+const maxPlaintextSize = 0xffff; // 65535 (64kb-1) => padded to 64kb
+
+const u = {
     utf8Encode: utf8ToBytes,
     utf8Decode(bytes: Uint8Array) {
         return decoder.decode(bytes);
-    },
-
-    getConversationKey(privkeyA: string, pubkeyB: string): Uint8Array | Error {
-        try {
-            const sharedX = secp256k1.getSharedSecret(privkeyA, "02" + pubkeyB).subarray(1, 33);
-            return hkdf_extract(sha256, sharedX, "nip44-v2");
-        } catch (e) {
-            return e;
-        }
     },
 
     getMessageKeys(conversationKey: Uint8Array, nonce: Uint8Array) {
@@ -37,16 +29,8 @@ const u = {
         };
     },
 
-    calcPaddedLen(len: number): number {
-        if (!Number.isSafeInteger(len) || len < 1) throw new Error("expected positive integer");
-        if (len <= 32) return 32;
-        const nextPower = 1 << (Math.floor(Math.log2(len - 1)) + 1);
-        const chunk = nextPower <= 256 ? 32 : nextPower / 8;
-        return chunk * (Math.floor((len - 1) / chunk) + 1);
-    },
-
     writeU16BE(num: number) {
-        if (!Number.isSafeInteger(num) || num < u.minPlaintextSize || num > u.maxPlaintextSize) {
+        if (!Number.isSafeInteger(num) || num < minPlaintextSize || num > maxPlaintextSize) {
             throw new Error("invalid plaintext size: must be between 1 and 65535 bytes");
         }
         const arr = new Uint8Array(2);
@@ -58,7 +42,7 @@ const u = {
         const unpadded = u.utf8Encode(plaintext);
         const unpaddedLen = unpadded.length;
         const prefix = u.writeU16BE(unpaddedLen);
-        const suffix = new Uint8Array(u.calcPaddedLen(unpaddedLen) - unpaddedLen);
+        const suffix = new Uint8Array(calcPaddedLen(unpaddedLen) - unpaddedLen);
         return concatBytes(prefix, unpadded, suffix);
     },
 
@@ -66,10 +50,10 @@ const u = {
         const unpaddedLen = new DataView(padded.buffer).getUint16(0);
         const unpadded = padded.subarray(2, 2 + unpaddedLen);
         if (
-            unpaddedLen < u.minPlaintextSize ||
-            unpaddedLen > u.maxPlaintextSize ||
+            unpaddedLen < minPlaintextSize ||
+            unpaddedLen > maxPlaintextSize ||
             unpadded.length !== unpaddedLen ||
-            padded.length !== 2 + u.calcPaddedLen(unpaddedLen)
+            padded.length !== 2 + calcPaddedLen(unpaddedLen)
         ) {
             throw new Error("invalid padding");
         }
@@ -111,7 +95,7 @@ const u = {
     },
 };
 
-function encrypt(plaintext: string, conversationKey: Uint8Array, nonce = randomBytes(32)): string {
+export function encrypt(plaintext: string, conversationKey: Uint8Array, nonce = randomBytes(32)): string {
     const { chacha_key, chacha_nonce, hmac_key } = u.getMessageKeys(conversationKey, nonce);
     const padded = u.pad(plaintext);
     const ciphertext = chacha20(chacha_key, chacha_nonce, padded);
@@ -134,8 +118,26 @@ export function decrypt(payload: string, conversationKey: Uint8Array): string | 
     }
 }
 
+export function getConversationKey(privkeyA: string, pubkeyB: string): Uint8Array | Error {
+    try {
+        const sharedX = secp256k1.getSharedSecret(privkeyA, "02" + pubkeyB).subarray(1, 33);
+        return hkdf_extract(sha256, sharedX, "nip44-v2");
+    } catch (e) {
+        return e;
+    }
+}
+
+export function calcPaddedLen(len: number): number {
+    if (!Number.isSafeInteger(len) || len < 1) throw new Error("expected positive integer");
+    if (len <= 32) return 32;
+    const nextPower = 1 << (Math.floor(Math.log2(len - 1)) + 1);
+    const chunk = nextPower <= 256 ? 32 : nextPower / 8;
+    return chunk * (Math.floor((len - 1) / chunk) + 1);
+}
+
 export default {
-    utils: u,
     encrypt,
     decrypt,
+    getConversationKey,
+    calcPaddedLen,
 };
