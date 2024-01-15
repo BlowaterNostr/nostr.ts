@@ -1,6 +1,6 @@
-import * as ende from "./ende.ts";
+import * as ende from "./nip4.ts";
 import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
-import { utf8Decode, utf8Encode } from "./ende.ts";
+import { utf8Decode, utf8Encode } from "./nip4.ts";
 import { PrivateKey } from "./key.ts";
 import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { prepareEncryptedNostrEvent } from "./event.ts";
@@ -72,7 +72,7 @@ Deno.test("decryption performance", async (t) => {
 
     await t.step("decrypt", async () => {
         for (let i = 0; i < 100; i++) {
-            const err = await ctx.decrypt(ctx.publicKey.hex, event.content);
+            const err = await ctx.decrypt(ctx.publicKey.hex, event.content, "nip4");
             if (err instanceof Error) {
                 fail(err.message);
             }
@@ -92,7 +92,7 @@ Deno.test("decryption performance: large data", async (t) => {
 
     let result;
     await t.step("decrypt", async () => {
-        result = await ctx.decrypt(ctx.publicKey.hex, event.content);
+        result = await ctx.decrypt(ctx.publicKey.hex, event.content, "nip4");
         if (result instanceof Error) fail(result.message);
     });
     assertEquals(result, data);

@@ -1,7 +1,8 @@
 import * as hex from "https://deno.land/std@0.176.0/encoding/hex.ts";
 import { PrivateKey, PublicKey } from "./key.ts";
 import { getSharedSecret, schnorr, utils } from "./vendor/secp256k1.js";
-import { decrypt_with_shared_secret, encrypt, utf8Decode, utf8Encode } from "./ende.ts";
+import { decrypt_with_shared_secret, encrypt, utf8Decode, utf8Encode } from "./nip4.ts";
+import nip44 from "./nip44.ts";
 
 export enum NostrKind {
     META_DATA = 0,
@@ -9,6 +10,7 @@ export enum NostrKind {
     RECOMMED_SERVER = 2,
     CONTACTS = 3,
     DIRECT_MESSAGE = 4,
+    DIRECT_MESSAGE_V2 = 44,
     DELETE = 5,
     Encrypted_Custom_App_Data = 20231125,
     Custom_App_Data = 30078, // https://github.com/nostr-protocol/nips/blob/master/78.md
@@ -153,8 +155,8 @@ export function getTags(event: NostrEvent): Tags {
 export interface NostrAccountContext {
     readonly publicKey: PublicKey;
     signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
-    encrypt(pubkey: string, plaintext: string): Promise<string | Error>;
-    decrypt(pubkey: string, ciphertext: string): Promise<string | Error>;
+    encrypt(pubkey: string, plaintext: string, algorithm: "nip44" | "nip4"): Promise<string | Error>;
+    decrypt(pubkey: string, ciphertext: string, algorithm: "nip44" | "nip4"): Promise<string | Error>;
 }
 
 export class DecryptionFailure extends Error {
@@ -162,40 +164,6 @@ export class DecryptionFailure extends Error {
         public event: NostrEvent,
     ) {
         super(`Failed to decrypt event ${event.id}`);
-    }
-}
-
-export async function decryptNostrEvent(
-    nostrEvent: NostrEvent,
-    accountContext: NostrAccountContext,
-    publicKeyHex: string,
-): Promise<NostrEvent | DecryptionFailure> {
-    const content = nostrEvent.content;
-    if (content.length === 0) {
-        return nostrEvent;
-    }
-    const created_at = nostrEvent.created_at;
-    try {
-        const msg = await accountContext.decrypt(publicKeyHex, content);
-        if (msg instanceof Error) {
-            console.error(msg.message);
-            return new DecryptionFailure(nostrEvent);
-        }
-        return {
-            content: msg,
-            created_at,
-            kind: nostrEvent.kind,
-            tags: nostrEvent.tags,
-            pubkey: nostrEvent.pubkey,
-            id: nostrEvent.id,
-            sig: nostrEvent.sig,
-        };
-    } catch (e) {
-        if (e instanceof DOMException) {
-            return new DecryptionFailure(nostrEvent);
-        } else {
-            throw e;
-        }
     }
 }
 
@@ -277,11 +245,23 @@ export class InMemoryAccountContext implements NostrAccountContext {
         return { ...event, id, sig };
     }
 
-    async encrypt(pubkey: string, plaintext: string): Promise<string> {
+    async encrypt(pubkey: string, plaintext: string, algorithm: "nip44" | "nip4"): Promise<string | Error> {
+        if (algorithm == "nip44") {
+            const key = nip44.getConversationKey(this.privateKey.hex, pubkey);
+            if (key instanceof Error) return key;
+            return nip44.encrypt(plaintext, key);
+        }
         return encrypt(pubkey, plaintext, this.privateKey.hex);
     }
 
-    async decrypt(decryptionPublicKey: string, ciphertext: string): Promise<string | Error> {
+    async decrypt(
+        decryptionPublicKey: string,
+        ciphertext: string,
+        algorithm: "nip44" | "nip4",
+    ): Promise<string | Error> {
+        if (algorithm == "nip44") {
+            throw new Error("not implemented");
+        }
         let key = this.sharedSecretsMap.get(decryptionPublicKey);
         if (key == undefined) {
             try {

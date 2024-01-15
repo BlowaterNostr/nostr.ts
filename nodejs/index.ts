@@ -1,5 +1,5 @@
 export * from "../event.ts";
-export * from "../ende.ts";
+export * from "../nip4.ts";
 export * from "../key.ts";
 export * from "../nip06.ts";
 export * from "../nip19.ts";
