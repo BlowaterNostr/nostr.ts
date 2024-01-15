@@ -114,11 +114,3 @@ function getNormalizedX(key: Uint8Array): Uint8Array {
 function randomBytes(bytesLength: number = 32) {
     return crypto.getRandomValues(new Uint8Array(bytesLength));
 }
-
-export function utf16Encode(str: string): number[] {
-    let array = new Array(str.length);
-    for (let i = 0; i < str.length; i++) {
-        array[i] = str.charCodeAt(i);
-    }
-    return array;
-}
