@@ -66,6 +66,7 @@ Deno.test("decryption performance", async (t) => {
             kind: NostrKind.DIRECT_MESSAGE,
             tags: [],
             content: "whatever",
+            algorithm: "nip4",
         },
     );
     assertNotInstanceOf(event, Error);
@@ -87,6 +88,7 @@ Deno.test("decryption performance: large data", async (t) => {
         encryptKey: ctx.publicKey,
         kind: NostrKind.DIRECT_MESSAGE,
         content: data,
+        algorithm: "nip4",
     });
     assertNotInstanceOf(event, Error);
 

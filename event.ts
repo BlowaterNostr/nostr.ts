@@ -8,9 +8,14 @@ export async function prepareEncryptedNostrEvent<T extends NostrKind>(
         kind: T;
         content: string;
         tags?: Tag[];
+        algorithm?: "nip4" | "nip44";
     },
 ): Promise<NostrEvent<T> | Error> {
-    const encrypted = await sender.encrypt(args.encryptKey.hex, args.content, "nip4");
+    const encrypted = await sender.encrypt(
+        args.encryptKey.hex,
+        args.content,
+        args.algorithm ? args.algorithm : "nip44",
+    );
     if (encrypted instanceof Error) {
         return encrypted;
     }

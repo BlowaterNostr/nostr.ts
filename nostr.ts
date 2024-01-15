@@ -156,7 +156,7 @@ export interface NostrAccountContext {
     readonly publicKey: PublicKey;
     signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
     encrypt(pubkey: string, plaintext: string, algorithm: "nip44" | "nip4"): Promise<string | Error>;
-    decrypt(pubkey: string, ciphertext: string, algorithm: "nip44" | "nip4"): Promise<string | Error>;
+    decrypt(pubkey: string, ciphertext: string, algorithm?: "nip44" | "nip4"): Promise<string | Error>;
 }
 
 export class DecryptionFailure extends Error {
@@ -250,8 +250,9 @@ export class InMemoryAccountContext implements NostrAccountContext {
             const key = nip44.getConversationKey(this.privateKey.hex, pubkey);
             if (key instanceof Error) return key;
             return nip44.encrypt(plaintext, key);
+        } else {
+            return encrypt(pubkey, plaintext, this.privateKey.hex);
         }
-        return encrypt(pubkey, plaintext, this.privateKey.hex);
     }
 
     async decrypt(
