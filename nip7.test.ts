@@ -6,7 +6,7 @@ Deno.test("nip07", async () => {
     const pri = PrivateKey.Generate();
     const ctx = InMemoryAccountContext.New(pri);
 
-    const f = await ctx.decrypt(ctx.publicKey.hex, "{}");
+    const f = await ctx.decrypt(ctx.publicKey.hex, "{}", "nip4");
     if (f instanceof Error) {
         assertEquals(
             f.message,

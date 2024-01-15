@@ -1,12 +1,5 @@
 import { PublicKey } from "./key.ts";
-import {
-    NostrAccountContext,
-    NostrEvent,
-    NostrKind,
-    Tag,
-    TagIdentifier,
-    UnsignedNostrEvent,
-} from "./nostr.ts";
+import { NostrAccountContext, NostrEvent, NostrKind, Tag, UnsignedNostrEvent } from "./nostr.ts";
 
 export async function prepareEncryptedNostrEvent<T extends NostrKind>(
     sender: NostrAccountContext,
@@ -15,9 +8,14 @@ export async function prepareEncryptedNostrEvent<T extends NostrKind>(
         kind: T;
         content: string;
         tags?: Tag[];
+        algorithm?: "nip4" | "nip44";
     },
 ): Promise<NostrEvent<T> | Error> {
-    const encrypted = await sender.encrypt(args.encryptKey.hex, args.content);
+    const encrypted = await sender.encrypt(
+        args.encryptKey.hex,
+        args.content,
+        args.algorithm ? args.algorithm : "nip44",
+    );
     if (encrypted instanceof Error) {
         return encrypted;
     }
