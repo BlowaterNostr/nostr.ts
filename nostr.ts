@@ -257,21 +257,24 @@ export class InMemoryAccountContext implements NostrAccountContext {
     async decrypt(
         decryptionPublicKey: string,
         ciphertext: string,
-        algorithm: "nip44" | "nip4",
+        algorithm?: "nip44" | "nip4",
     ): Promise<string | Error> {
-        if (algorithm == "nip44") {
-            throw new Error("not implemented");
-        }
-        let key = this.sharedSecretsMap.get(decryptionPublicKey);
-        if (key == undefined) {
-            try {
-                key = getSharedSecret(this.privateKey.hex, "02" + decryptionPublicKey) as Uint8Array;
-            } catch (e) {
-                return e as Error;
+        if (algorithm != "nip4" && (algorithm == "nip44" || !ciphertext.includes("?iv"))) {
+            const key = nip44.getConversationKey(this.privateKey.hex, decryptionPublicKey);
+            if (key instanceof Error) return key;
+            return nip44.decrypt(ciphertext, key);
+        } else {
+            let key = this.sharedSecretsMap.get(decryptionPublicKey);
+            if (key == undefined) {
+                try {
+                    key = getSharedSecret(this.privateKey.hex, "02" + decryptionPublicKey) as Uint8Array;
+                } catch (e) {
+                    return e as Error;
+                }
+                this.sharedSecretsMap.set(decryptionPublicKey, key);
             }
-            this.sharedSecretsMap.set(decryptionPublicKey, key);
+            return decrypt_with_shared_secret(ciphertext, key);
         }
-        return decrypt_with_shared_secret(ciphertext, key);
     }
 }
 
