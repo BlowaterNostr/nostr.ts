@@ -1,4 +1,4 @@
-import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.202.0/testing/asserts.ts";
 import { InMemoryAccountContext, NostrEvent, NostrKind } from "./nostr.ts";
 import { blowater, relays } from "./relay-list.test.ts";
 import {

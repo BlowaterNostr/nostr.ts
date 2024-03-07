@@ -1,6 +1,6 @@
 test:
 	rm -rf cov_profile*
-	deno test --allow-net --trace-ops --coverage=cov_profile
+	deno test --allow-net --trace-ops --coverage=cov_profile *.test.ts
 
 # https://deno.com/manual@main/basics/testing/coverage
 cov:
@@ -18,4 +18,4 @@ check: fmt-check
 	deno compile cli/nostr.ts
 
 install:
-	deno install --allow-net --allow-read https://deno.land/std@0.191.0/http/file_server.ts
+	deno install --allow-net --allow-read https://deno.land/std@0.202.0/http/file_server.ts

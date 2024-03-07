@@ -2,7 +2,7 @@ import {
     assertInstanceOf,
     assertNotInstanceOf,
     fail,
-} from "https://deno.land/std@0.176.0/testing/asserts.ts";
+} from "https://deno.land/std@0.202.0/testing/asserts.ts";
 import { SingleRelayConnection } from "./relay-single.ts";
 import { ConnectionPool } from "./relay-pool.ts";
 
