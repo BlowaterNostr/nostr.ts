@@ -1,4 +1,4 @@
-import { assertEquals, assertNotInstanceOf } from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import { assertEquals, assertNotInstanceOf } from "https://deno.land/std@0.202.0/testing/asserts.ts";
 import { generateSeedWords, privateKeyFromSeedWords, validateWords } from "./nip06.ts";
 import { PrivateKey } from "./key.ts";
 

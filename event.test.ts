@@ -1,4 +1,4 @@
-import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.176.0/testing/asserts.ts";
+import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.202.0/testing/asserts.ts";
 import { PrivateKey } from "./key.ts";
 import { getTags, InMemoryAccountContext, NostrKind, verifyEvent } from "./nostr.ts";
 import { prepareEncryptedNostrEvent, prepareNormalNostrEvent } from "./event.ts";
