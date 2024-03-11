@@ -1,11 +1,6 @@
-import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.202.0/testing/asserts.ts";
-import { blowater, relays } from "./relay-list.test.ts";
-import {
-    BidirectionalNetwork,
-    SingleRelayConnection,
-    SubscriptionAlreadyExist,
-    WebSocketClosed,
-} from "./relay-single.ts";
+import { assertEquals, fail } from "https://deno.land/std@0.202.0/testing/asserts.ts";
+import { nos, relays } from "./relay-list.test.ts";
+import { BidirectionalNetwork, SingleRelayConnection, WebSocketClosed } from "./relay-single.ts";
 import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import {
     close_sub_keep_reading,
@@ -22,7 +17,7 @@ Deno.test("SingleRelayConnection newSub & close", newSub_close(relays[0]));
 
 Deno.test("SingleRelayConnection subscription already exists", sub_exits(relays[0]));
 
-Deno.test("SingleRelayConnection: close subscription and keep reading", close_sub_keep_reading(blowater));
+Deno.test("SingleRelayConnection: close subscription and keep reading", close_sub_keep_reading(nos));
 
 Deno.test("auto reconnection", async () => {
     let _state: WebSocketReadyState = "Open";
@@ -63,9 +58,9 @@ Deno.test("auto reconnection", async () => {
     await relay.close();
 });
 
-Deno.test("send event", send_event(blowater));
+Deno.test("send event", send_event(nos));
 
 Deno.test(
     "SingleRelayConnection.newSub able to sub before web socket connection is openned",
-    sub_before_socket_open(blowater),
+    sub_before_socket_open(nos),
 );
