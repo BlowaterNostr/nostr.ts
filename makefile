@@ -9,10 +9,10 @@ cov:
 	file_server -p 4508 cov_profile/html
 
 fmt:
-	deno fmt --options-indent-width 4 --options-line-width 110 --ignore=cov_profile
+	deno fmt
 
 fmt-check:
-	deno fmt  --check --options-indent-width 4 --options-line-width 110
+	deno fmt  --check
 
 check: fmt-check
 	deno compile cli/nostr.ts

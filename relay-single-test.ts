@@ -107,14 +107,16 @@ export const sub_before_socket_open = (url: string) => async () => {
             fail(relay.status());
         }
 
-        await relay.sendEvent(await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
-            kind: NostrKind.TEXT_NOTE,
-            content: "test",
-        }))
+        await relay.sendEvent(
+            await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+                kind: NostrKind.TEXT_NOTE,
+                content: "test",
+            }),
+        );
 
-        console.log("a")
+        console.log("a");
         const msg = await stream.chan.pop();
-        console.log("b")
+        console.log("b");
         if (msg == csp.closed) {
             fail();
         }
