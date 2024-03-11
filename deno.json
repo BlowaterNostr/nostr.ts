@@ -1,0 +1,7 @@
+{
+    "fmt": {
+        "indentWidth": 4,
+        "lineWidth": 110,
+        "exclude": ["cov_profile"]
+    }
+}
