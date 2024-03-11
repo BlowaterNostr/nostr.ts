@@ -3,3 +3,5 @@ cov_profile*
 nostr
 nodejs/index.js
 nodejs/index.mjs
+test.ts
+
