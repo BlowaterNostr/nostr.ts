@@ -4,6 +4,7 @@ import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import {
     close_sub_keep_reading,
     get_correct_kind,
+    limit,
     newSub_close,
     open_close,
     send_event,
@@ -29,6 +30,8 @@ Deno.test(
 );
 
 Deno.test("get_correct_kind", get_correct_kind(relayed));
+
+Deno.test("limit", limit(relayed));
 
 Deno.test("auto reconnection", async () => {
     let _state: WebSocketReadyState = "Open";
