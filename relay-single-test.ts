@@ -11,9 +11,6 @@ export const open_close = (urls: string[]) => async () => {
     for (let url of urls) {
         const p = (async () => {
             const relay = SingleRelayConnection.New(url);
-            if (relay instanceof Error) {
-                fail(relay.message);
-            }
             await relay.sendEvent({ id: "test id" } as NostrEvent);
             await relay.close();
         })();
@@ -25,9 +22,6 @@ export const open_close = (urls: string[]) => async () => {
 export const newSub_close = (url: string) => async () => {
     // able to open & close
     const relay = SingleRelayConnection.New(url);
-    if (relay instanceof Error) {
-        fail(relay.message);
-    }
     const sub = await relay.newSub("1", { kinds: [0], limit: 1 });
     if (sub instanceof Error) fail(sub.message);
 
@@ -40,7 +34,6 @@ export const newSub_close = (url: string) => async () => {
 
 export const sub_exits = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
-    if (relay instanceof Error) fail(relay.message);
     {
         // open
         const subID = "1";
@@ -66,7 +59,6 @@ export const sub_exits = (url: string) => async () => {
 
 export const close_sub_keep_reading = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
-    if (relay instanceof Error) fail(relay.message);
 
     {
         const subID = "1";
@@ -80,7 +72,6 @@ export const close_sub_keep_reading = (url: string) => async () => {
 
 export const send_event = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
-    if (relay instanceof Error) fail(relay.message);
 
     {
         const err = relay.sendEvent(
@@ -114,14 +105,78 @@ export const sub_before_socket_open = (url: string) => async () => {
             }),
         );
 
-        console.log("a");
         const msg = await stream.chan.pop();
-        console.log("b");
         if (msg == csp.closed) {
             fail();
         }
         assertEquals(msg.subID, "test");
         assertEquals(msg.type, "EVENT");
+    }
+    await relay.close();
+};
+
+export const get_correct_kind = (url: string) => async () => {
+    const relay = SingleRelayConnection.New(url);
+    {
+        const stream = await relay.newSub("test", { limit: 1, kinds: [NostrKind.Encrypted_Custom_App_Data] });
+        if (stream instanceof Error) fail(stream.message);
+
+        await relay.sendEvent(
+            await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+                kind: NostrKind.Encrypted_Custom_App_Data,
+                content: "test",
+            }),
+        );
+
+        const msg = await stream.chan.pop();
+        if (msg == csp.closed) {
+            fail();
+        }
+        if (msg.type != "EVENT") {
+            fail(`msg.type is ${msg.type}`);
+        }
+        assertEquals(msg.subID, "test");
+        assertEquals(msg.event.kind, NostrKind.Encrypted_Custom_App_Data);
+        assertEquals(msg.event.content, "test");
+    }
+    await relay.close();
+};
+
+export const limit = (url: string) => async () => {
+    const ctx = InMemoryAccountContext.Generate();
+    const relay = SingleRelayConnection.New(url);
+    {
+        const subID = "limit";
+        const sub = await relay.newSub(subID, { limit: 3 });
+        if (sub instanceof Error) fail(sub.message);
+
+        await relay.sendEvent(
+            await prepareNormalNostrEvent(ctx, {
+                kind: NostrKind.TEXT_NOTE,
+                content: "1",
+            }),
+        );
+        await relay.sendEvent(
+            await prepareNormalNostrEvent(ctx, {
+                kind: NostrKind.TEXT_NOTE,
+                content: "2",
+            }),
+        );
+        await relay.sendEvent(
+            await prepareNormalNostrEvent(ctx, {
+                kind: NostrKind.TEXT_NOTE,
+                content: "3",
+            }),
+        );
+
+        let i = 0;
+        for await (const msg of sub.chan) {
+            if (msg.type == "EOSE") {
+                break;
+            }
+            i++;
+        }
+        assertEquals(i, 3);
     }
     await relay.close();
 };
