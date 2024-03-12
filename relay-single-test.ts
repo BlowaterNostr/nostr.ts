@@ -180,3 +180,22 @@ export const limit = (url: string) => async () => {
     }
     await relay.close();
 };
+
+export const no_event = (url: string) => async () => {
+    const ctx = InMemoryAccountContext.Generate();
+    const relay = SingleRelayConnection.New(url);
+    {
+        const subID = "NoEvent";
+        const sub = await relay.newSub(subID, {
+            "authors": [ctx.publicKey.hex],
+            "kinds": [NostrKind.CONTACTS],
+        });
+        if (sub instanceof Error) fail(sub.message);
+
+        for await (const msg of sub.chan) {
+            assertEquals(msg.type, "EOSE")
+            break;
+        }
+    }
+    await relay.close();
+}
