@@ -7,16 +7,10 @@ import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 
 export const open_close = (urls: string[]) => async () => {
-    const ps = [];
     for (let url of urls) {
-        const p = (async () => {
-            const relay = SingleRelayConnection.New(url);
-            await relay.sendEvent({ id: "test id" } as NostrEvent);
-            await relay.close();
-        })();
-        ps.push(p);
+        const relay = SingleRelayConnection.New(url);
+        await relay.close();
     }
-    await Promise.all(ps);
 };
 
 export const newSub_close = (url: string) => async () => {
@@ -193,9 +187,40 @@ export const no_event = (url: string) => async () => {
         if (sub instanceof Error) fail(sub.message);
 
         for await (const msg of sub.chan) {
-            assertEquals(msg.type, "EOSE")
+            assertEquals(msg.type, "EOSE");
             break;
         }
     }
     await relay.close();
-}
+};
+
+export const two_clients_communicate = (url: string) => async () => {
+    const ctx = InMemoryAccountContext.Generate();
+    const relay1 = SingleRelayConnection.New(url);
+    const relay2 = SingleRelayConnection.New(url);
+    {
+        const sub = await relay1.newSub("relay1", {
+            authors: [ctx.publicKey.hex],
+        });
+        if (sub instanceof Error) fail(sub.message);
+
+        const err = await relay2.sendEvent(
+            await prepareNormalNostrEvent(ctx, {
+                content: "test",
+                kind: NostrKind.TEXT_NOTE,
+            }),
+        );
+        if (err instanceof Error) fail(err.message);
+
+        for await (const msg of sub.chan) {
+            console.log(msg);
+            if (msg.type == "EVENT") {
+                assertEquals(msg.event.content, "test");
+                assertEquals(msg.event.pubkey, ctx.publicKey.hex);
+                break;
+            }
+        }
+    }
+    await relay1.close();
+    await relay2.close();
+};

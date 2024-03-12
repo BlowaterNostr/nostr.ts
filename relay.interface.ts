@@ -16,7 +16,7 @@ export type SubscriptionCloser = {
 };
 
 export type EventSender = {
-    sendEvent: (nostrEvent: NostrEvent) => Promise<Error | void>;
+    sendEvent: (nostrEvent: NostrEvent) => Promise<Error | string>;
 };
 
 export type Closer = {

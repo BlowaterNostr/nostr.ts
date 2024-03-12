@@ -227,6 +227,7 @@ export class ConnectionPool
                 console.log(err);
             }
         }
+        return "";
     }
 
     async closeSub(subID: string) {

@@ -6,11 +6,12 @@ import {
     get_correct_kind,
     limit,
     newSub_close,
+    no_event,
     open_close,
     send_event,
     sub_before_socket_open,
     sub_exits,
-    no_event
+    two_clients_communicate,
 } from "./relay-single-test.ts";
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
@@ -34,7 +35,9 @@ Deno.test("get_correct_kind", get_correct_kind(relayed));
 
 Deno.test("limit", limit(relayed));
 
-Deno.test("no_event", no_event(relayed))
+Deno.test("no_event", no_event(relayed));
+
+Deno.test("two_clients_communicate", two_clients_communicate(relayed));
 
 Deno.test("auto reconnection", async () => {
     let _state: WebSocketReadyState = "Open";

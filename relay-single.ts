@@ -91,6 +91,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         string,
         { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
     >();
+    readonly send_promise_resolvers = new Map<string, (res: { ok: boolean; message: string }) => void>();
     private error: any; // todo: check this error in public APIs
     private ws: BidirectionalNetwork | undefined;
 
@@ -121,7 +122,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     if (this.log) {
                         console.log(`RelayDisconnectedByClient: exiting the relay coroutine of ${this.url}`);
                     }
-                    return;
+                    return "RelayDisconnectedByClient";
                 } else if (
                     messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress" ||
                     messsage.type == "OtherError" || messsage.type == "closed"
@@ -154,8 +155,8 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 } else {
                     let relayResponse = parseJSON<_RelayResponse>(messsage.data);
                     if (relayResponse instanceof Error) {
-                        console.error(relayResponse.message);
-                        return;
+                        console.error(relayResponse);
+                        continue;
                     }
 
                     if (
@@ -167,7 +168,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             subID,
                         );
                         if (subscription === undefined) {
-                            return; // the subscription has been closed locally before receiving remote messages
+                            // the subscription has been closed locally before receiving remote messages
+                            // or the relay sends to the wrong connection
+                            continue;
                         }
                         const chan = subscription.chan;
                         if (!chan.closed()) {
@@ -184,6 +187,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                                 });
                             }
                         }
+                    } else if (relayResponse[0] == "OK") {
+                        const resolver = this.send_promise_resolvers.get(relayResponse[1]);
+                        const ok = relayResponse[2];
+                        const message = relayResponse[3];
+                        if (resolver) {
+                            resolver({ ok, message });
+                        }
                     } else {
                         if (this.log) {
                             console.log(url, messsage); // NOTICE, OK and other non-standard response types
@@ -191,7 +201,11 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     }
                 }
             }
-        })();
+        })().then((res) => {
+            if (res != "RelayDisconnectedByClient") {
+                throw new Error("this promise should never resolve");
+            }
+        });
     }
 
     public static New(
@@ -245,15 +259,24 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return { filter, chan };
     }
 
-    // todo: add waitForOk back
-    async sendEvent(nostrEvent: NostrEvent) {
+    async sendEvent(event: NostrEvent) {
         if (this.ws == undefined) {
             return new WebSocketClosed(this.url, this.status());
         }
-        return this.ws.send(JSON.stringify([
+        const err = await this.ws.send(JSON.stringify([
             "EVENT",
-            nostrEvent,
+            event,
         ]));
+        if (err instanceof Error) {
+            return err;
+        }
+        const res = await new Promise<{ ok: boolean; message: string }>((resolve) => {
+            this.send_promise_resolvers.set(event.id, resolve);
+        });
+        if (!res.ok) {
+            return new Error(res.message);
+        }
+        return res.message;
     }
 
     async closeSub(subID: string) {
