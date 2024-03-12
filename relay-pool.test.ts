@@ -1,4 +1,3 @@
-import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.202.0/testing/asserts.ts";
 import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
@@ -6,6 +5,10 @@ import { AsyncWebSocket } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { ConnectionPool } from "./relay-pool.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
+import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
+import { assertNotInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_not_instance_of.ts";
+import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
+import { send_event } from "./relay-single-test.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
     const pool = new ConnectionPool();
@@ -143,6 +146,13 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
 
     const _relay = await pool.addRelay(relay);
     assertEquals(_relay, relay);
+
+    await pool.sendEvent(
+        await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+            kind: NostrKind.DELETE,
+            content: "",
+        }),
+    );
 
     const msg = await chan.chan.pop();
     if (msg === csp.closed) {

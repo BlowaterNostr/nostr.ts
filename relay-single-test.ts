@@ -114,14 +114,39 @@ export const sub_before_socket_open = (url: string) => async () => {
             }),
         );
 
-        console.log("a");
         const msg = await stream.chan.pop();
-        console.log("b");
         if (msg == csp.closed) {
             fail();
         }
         assertEquals(msg.subID, "test");
         assertEquals(msg.type, "EVENT");
+    }
+    await relay.close();
+};
+
+export const get_correct_kind = (url: string) => async () => {
+    const relay = SingleRelayConnection.New(url);
+    {
+        const stream = await relay.newSub("test", { limit: 1, kinds: [NostrKind.Encrypted_Custom_App_Data] });
+        if (stream instanceof Error) fail(stream.message);
+
+        await relay.sendEvent(
+            await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+                kind: NostrKind.Encrypted_Custom_App_Data,
+                content: "test",
+            }),
+        );
+
+        const msg = await stream.chan.pop();
+        if (msg == csp.closed) {
+            fail();
+        }
+        if (msg.type != "EVENT") {
+            fail(`msg.type is ${msg.type}`);
+        }
+        assertEquals(msg.subID, "test");
+        assertEquals(msg.event.kind, NostrKind.Encrypted_Custom_App_Data);
+        assertEquals(msg.event.content, "test");
     }
     await relay.close();
 };
