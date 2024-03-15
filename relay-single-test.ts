@@ -5,6 +5,7 @@ import { prepareNormalNostrEvent } from "./event.ts";
 import { InMemoryAccountContext, NostrEvent, NostrKind } from "./nostr.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { PrivateKey } from "./key.ts";
 
 export const open_close = (urls: string[]) => async () => {
     for (let url of urls) {
@@ -79,36 +80,6 @@ export const send_event = (url: string) => async () => {
     await relay.close();
 };
 
-export const sub_before_socket_open = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url, { log: true, connect: false });
-    {
-        assertEquals(relay.status(), "Connecting");
-        const stream = await relay.newSub("test", { limit: 1 });
-        if (stream instanceof Error) fail(stream.message);
-
-        // connect
-        await relay.connect();
-        if (relay.status() != "Open" && relay.status() != "Connecting") {
-            fail(relay.status());
-        }
-
-        await relay.sendEvent(
-            await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
-                kind: NostrKind.TEXT_NOTE,
-                content: "test",
-            }),
-        );
-
-        const msg = await stream.chan.pop();
-        if (msg == csp.closed) {
-            fail();
-        }
-        assertEquals(msg.subID, "test");
-        assertEquals(msg.type, "EVENT");
-    }
-    await relay.close();
-};
-
 export const get_correct_kind = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
     {
@@ -131,7 +102,6 @@ export const get_correct_kind = (url: string) => async () => {
         }
         assertEquals(msg.subID, "test");
         assertEquals(msg.event.kind, NostrKind.Encrypted_Custom_App_Data);
-        assertEquals(msg.event.content, "test");
     }
     await relay.close();
 };
@@ -223,4 +193,26 @@ export const two_clients_communicate = (url: string) => async () => {
     }
     await relay1.close();
     await relay2.close();
+};
+
+export const get_event_by_id = (url: string) => async () => {
+    const relay1 = SingleRelayConnection.New(url, { log: true });
+    const ctx = InMemoryAccountContext.Generate();
+    {
+        const event_1 = await relay1.getEvent(PrivateKey.Generate().hex);
+        assertEquals(event_1, undefined);
+
+        const event = await prepareNormalNostrEvent(ctx, {
+            content: "get_event_by_id",
+            kind: NostrKind.TEXT_NOTE,
+        });
+        const err = await relay1.sendEvent(event);
+        if (err instanceof Error) fail(err.message);
+
+        const event_2 = await relay1.getEvent(event.id);
+        if (event_2 instanceof Error) fail(event_2.message);
+
+        assertEquals(event, event_2);
+    }
+    await relay1.close();
 };

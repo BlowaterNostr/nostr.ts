@@ -59,8 +59,8 @@ export type _RelayResponse_EOSE = ["EOSE", SubID]; // https://github.com/nostr-p
 export type _RelayResponse_Notice = ["NOTICE", string];
 export type _RelayResponse_OK = ["OK", EventID, boolean, string];
 
-export type RelayResponse = RelayResponse_REQ_Message | RelayResponse_OK | RelayResponse_Notice;
-export type RelayResponse_REQ_Message = RelayResponse_Event | RelayResponse_EOSE;
+export type RelayResponse = RelayResponse_REQ_Message | RelayResponse_OK;
+export type RelayResponse_REQ_Message = RelayResponse_Event | RelayResponse_EOSE | RelayResponse_Notice;
 
 export type RelayResponse_Event = {
     type: "EVENT";

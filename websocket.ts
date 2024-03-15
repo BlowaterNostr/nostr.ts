@@ -163,7 +163,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         ) {
             return new CloseTwice(this.ws.url);
         }
-        console.log("closing Web Socket", this.url, this.status());
+
         this.ws.close(code, reason);
         console.log("closing Web Socket", this.url, this.status());
         if (force) {

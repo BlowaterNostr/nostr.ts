@@ -1,10 +1,12 @@
 import { parseJSON } from "./_helper.ts";
+import { NoteID } from "./nip19.ts";
 import {
     _RelayResponse,
     _RelayResponse_OK,
     _RelayResponse_REQ_Message,
     NostrEvent,
     NostrFilters,
+    RelayResponse,
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
@@ -189,15 +191,19 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         }
                     } else if (relayResponse[0] == "OK") {
                         const resolver = this.send_promise_resolvers.get(relayResponse[1]);
-                        const ok = relayResponse[2];
-                        const message = relayResponse[3];
                         if (resolver) {
+                            const ok = relayResponse[2];
+                            const message = relayResponse[3];
                             resolver({ ok, message });
                         }
                     } else {
-                        if (this.log) {
-                            console.log(url, messsage); // NOTICE, OK and other non-standard response types
+                        for (const sub of this.subscriptionMap.values()) {
+                            sub.chan.put({
+                                type: "NOTICE",
+                                note: relayResponse[1],
+                            });
                         }
+                        console.log(url, relayResponse); // NOTICE, OK and other non-standard response types
                     }
                 }
             }
@@ -274,9 +280,32 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             this.send_promise_resolvers.set(event.id, resolve);
         });
         if (!res.ok) {
-            return new Error(res.message);
+            return new RelayRejectedEvent(res.message, event);
         }
         return res.message;
+    }
+
+    async getEvent(id: NoteID | string) {
+        if (id instanceof NoteID) {
+            id = id.hex;
+        }
+
+        let events = await this.newSub(id, { ids: [id] });
+        if (events instanceof Error) {
+            return events;
+        }
+        for await (const msg of events.chan) {
+            const err = await this.closeSub(id);
+            if (err instanceof Error) return err;
+
+            if (msg.type == "EVENT") {
+                return msg.event;
+            } else if (msg.type == "NOTICE") {
+                return new Error(msg.note);
+            } else if (msg.type == "EOSE") {
+                return;
+            }
+        }
     }
 
     async closeSub(subID: string) {
@@ -305,7 +334,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 
     close = async (force?: boolean) => {
-        console.log(`closing relay ${this.url}, status: ${this.status()}`);
         this._isClosedByClient = true;
         for (const [subID, { chan }] of this.subscriptionMap.entries()) {
             if (chan.closed()) {
@@ -379,5 +407,12 @@ async function sendSubscription(ws: BidirectionalNetwork, subID: string, filter:
     ]));
     if (err) {
         return err;
+    }
+}
+
+class RelayRejectedEvent extends Error {
+    constructor(msg: string, public readonly event: NostrEvent) {
+        super(`${event.id}: ${msg}`);
+        this.name = RelayRejectedEvent.name;
     }
 }

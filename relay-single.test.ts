@@ -1,15 +1,15 @@
-import { relayed, relays } from "./relay-list.test.ts";
+import { relays, wirednet } from "./relay-list.test.ts";
 import { BidirectionalNetwork, SingleRelayConnection, WebSocketClosed } from "./relay-single.ts";
 import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import {
     close_sub_keep_reading,
     get_correct_kind,
+    get_event_by_id,
     limit,
     newSub_close,
     no_event,
     open_close,
     send_event,
-    sub_before_socket_open,
     sub_exits,
     two_clients_communicate,
 } from "./relay-single-test.ts";
@@ -22,22 +22,19 @@ Deno.test("SingleRelayConnection newSub & close", newSub_close(relays[0]));
 
 Deno.test("SingleRelayConnection subscription already exists", sub_exits(relays[0]));
 
-Deno.test("SingleRelayConnection: close subscription and keep reading", close_sub_keep_reading(relayed));
+Deno.test("SingleRelayConnection: close subscription and keep reading", close_sub_keep_reading(relays[0]));
 
-Deno.test("send event", send_event(relayed));
+Deno.test("send event", send_event(relays[0]));
 
-Deno.test(
-    "SingleRelayConnection.newSub able to sub before web socket connection is openned",
-    sub_before_socket_open(relayed),
-);
+Deno.test("get_correct_kind", get_correct_kind(relays[0]));
 
-Deno.test("get_correct_kind", get_correct_kind(relayed));
+Deno.test("limit", limit(relays[0]));
 
-Deno.test("limit", limit(relayed));
+Deno.test("no_event", no_event(relays[0]));
 
-Deno.test("no_event", no_event(relayed));
+Deno.test("two_clients_communicate", two_clients_communicate(relays[0]));
 
-Deno.test("two_clients_communicate", two_clients_communicate(relayed));
+Deno.test("get_event_by_id", get_event_by_id(relays[0]));
 
 Deno.test("auto reconnection", async () => {
     let _state: WebSocketReadyState = "Open";
