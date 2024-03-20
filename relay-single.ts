@@ -290,6 +290,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             id = id.hex;
         }
 
+        const err = await this.closeSub(id);
+        if (err instanceof Error) return err;
+
         let events = await this.newSub(id, { ids: [id] });
         if (events instanceof Error) {
             return events;
