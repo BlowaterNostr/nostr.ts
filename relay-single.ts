@@ -381,11 +381,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
             ws = this.wsCreator(this.url, this.log);
             if (ws instanceof Error) {
-                console.error(ws);
-                if (ws.message.includes("this endpoint must be available over WSS")) {
+                console.error(ws.name, ws.message, ws.cause);
+                if (ws.name == "SecurityError") {
                     return ws;
                 }
-                return;
                 continue;
             }
             break;
