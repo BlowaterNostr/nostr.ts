@@ -110,7 +110,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     ) {
         (async () => {
             const ws = await this.connect();
-            if (ws instanceof Error) {
+            if (ws instanceof Error || ws == undefined) {
                 console.error(ws);
                 return;
             }
@@ -385,6 +385,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 if (ws.message.includes("this endpoint must be available over WSS")) {
                     return ws;
                 }
+                return;
                 continue;
             }
             break;
