@@ -132,8 +132,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         this.error = messsage.error;
                     }
                     console.log(messsage);
-                    const err = this.connect();
+                    const err = await this.connect();
                     if (err instanceof Error) {
+                        console.error(err)
                         this.error = err;
                     }
                     continue;
