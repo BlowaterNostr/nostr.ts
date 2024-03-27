@@ -6,7 +6,6 @@ import {
     _RelayResponse_REQ_Message,
     NostrEvent,
     NostrFilters,
-    RelayResponse,
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
@@ -94,7 +93,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
     >();
     readonly send_promise_resolvers = new Map<string, (res: { ok: boolean; message: string }) => void>();
-    private error: any; // todo: check this error in public APIs
+    private error: Error | string | WebSocketError | undefined; // todo: check this error in public APIs
     private ws: BidirectionalNetwork | undefined;
 
     status(): WebSocketReadyState {
@@ -111,7 +110,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     ) {
         (async () => {
             const ws = await this.connect();
-            if (ws instanceof RelayDisconnectedByClient) {
+            if (ws instanceof Error) {
                 console.error(ws);
                 return;
             }
@@ -120,7 +119,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 const messsage = await this.nextMessage(this.ws);
                 if (messsage.type == "RelayDisconnectedByClient") {
                     // exit the coroutine
-                    this.error = messsage;
+                    this.error = messsage.error;
                     if (this.log) {
                         console.log(`RelayDisconnectedByClient: exiting the relay coroutine of ${this.url}`);
                     }
@@ -382,6 +381,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             ws = this.wsCreator(this.url, this.log);
             if (ws instanceof Error) {
                 console.error(ws);
+                if (ws.message.includes("this endpoint must be available over WSS")) {
+                    return ws;
+                }
                 continue;
             }
             break;
