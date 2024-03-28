@@ -77,7 +77,11 @@ export type BidirectionalNetwork = {
 };
 
 export class SubscriptionAlreadyExist extends Error {
-    constructor(public subID: string, public filter: NostrFilters, public url: string) {
+    constructor(
+        public subID: string,
+        public filter: NostrFilters,
+        public url: string,
+    ) {
         super(`subscription '${subID}' already exists for ${url}`);
     }
 }
@@ -92,7 +96,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         string,
         { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
     >();
-    readonly send_promise_resolvers = new Map<string, (res: { ok: boolean; message: string }) => void>();
+    readonly send_promise_resolvers = new Map<
+        string,
+        (res: { ok: boolean; message: string }) => void
+    >();
     private error: Error | string | WebSocketError | undefined; // todo: check this error in public APIs
     private ws: BidirectionalNetwork | undefined;
 
@@ -105,7 +112,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private constructor(
         readonly url: string,
-        readonly wsCreator: (url: string, log: boolean) => BidirectionalNetwork | Error,
+        readonly wsCreator: (
+            url: string,
+            log: boolean,
+        ) => BidirectionalNetwork | Error,
         public log: boolean,
     ) {
         (async () => {
@@ -121,11 +131,14 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     // exit the coroutine
                     this.error = messsage.error;
                     if (this.log) {
-                        console.log(`RelayDisconnectedByClient: exiting the relay coroutine of ${this.url}`);
+                        console.log(
+                            `RelayDisconnectedByClient: exiting the relay coroutine of ${this.url}`,
+                        );
                     }
                     return "RelayDisconnectedByClient";
                 } else if (
-                    messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress" ||
+                    messsage.type == "WebSocketClosed" ||
+                    messsage.type == "FailedToLookupAddress" ||
                     messsage.type == "OtherError" || messsage.type == "closed"
                 ) {
                     if (messsage.type != "closed") {
@@ -133,6 +146,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     }
                     console.log(messsage);
                     const err = await this.connect();
+                    if (err instanceof RelayDisconnectedByClient) {
+                        return err;
+                    }
                     if (err instanceof Error) {
                         console.error(err);
                         this.error = err;
@@ -144,18 +160,26 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     }
                     // the websocket is just openned
                     // send all the subscriptions to the relay
-                    for (const [subID, data] of this.subscriptionMap.entries()) {
+                    for (
+                        const [subID, data] of this.subscriptionMap.entries()
+                    ) {
                         if (this.ws == undefined) {
                             console.error("impossible state");
                             break;
                         }
-                        const err = await sendSubscription(this.ws, subID, data.filter);
+                        const err = await sendSubscription(
+                            this.ws,
+                            subID,
+                            data.filter,
+                        );
                         if (err instanceof Error) {
                             console.error(err);
                         }
                     }
                 } else {
-                    let relayResponse = parseJSON<_RelayResponse>(messsage.data);
+                    const relayResponse = parseJSON<_RelayResponse>(
+                        messsage.data,
+                    );
                     if (relayResponse instanceof Error) {
                         console.error(relayResponse);
                         continue;
@@ -165,8 +189,8 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         relayResponse[0] === "EVENT" ||
                         relayResponse[0] === "EOSE"
                     ) {
-                        let subID = relayResponse[1];
-                        let subscription = this.subscriptionMap.get(
+                        const subID = relayResponse[1];
+                        const subscription = this.subscriptionMap.get(
                             subID,
                         );
                         if (subscription === undefined) {
@@ -190,7 +214,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             }
                         }
                     } else if (relayResponse[0] == "OK") {
-                        const resolver = this.send_promise_resolvers.get(relayResponse[1]);
+                        const resolver = this.send_promise_resolvers.get(
+                            relayResponse[1],
+                        );
                         if (resolver) {
                             const ok = relayResponse[2];
                             const message = relayResponse[3];
@@ -208,6 +234,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 }
             }
         })().then((res) => {
+            if (res instanceof RelayDisconnectedByClient) return;
             if (res != "RelayDisconnectedByClient") {
                 throw new Error("this promise should never resolve");
             }
@@ -217,7 +244,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     public static New(
         url: string,
         args?: {
-            wsCreator?: (url: string, log: boolean) => BidirectionalNetwork | Error;
+            wsCreator?: (
+                url: string,
+                log: boolean,
+            ) => BidirectionalNetwork | Error;
             connect?: boolean;
             log?: boolean;
         },
@@ -232,7 +262,11 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (args.wsCreator == undefined) {
                 args.wsCreator = AsyncWebSocket.New;
             }
-            let relay = new SingleRelayConnection(url, args.wsCreator, args.log || false);
+            const relay = new SingleRelayConnection(
+                url,
+                args.wsCreator,
+                args.log || false,
+            );
             return relay;
         } catch (e) {
             return e;
@@ -248,7 +282,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         if (this.log) {
             console.log(`${this.url} registers subscription ${subID}`, filter);
         }
-        let subscription = this.subscriptionMap.get(subID);
+        const subscription = this.subscriptionMap.get(subID);
         if (subscription !== undefined) {
             return new SubscriptionAlreadyExist(subID, filter, this.url);
         }
@@ -276,9 +310,11 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         if (err instanceof Error) {
             return err;
         }
-        const res = await new Promise<{ ok: boolean; message: string }>((resolve) => {
-            this.send_promise_resolvers.set(event.id, resolve);
-        });
+        const res = await new Promise<{ ok: boolean; message: string }>(
+            (resolve) => {
+                this.send_promise_resolvers.set(event.id, resolve);
+            },
+        );
         if (!res.ok) {
             return new RelayRejectedEvent(res.message, event);
         }
@@ -293,7 +329,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         const err = await this.closeSub(id);
         if (err instanceof Error) return err;
 
-        let events = await this.newSub(id, { ids: [id] });
+        const events = await this.newSub(id, { ids: [id] });
         if (events instanceof Error) {
             return events;
         }
@@ -367,7 +403,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         let ws: BidirectionalNetwork | Error | undefined;
         for (;;) {
             if (this.log) {
-                console.log(`(re)connecting ${this.url}, reason: ${JSON.stringify(this.error)}`);
+                console.log(
+                    `(re)connecting ${this.url}, reason: ${JSON.stringify(this.error)}`,
+                );
             }
             if (this.isClosedByClient()) {
                 return new RelayDisconnectedByClient();
@@ -393,7 +431,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return this.ws;
     }
 
-    private async nextMessage(ws: BidirectionalNetwork): Promise<NextMessageType> {
+    private async nextMessage(
+        ws: BidirectionalNetwork,
+    ): Promise<NextMessageType> {
         if (this.isClosedByClient()) {
             return {
                 type: "RelayDisconnectedByClient",
@@ -405,7 +445,11 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 }
 
-async function sendSubscription(ws: BidirectionalNetwork, subID: string, filter: NostrFilters) {
+async function sendSubscription(
+    ws: BidirectionalNetwork,
+    subID: string,
+    filter: NostrFilters,
+) {
     const err = await ws.send(JSON.stringify([
         "REQ",
         subID,
@@ -416,7 +460,7 @@ async function sendSubscription(ws: BidirectionalNetwork, subID: string, filter:
     }
 }
 
-class RelayRejectedEvent extends Error {
+export class RelayRejectedEvent extends Error {
     constructor(msg: string, public readonly event: NostrEvent) {
         super(`${event.id}: ${msg}`);
         this.name = RelayRejectedEvent.name;
