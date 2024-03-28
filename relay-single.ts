@@ -77,11 +77,7 @@ export type BidirectionalNetwork = {
 };
 
 export class SubscriptionAlreadyExist extends Error {
-    constructor(
-        public subID: string,
-        public filter: NostrFilters,
-        public url: string,
-    ) {
+    constructor(public subID: string, public url: string) {
         super(`subscription '${subID}' already exists for ${url}`);
     }
 }
@@ -259,7 +255,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
         const subscription = this.subscriptionMap.get(subID);
         if (subscription !== undefined) {
-            return new SubscriptionAlreadyExist(subID, filter, this.url);
+            return new SubscriptionAlreadyExist(subID, this.url);
         }
 
         if (this.ws != undefined) {
