@@ -160,11 +160,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             console.error("impossible state");
                             break;
                         }
-                        const err = await sendSubscription(
-                            this.ws,
-                            subID,
-                            data.filter,
-                        );
+                        const err = await sendSubscription(this.ws, subID, data.filter);
                         if (err instanceof Error) {
                             console.error(err);
                         }
@@ -233,10 +229,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     public static New(
         url: string,
         args?: {
-            wsCreator?: (
-                url: string,
-                log: boolean,
-            ) => BidirectionalNetwork | Error;
+            wsCreator?: (url: string, log: boolean) => BidirectionalNetwork | Error;
             connect?: boolean;
             log?: boolean;
         },
@@ -251,11 +244,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (args.wsCreator == undefined) {
                 args.wsCreator = AsyncWebSocket.New;
             }
-            const relay = new SingleRelayConnection(
-                url,
-                args.wsCreator,
-                args.log || false,
-            );
+            const relay = new SingleRelayConnection(url, args.wsCreator, args.log || false);
             return relay;
         } catch (e) {
             return e;
