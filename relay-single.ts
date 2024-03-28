@@ -77,7 +77,7 @@ export type BidirectionalNetwork = {
 };
 
 export class SubscriptionAlreadyExist extends Error {
-    constructor(public subID: string, public filter: NostrFilters, public url: string) {
+    constructor(public subID: string, public url: string) {
         super(`subscription '${subID}' already exists for ${url}`);
     }
 }
@@ -92,7 +92,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         string,
         { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
     >();
-    readonly send_promise_resolvers = new Map<string, (res: { ok: boolean; message: string }) => void>();
+    readonly send_promise_resolvers = new Map<
+        string,
+        (res: { ok: boolean; message: string }) => void
+    >();
     private error: Error | string | WebSocketError | undefined; // todo: check this error in public APIs
     private ws: BidirectionalNetwork | undefined;
 
@@ -118,14 +121,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             for (;;) {
                 const messsage = await this.nextMessage(this.ws);
                 if (messsage.type == "RelayDisconnectedByClient") {
-                    // exit the coroutine
                     this.error = messsage.error;
-                    if (this.log) {
-                        console.log(`RelayDisconnectedByClient: exiting the relay coroutine of ${this.url}`);
-                    }
+                    // exit the coroutine
                     return "RelayDisconnectedByClient";
                 } else if (
-                    messsage.type == "WebSocketClosed" || messsage.type == "FailedToLookupAddress" ||
+                    messsage.type == "WebSocketClosed" ||
+                    messsage.type == "FailedToLookupAddress" ||
                     messsage.type == "OtherError" || messsage.type == "closed"
                 ) {
                     if (messsage.type != "closed") {
@@ -133,6 +134,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     }
                     console.log(messsage);
                     const err = await this.connect();
+                    if (err instanceof RelayDisconnectedByClient) {
+                        return err;
+                    }
                     if (err instanceof Error) {
                         console.error(err);
                         this.error = err;
@@ -155,7 +159,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         }
                     }
                 } else {
-                    let relayResponse = parseJSON<_RelayResponse>(messsage.data);
+                    const relayResponse = parseJSON<_RelayResponse>(messsage.data);
                     if (relayResponse instanceof Error) {
                         console.error(relayResponse);
                         continue;
@@ -165,8 +169,8 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         relayResponse[0] === "EVENT" ||
                         relayResponse[0] === "EOSE"
                     ) {
-                        let subID = relayResponse[1];
-                        let subscription = this.subscriptionMap.get(
+                        const subID = relayResponse[1];
+                        const subscription = this.subscriptionMap.get(
                             subID,
                         );
                         if (subscription === undefined) {
@@ -208,6 +212,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 }
             }
         })().then((res) => {
+            if (res instanceof RelayDisconnectedByClient) return;
             if (res != "RelayDisconnectedByClient") {
                 throw new Error("this promise should never resolve");
             }
@@ -232,7 +237,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (args.wsCreator == undefined) {
                 args.wsCreator = AsyncWebSocket.New;
             }
-            let relay = new SingleRelayConnection(url, args.wsCreator, args.log || false);
+            const relay = new SingleRelayConnection(url, args.wsCreator, args.log || false);
             return relay;
         } catch (e) {
             return e;
@@ -248,9 +253,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         if (this.log) {
             console.log(`${this.url} registers subscription ${subID}`, filter);
         }
-        let subscription = this.subscriptionMap.get(subID);
+        const subscription = this.subscriptionMap.get(subID);
         if (subscription !== undefined) {
-            return new SubscriptionAlreadyExist(subID, filter, this.url);
+            return new SubscriptionAlreadyExist(subID, this.url);
         }
 
         if (this.ws != undefined) {
@@ -276,9 +281,11 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         if (err instanceof Error) {
             return err;
         }
-        const res = await new Promise<{ ok: boolean; message: string }>((resolve) => {
-            this.send_promise_resolvers.set(event.id, resolve);
-        });
+        const res = await new Promise<{ ok: boolean; message: string }>(
+            (resolve) => {
+                this.send_promise_resolvers.set(event.id, resolve);
+            },
+        );
         if (!res.ok) {
             return new RelayRejectedEvent(res.message, event);
         }
@@ -293,7 +300,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         const err = await this.closeSub(id);
         if (err instanceof Error) return err;
 
-        let events = await this.newSub(id, { ids: [id] });
+        const events = await this.newSub(id, { ids: [id] });
         if (events instanceof Error) {
             return events;
         }
@@ -416,7 +423,7 @@ async function sendSubscription(ws: BidirectionalNetwork, subID: string, filter:
     }
 }
 
-class RelayRejectedEvent extends Error {
+export class RelayRejectedEvent extends Error {
     constructor(msg: string, public readonly event: NostrEvent) {
         super(`${event.id}: ${msg}`);
         this.name = RelayRejectedEvent.name;
