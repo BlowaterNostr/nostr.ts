@@ -165,17 +165,17 @@ export class ConnectionPool
         filter: NostrFilters,
     ) {
         if (this.subscriptionMap.has(subID)) {
-            return new SubscriptionAlreadyExist(subID, filter, "relay pool");
+            return new SubscriptionAlreadyExist(subID, "relay pool");
         }
         const results = chan<{ res: RelayResponse_REQ_Message; url: string }>();
-        for (let conn of this.connections.values()) {
+        for (const conn of this.connections.values()) {
             (async (relay: SingleRelayConnection) => {
                 const sub = await relay.newSub(subID, filter);
                 if (sub instanceof Error) {
                     console.error(sub);
                     return;
                 }
-                for await (let msg of sub.chan) {
+                for await (const msg of sub.chan) {
                     await results.put({ res: msg, url: relay.url });
                 }
             })(conn);
