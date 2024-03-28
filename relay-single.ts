@@ -128,13 +128,8 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             for (;;) {
                 const messsage = await this.nextMessage(this.ws);
                 if (messsage.type == "RelayDisconnectedByClient") {
-                    // exit the coroutine
                     this.error = messsage.error;
-                    if (this.log) {
-                        console.log(
-                            `RelayDisconnectedByClient: exiting the relay coroutine of ${this.url}`,
-                        );
-                    }
+                    // exit the coroutine
                     return "RelayDisconnectedByClient";
                 } else if (
                     messsage.type == "WebSocketClosed" ||
