@@ -112,10 +112,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private constructor(
         readonly url: string,
-        readonly wsCreator: (
-            url: string,
-            log: boolean,
-        ) => BidirectionalNetwork | Error,
+        readonly wsCreator: (url: string, log: boolean) => BidirectionalNetwork | Error,
         public log: boolean,
     ) {
         (async () => {
