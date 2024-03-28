@@ -155,9 +155,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     }
                     // the websocket is just openned
                     // send all the subscriptions to the relay
-                    for (
-                        const [subID, data] of this.subscriptionMap.entries()
-                    ) {
+                    for (const [subID, data] of this.subscriptionMap.entries()) {
                         if (this.ws == undefined) {
                             console.error("impossible state");
                             break;
@@ -172,9 +170,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         }
                     }
                 } else {
-                    const relayResponse = parseJSON<_RelayResponse>(
-                        messsage.data,
-                    );
+                    const relayResponse = parseJSON<_RelayResponse>(messsage.data);
                     if (relayResponse instanceof Error) {
                         console.error(relayResponse);
                         continue;
@@ -209,9 +205,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             }
                         }
                     } else if (relayResponse[0] == "OK") {
-                        const resolver = this.send_promise_resolvers.get(
-                            relayResponse[1],
-                        );
+                        const resolver = this.send_promise_resolvers.get(relayResponse[1]);
                         if (resolver) {
                             const ok = relayResponse[2];
                             const message = relayResponse[3];
@@ -398,9 +392,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         let ws: BidirectionalNetwork | Error | undefined;
         for (;;) {
             if (this.log) {
-                console.log(
-                    `(re)connecting ${this.url}, reason: ${JSON.stringify(this.error)}`,
-                );
+                console.log(`(re)connecting ${this.url}, reason: ${JSON.stringify(this.error)}`);
             }
             if (this.isClosedByClient()) {
                 return new RelayDisconnectedByClient();
@@ -426,9 +418,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return this.ws;
     }
 
-    private async nextMessage(
-        ws: BidirectionalNetwork,
-    ): Promise<NextMessageType> {
+    private async nextMessage(ws: BidirectionalNetwork): Promise<NextMessageType> {
         if (this.isClosedByClient()) {
             return {
                 type: "RelayDisconnectedByClient",
@@ -440,11 +430,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 }
 
-async function sendSubscription(
-    ws: BidirectionalNetwork,
-    subID: string,
-    filter: NostrFilters,
-) {
+async function sendSubscription(ws: BidirectionalNetwork, subID: string, filter: NostrFilters) {
     const err = await ws.send(JSON.stringify([
         "REQ",
         subID,
