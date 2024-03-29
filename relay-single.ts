@@ -82,6 +82,10 @@ export class SubscriptionAlreadyExist extends Error {
     }
 }
 
+export type SubscriptionStream = {
+    filter: NostrFilters;
+    chan: csp.Channel<RelayResponse_REQ_Message>;
+};
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
     private _isClosedByClient = false;
     isClosedByClient() {
@@ -245,10 +249,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 
     async newSub(subID: string, filter: NostrFilters): Promise<
-        SubscriptionAlreadyExist | RelayDisconnectedByClient | {
-            filter: NostrFilters;
-            chan: csp.Channel<RelayResponse_REQ_Message>;
-        }
+        SubscriptionAlreadyExist | RelayDisconnectedByClient | SubscriptionStream
     > {
         if (this.log) {
             console.log(`${this.url} registers subscription ${subID}`, filter);
