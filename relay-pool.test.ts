@@ -77,7 +77,7 @@ Deno.test("ConnectionPool newSub support multiple filters", async () => {
         if (sub instanceof Error) fail(sub.message);
     }
     await pool.close();
-})
+});
 
 Deno.test("ConnectionPool: open,close,open again | no relay", async () => {
     const pool = new ConnectionPool();

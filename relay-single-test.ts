@@ -34,7 +34,7 @@ export const newSub_multiple_filters = (url: string) => async () => {
         if (sub instanceof Error) fail(sub.message);
     }
     await relay.close();
-}
+};
 
 export const sub_exits = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
