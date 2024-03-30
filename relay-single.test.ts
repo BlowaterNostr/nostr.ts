@@ -21,8 +21,6 @@ Deno.test("SingleRelayConnection open & close", open_close(relays));
 
 Deno.test("SingleRelayConnection newSub & close", newSub_close(relays[0]));
 
-Deno.test("SingleRelayConnection newSub support multiple filters", newSub_multiple_filters(relays[0]));
-
 Deno.test("SingleRelayConnection subscription already exists", sub_exits(relays[0]));
 
 Deno.test("SingleRelayConnection: close subscription and keep reading", close_sub_keep_reading(relays[0]));
@@ -30,6 +28,8 @@ Deno.test("SingleRelayConnection: close subscription and keep reading", close_su
 Deno.test("send event", send_event(relays[0]));
 
 Deno.test("get_correct_kind", get_correct_kind(relays[0]));
+
+Deno.test("SingleRelayConnection newSub support multiple filters", newSub_multiple_filters(relays[0]));
 
 Deno.test("limit", limit(relays[0]));
 

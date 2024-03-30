@@ -68,17 +68,6 @@ Deno.test("ConnectionPool newSub & close", async () => {
     );
 });
 
-Deno.test("ConnectionPool newSub support multiple filters", async () => {
-    const url = relays[0];
-    const pool = new ConnectionPool();
-    await pool.addRelayURL(url);
-    {
-        const sub = await pool.newSub("1", { kinds: [0, 1], limit: 1 }, { kinds: [4], limit: 1 });
-        if (sub instanceof Error) fail(sub.message);
-    }
-    await pool.close();
-});
-
 Deno.test("ConnectionPool: open,close,open again | no relay", async () => {
     const pool = new ConnectionPool();
     {
@@ -226,4 +215,44 @@ Deno.test("send & get event", async (t) => {
         assertEquals(e, event);
     }
     await pool.close();
+});
+
+Deno.test("ConnectionPool newSub support multiple filters", async () => {
+    const pool = new ConnectionPool();
+    const err = await pool.addRelayURLs(relays);
+    try {
+        const sub = await pool.newSub("multiple filters", { kinds: [NostrKind.META_DATA], limit: 1 }, {
+            kinds: [NostrKind.TEXT_NOTE],
+            limit: 1,
+        });
+        if (sub instanceof Error) fail(sub.message);
+
+        const event1 = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+            kind: NostrKind.TEXT_NOTE,
+            content: "test1",
+        });
+
+        const event2 = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+            kind: NostrKind.META_DATA,
+            content: "test2",
+        });
+        const err1 = await pool.sendEvent(event1);
+        const err2 = await pool.sendEvent(event2);
+        if (err1 || err2) fail();
+
+        const msg1 = await sub.chan.pop();
+        const msg2 = await sub.chan.pop();
+        if (msg1 == csp.closed || msg2 == csp.closed) {
+            fail();
+        }
+        if (msg1.res.type != "EVENT" || msg2.res.type != "EVENT") {
+            fail();
+        }
+        assertEquals(msg1.res.subID, "multiple filters");
+        assertEquals(msg2.res.subID, "multiple filters");
+        assertEquals(msg1.res.event.kind, NostrKind.TEXT_NOTE);
+        assertEquals(msg2.res.event.kind, NostrKind.META_DATA);
+    } finally {
+        await pool.close();
+    }
 });
