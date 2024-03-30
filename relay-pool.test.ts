@@ -1,4 +1,4 @@
-import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
+import { InMemoryAccountContext, NostrKind, RelayResponse_Event } from "./nostr.ts";
 import { relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
@@ -217,9 +217,9 @@ Deno.test("send & get event", async (t) => {
     await pool.close();
 });
 
-Deno.test("ConnectionPool newSub support multiple filters | only 1 relay", async () => {
+Deno.test("ConnectionPool newSub support multiple filters", async () => {
     const pool = new ConnectionPool();
-    await pool.addRelayURL(relays[0]);
+    await pool.addRelayURLs(relays);
     try {
         const sub = await pool.newSub("multiple filters", { kinds: [NostrKind.META_DATA], limit: 1 }, {
             kinds: [NostrKind.TEXT_NOTE],
@@ -241,17 +241,20 @@ Deno.test("ConnectionPool newSub support multiple filters | only 1 relay", async
         const err2 = await pool.sendEvent(event2);
         if (err1 || err2) fail();
 
-        const msg1 = await sub.chan.pop();
-        const msg2 = await sub.chan.pop();
-        if (msg1 == csp.closed || msg2 == csp.closed) {
-            fail();
+        const resultMsgs: RelayResponse_Event[] = [];
+        while (true) {
+            if (resultMsgs.length >= 2) break;
+            const msg = await sub.chan.pop();
+            if (msg == csp.closed) fail();
+            if (msg.res.type != "EVENT") fail();
+            if (msg.url == relays[0]) {
+                resultMsgs.push(msg.res);
+            }
         }
-        if (msg1.res.type != "EVENT" || msg2.res.type != "EVENT") {
-            fail();
-        }
-        assert(msg1.res.event.kind != msg2.res.event.kind);
-        assert([NostrKind.META_DATA, NostrKind.TEXT_NOTE].includes(msg1.res.event.kind));
-        assert([NostrKind.META_DATA, NostrKind.TEXT_NOTE].includes(msg2.res.event.kind));
+
+        assert(resultMsgs[0].event.kind != resultMsgs[1].event.kind);
+        assert([NostrKind.META_DATA, NostrKind.TEXT_NOTE].includes(resultMsgs[0].event.kind));
+        assert([NostrKind.META_DATA, NostrKind.TEXT_NOTE].includes(resultMsgs[1].event.kind));
     } finally {
         await pool.close();
     }
