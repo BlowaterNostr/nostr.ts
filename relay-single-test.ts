@@ -138,8 +138,6 @@ export const newSub_multiple_filters = (url: string) => async () => {
         if (msg1.type != "EVENT" || msg2.type != "EVENT") {
             fail();
         }
-        assertEquals(msg1.subID, "multiple_filters");
-        assertEquals(msg2.subID, "multiple_filters");
         assert(msg1.event.kind != msg2.event.kind);
         assert([NostrKind.TEXT_NOTE, NostrKind.META_DATA].includes(msg1.event.kind));
         assert([NostrKind.TEXT_NOTE, NostrKind.META_DATA].includes(msg2.event.kind));

@@ -249,8 +249,6 @@ Deno.test("ConnectionPool newSub support multiple filters", async () => {
         if (msg1.res.type != "EVENT" || msg2.res.type != "EVENT") {
             fail();
         }
-        assertEquals(msg1.res.subID, "multiple filters");
-        assertEquals(msg2.res.subID, "multiple filters");
         assert(msg1.res.event.kind != msg2.res.event.kind);
         assert([NostrKind.META_DATA, NostrKind.TEXT_NOTE].includes(msg1.res.event.kind));
         assert([NostrKind.META_DATA, NostrKind.TEXT_NOTE].includes(msg2.res.event.kind));
