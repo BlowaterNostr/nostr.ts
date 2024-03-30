@@ -1,7 +1,7 @@
 cov_profile*
+coverage/
 .DS_Store
 nostr
 nodejs/index.js
 nodejs/index.mjs
 test.ts
-
