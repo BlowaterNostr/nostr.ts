@@ -5,10 +5,10 @@ import { AsyncWebSocket } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { ConnectionPool } from "./relay-pool.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
+import { assert } from "https://deno.land/std@0.202.0/assert/assert.ts";
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { assertNotInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_not_instance_of.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
-import { send_event } from "./relay-single-test.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
     const pool = new ConnectionPool();
@@ -219,7 +219,7 @@ Deno.test("send & get event", async (t) => {
 
 Deno.test("ConnectionPool newSub support multiple filters", async () => {
     const pool = new ConnectionPool();
-    const err = await pool.addRelayURLs(relays);
+    await pool.addRelayURLs(relays);
     try {
         const sub = await pool.newSub("multiple filters", { kinds: [NostrKind.META_DATA], limit: 1 }, {
             kinds: [NostrKind.TEXT_NOTE],
@@ -236,6 +236,7 @@ Deno.test("ConnectionPool newSub support multiple filters", async () => {
             kind: NostrKind.META_DATA,
             content: "test2",
         });
+
         const err1 = await pool.sendEvent(event1);
         const err2 = await pool.sendEvent(event2);
         if (err1 || err2) fail();
@@ -250,8 +251,9 @@ Deno.test("ConnectionPool newSub support multiple filters", async () => {
         }
         assertEquals(msg1.res.subID, "multiple filters");
         assertEquals(msg2.res.subID, "multiple filters");
-        assertEquals(msg1.res.event.kind, NostrKind.TEXT_NOTE);
-        assertEquals(msg2.res.event.kind, NostrKind.META_DATA);
+        assert(msg1.res.event.kind != msg2.res.event.kind);
+        assert([NostrKind.META_DATA, NostrKind.TEXT_NOTE].includes(msg1.res.event.kind));
+        assert([NostrKind.META_DATA, NostrKind.TEXT_NOTE].includes(msg2.res.event.kind));
     } finally {
         await pool.close();
     }

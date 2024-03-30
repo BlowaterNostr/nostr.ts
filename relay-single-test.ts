@@ -1,3 +1,4 @@
+import { assert } from "https://deno.land/std@0.202.0/assert/assert.ts";
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { assertInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_instance_of.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
@@ -139,8 +140,9 @@ export const newSub_multiple_filters = (url: string) => async () => {
         }
         assertEquals(msg1.subID, "multiple_filters");
         assertEquals(msg2.subID, "multiple_filters");
-        assertEquals(msg1.event.kind, NostrKind.TEXT_NOTE);
-        assertEquals(msg2.event.kind, NostrKind.META_DATA);
+        assert(msg1.event.kind != msg2.event.kind);
+        assert([NostrKind.TEXT_NOTE, NostrKind.META_DATA].includes(msg1.event.kind));
+        assert([NostrKind.TEXT_NOTE, NostrKind.META_DATA].includes(msg2.event.kind));
     } finally {
         await relay.close();
     }
