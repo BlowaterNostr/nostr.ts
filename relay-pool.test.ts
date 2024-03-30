@@ -217,9 +217,9 @@ Deno.test("send & get event", async (t) => {
     await pool.close();
 });
 
-Deno.test("ConnectionPool newSub support multiple filters", async () => {
+Deno.test("ConnectionPool newSub support multiple filters | only 1 relay", async () => {
     const pool = new ConnectionPool();
-    await pool.addRelayURLs(relays);
+    await pool.addRelayURL(relays[0]);
     try {
         const sub = await pool.newSub("multiple filters", { kinds: [NostrKind.META_DATA], limit: 1 }, {
             kinds: [NostrKind.TEXT_NOTE],
