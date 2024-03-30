@@ -86,6 +86,7 @@ export type SubscriptionStream = {
     filters: NostrFilters[];
     chan: csp.Channel<RelayResponse_REQ_Message>;
 };
+
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
     private _isClosedByClient = false;
     isClosedByClient() {
@@ -94,7 +95,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private subscriptionMap = new Map<
         string,
-        { filters: NostrFilters[]; chan: csp.Channel<RelayResponse_REQ_Message> }
+        SubscriptionStream
     >();
     readonly send_promise_resolvers = new Map<
         string,
