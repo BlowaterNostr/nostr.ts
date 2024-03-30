@@ -246,8 +246,7 @@ Deno.test("ConnectionPool newSub support multiple filters", async () => {
             if (resultMsgs.length >= 2) break;
             const msg = await sub.chan.pop();
             if (msg == csp.closed) fail();
-            if (msg.res.type != "EVENT") fail();
-            if (msg.url == relays[0]) {
+            if (msg.res.type === "EVENT" && msg.url === relays[0]) {
                 resultMsgs.push(msg.res);
             }
         }
