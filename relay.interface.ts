@@ -3,9 +3,9 @@ import { NostrEvent, NostrFilters, RelayResponse_REQ_Message } from "./nostr.ts"
 import { WebSocketClosed } from "./relay-single.ts";
 
 export type Subscriber = {
-    newSub: (subID: string, filter: NostrFilters) => Promise<
+    newSub: (subID: string, ...filters: NostrFilters[]) => Promise<
         Error | {
-            filter: NostrFilters;
+            filters: NostrFilters[];
             chan: Channel<RelayResponse_REQ_Message>;
         }
     >;

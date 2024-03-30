@@ -68,6 +68,17 @@ Deno.test("ConnectionPool newSub & close", async () => {
     );
 });
 
+Deno.test("ConnectionPool newSub support multiple filters", async () => {
+    const url = relays[0];
+    const pool = new ConnectionPool();
+    await pool.addRelayURL(url);
+    {
+        const sub = await pool.newSub("1", { kinds: [0, 1], limit: 1 }, { kinds: [4], limit: 1 });
+        if (sub instanceof Error) fail(sub.message);
+    }
+    await pool.close();
+})
+
 Deno.test("ConnectionPool: open,close,open again | no relay", async () => {
     const pool = new ConnectionPool();
     {

@@ -83,7 +83,7 @@ export class SubscriptionAlreadyExist extends Error {
 }
 
 export type SubscriptionStream = {
-    filter: NostrFilters;
+    filters: NostrFilters[];
     chan: csp.Channel<RelayResponse_REQ_Message>;
 };
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
@@ -94,7 +94,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private subscriptionMap = new Map<
         string,
-        { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
+        { filters: NostrFilters[]; chan: csp.Channel<RelayResponse_REQ_Message> }
     >();
     readonly send_promise_resolvers = new Map<
         string,
@@ -157,7 +157,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             console.error("impossible state");
                             break;
                         }
-                        const err = await sendSubscription(this.ws, subID, data.filter);
+                        const err = await sendSubscription(this.ws, subID, ...data.filters);
                         if (err instanceof Error) {
                             console.error(err);
                         }
@@ -248,11 +248,11 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
     }
 
-    async newSub(subID: string, filter: NostrFilters): Promise<
+    async newSub(subID: string, ...filters: NostrFilters[]): Promise<
         SubscriptionAlreadyExist | RelayDisconnectedByClient | SubscriptionStream
     > {
         if (this.log) {
-            console.log(`${this.url} registers subscription ${subID}`, filter);
+            console.log(`${this.url} registers subscription ${subID}`, ...filters);
         }
         const subscription = this.subscriptionMap.get(subID);
         if (subscription !== undefined) {
@@ -260,15 +260,15 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
 
         if (this.ws != undefined) {
-            const err = await sendSubscription(this.ws, subID, filter);
+            const err = await sendSubscription(this.ws, subID, ...filters);
             if (err instanceof Error) {
                 console.error(err);
             }
         }
 
         const chan = csp.chan<RelayResponse_REQ_Message>();
-        this.subscriptionMap.set(subID, { filter, chan });
-        return { filter, chan };
+        this.subscriptionMap.set(subID, { filters, chan });
+        return { filters, chan };
     }
 
     async sendEvent(event: NostrEvent) {
@@ -413,11 +413,11 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 }
 
-async function sendSubscription(ws: BidirectionalNetwork, subID: string, filter: NostrFilters) {
+async function sendSubscription(ws: BidirectionalNetwork, subID: string, ...filters: NostrFilters[]) {
     const err = await ws.send(JSON.stringify([
         "REQ",
         subID,
-        filter,
+        ...filters,
     ]));
     if (err) {
         return err;

@@ -7,6 +7,7 @@ import {
     get_event_by_id,
     limit,
     newSub_close,
+    newSub_multiple_filters,
     no_event,
     open_close,
     send_event,
@@ -19,6 +20,8 @@ import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
 Deno.test("SingleRelayConnection newSub & close", newSub_close(relays[0]));
+
+Deno.test("SingleRelayConnection newSub support multiple filters", newSub_multiple_filters(relays[0]));
 
 Deno.test("SingleRelayConnection subscription already exists", sub_exits(relays[0]));
 

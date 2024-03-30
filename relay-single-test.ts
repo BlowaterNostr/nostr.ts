@@ -27,6 +27,15 @@ export const newSub_close = (url: string) => async () => {
     assertEquals(sub.chan.closed(), true);
 };
 
+export const newSub_multiple_filters = (url: string) => async () => {
+    const relay = SingleRelayConnection.New(url);
+    {
+        const sub = await relay.newSub("1", { kinds: [0, 1], limit: 1 }, { kinds: [4], limit: 1 });
+        if (sub instanceof Error) fail(sub.message);
+    }
+    await relay.close();
+}
+
 export const sub_exits = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
     {
