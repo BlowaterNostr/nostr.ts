@@ -3,7 +3,7 @@ import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals
 import { assertInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_instance_of.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
-import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
+import { InMemoryAccountContext, NostrKind, RelayResponse_Event } from "./nostr.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { PrivateKey } from "./key.ts";
@@ -109,38 +109,38 @@ export const get_correct_kind = (url: string) => async () => {
 
 export const newSub_multiple_filters = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
+    const ctx = InMemoryAccountContext.Generate();
     try {
-        const stream = await relay.newSub("multiple_filters", { kinds: [NostrKind.TEXT_NOTE], limit: 1 }, {
-            kinds: [NostrKind.META_DATA],
-            limit: 1,
-        });
+        const stream = await relay.newSub(
+            "multiple filters",
+            {
+                kinds: [NostrKind.TEXT_NOTE],
+                limit: 1,
+            },
+            {
+                kinds: [NostrKind.META_DATA],
+                limit: 1,
+            },
+        );
         if (stream instanceof Error) fail(stream.message);
 
-        await relay.sendEvent(
-            await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
-                kind: NostrKind.TEXT_NOTE,
-                content: "test1",
-            }),
-        );
+        const event_1 = await prepareNormalNostrEvent(ctx, {
+            kind: NostrKind.TEXT_NOTE,
+            content: "test1",
+        });
+        const event_2 = await prepareNormalNostrEvent(ctx, {
+            kind: NostrKind.META_DATA,
+            content: "test2",
+        });
 
-        await relay.sendEvent(
-            await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
-                kind: NostrKind.META_DATA,
-                content: "test2",
-            }),
-        );
+        await relay.sendEvent(event_1);
+        await relay.sendEvent(event_2);
 
-        const msg1 = await stream.chan.pop();
-        const msg2 = await stream.chan.pop();
-        if (msg1 == csp.closed || msg2 == csp.closed) {
-            fail();
-        }
-        if (msg1.type != "EVENT" || msg2.type != "EVENT") {
-            fail();
-        }
-        assert(msg1.event.kind != msg2.event.kind);
-        assert([NostrKind.TEXT_NOTE, NostrKind.META_DATA].includes(msg1.event.kind));
-        assert([NostrKind.TEXT_NOTE, NostrKind.META_DATA].includes(msg2.event.kind));
+        const msg1 = await stream.chan.pop() as RelayResponse_Event;
+        const msg2 = await stream.chan.pop() as RelayResponse_Event;
+
+        assertEquals(NostrKind.TEXT_NOTE, msg1.event.kind);
+        assertEquals(NostrKind.META_DATA, msg2.event.kind);
     } finally {
         await relay.close();
     }
