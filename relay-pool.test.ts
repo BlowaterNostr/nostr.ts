@@ -1,11 +1,10 @@
-import { InMemoryAccountContext, NostrKind, RelayResponse_Event } from "./nostr.ts";
+import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { ConnectionPool } from "./relay-pool.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
-import { assert } from "https://deno.land/std@0.202.0/assert/assert.ts";
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { assertNotInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_not_instance_of.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
