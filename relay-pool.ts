@@ -4,7 +4,7 @@ import {
     PutToClosedChannelError,
 } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { NoteID } from "./nip19.ts";
-import { NostrEvent, NostrFilters, RelayResponse_REQ_Message } from "./nostr.ts";
+import { NostrEvent, NostrFilter, RelayResponse_REQ_Message } from "./nostr.ts";
 import { Closer, EventSender, SubscriptionCloser } from "./relay.interface.ts";
 import {
     RelayDisconnectedByClient,
@@ -40,7 +40,7 @@ export class ConnectionPool
     private readonly subscriptionMap = new Map<
         string,
         {
-            filter: NostrFilters;
+            filters: NostrFilter[];
             chan: Channel<{ res: RelayResponse_REQ_Message; url: string }>;
         }
     >();
@@ -125,8 +125,8 @@ export class ConnectionPool
         this.connections.set(relay.url, relay);
 
         // for this newly added relay, do all the subs
-        for (let [subID, { filter, chan }] of this.subscriptionMap.entries()) {
-            let sub = await relay.newSub(subID, filter);
+        for (let [subID, { filters, chan }] of this.subscriptionMap.entries()) {
+            let sub = await relay.newSub(subID, ...filters);
             if (sub instanceof Error) {
                 return sub;
             }
@@ -162,7 +162,7 @@ export class ConnectionPool
 
     async newSub(
         subID: string,
-        filter: NostrFilters,
+        ...filters: NostrFilter[]
     ) {
         if (this.subscriptionMap.has(subID)) {
             return new SubscriptionAlreadyExist(subID, "relay pool");
@@ -170,7 +170,7 @@ export class ConnectionPool
         const results = chan<{ res: RelayResponse_REQ_Message; url: string }>();
         for (const conn of this.connections.values()) {
             (async (relay: SingleRelayConnection) => {
-                const sub = await relay.newSub(subID, filter);
+                const sub = await relay.newSub(subID, ...filters);
                 if (sub instanceof Error) {
                     console.error(sub);
                     return;
@@ -180,7 +180,7 @@ export class ConnectionPool
                 }
             })(conn);
         }
-        const sub = { filter, chan: results };
+        const sub = { filters, chan: results };
         this.subscriptionMap.set(subID, sub);
         return sub;
     }

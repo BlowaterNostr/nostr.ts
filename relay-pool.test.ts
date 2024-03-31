@@ -8,7 +8,6 @@ import { prepareNormalNostrEvent } from "./event.ts";
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { assertNotInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_not_instance_of.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
-import { send_event } from "./relay-single-test.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
     const pool = new ConnectionPool();

@@ -4,8 +4,9 @@ import {
     _RelayResponse,
     _RelayResponse_OK,
     _RelayResponse_REQ_Message,
+    ClientRequest_REQ,
     NostrEvent,
-    NostrFilters,
+    NostrFilter,
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
@@ -83,9 +84,10 @@ export class SubscriptionAlreadyExist extends Error {
 }
 
 export type SubscriptionStream = {
-    filter: NostrFilters;
+    filters: NostrFilter[];
     chan: csp.Channel<RelayResponse_REQ_Message>;
 };
+
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
     private _isClosedByClient = false;
     isClosedByClient() {
@@ -94,7 +96,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     private subscriptionMap = new Map<
         string,
-        { filter: NostrFilters; chan: csp.Channel<RelayResponse_REQ_Message> }
+        SubscriptionStream
     >();
     readonly send_promise_resolvers = new Map<
         string,
@@ -157,7 +159,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             console.error("impossible state");
                             break;
                         }
-                        const err = await sendSubscription(this.ws, subID, data.filter);
+                        const err = await sendSubscription(this.ws, subID, ...data.filters);
                         if (err instanceof Error) {
                             console.error(err);
                         }
@@ -248,11 +250,11 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
     }
 
-    async newSub(subID: string, filter: NostrFilters): Promise<
+    async newSub(subID: string, ...filters: NostrFilter[]): Promise<
         SubscriptionAlreadyExist | RelayDisconnectedByClient | SubscriptionStream
     > {
         if (this.log) {
-            console.log(`${this.url} registers subscription ${subID}`, filter);
+            console.log(`${this.url} registers subscription ${subID}`, ...filters);
         }
         const subscription = this.subscriptionMap.get(subID);
         if (subscription !== undefined) {
@@ -260,15 +262,15 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
 
         if (this.ws != undefined) {
-            const err = await sendSubscription(this.ws, subID, filter);
+            const err = await sendSubscription(this.ws, subID, ...filters);
             if (err instanceof Error) {
                 console.error(err);
             }
         }
 
         const chan = csp.chan<RelayResponse_REQ_Message>();
-        this.subscriptionMap.set(subID, { filter, chan });
-        return { filter, chan };
+        this.subscriptionMap.set(subID, { filters, chan });
+        return { filters, chan };
     }
 
     async sendEvent(event: NostrEvent) {
@@ -413,12 +415,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 }
 
-async function sendSubscription(ws: BidirectionalNetwork, subID: string, filter: NostrFilters) {
-    const err = await ws.send(JSON.stringify([
-        "REQ",
-        subID,
-        filter,
-    ]));
+async function sendSubscription(ws: BidirectionalNetwork, subID: string, ...filters: NostrFilter[]) {
+    const req: ClientRequest_REQ = ["REQ", subID, ...filters];
+    const err = await ws.send(JSON.stringify(req));
     if (err) {
         return err;
     }

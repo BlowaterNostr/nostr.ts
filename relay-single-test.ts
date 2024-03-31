@@ -1,8 +1,9 @@
+import { assert } from "https://deno.land/std@0.202.0/assert/assert.ts";
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { assertInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_instance_of.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
-import { InMemoryAccountContext, NostrEvent, NostrKind } from "./nostr.ts";
+import { InMemoryAccountContext, NostrKind, RelayResponse_Event } from "./nostr.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { PrivateKey } from "./key.ts";
@@ -104,6 +105,43 @@ export const get_correct_kind = (url: string) => async () => {
         assertEquals(msg.event.kind, NostrKind.Encrypted_Custom_App_Data);
     }
     await relay.close();
+};
+
+export const newSub_multiple_filters = (url: string) => async () => {
+    const relay = SingleRelayConnection.New(url);
+    const event_1 = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+        kind: NostrKind.TEXT_NOTE,
+        content: "test1",
+    });
+    const event_2 = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+        kind: NostrKind.Long_Form,
+        content: "test2",
+    });
+    try {
+        const stream = await relay.newSub(
+            "multiple filters",
+            {
+                ids: [event_1.id],
+                limit: 1,
+            },
+            {
+                authors: [event_2.pubkey],
+                limit: 1,
+            },
+        );
+        if (stream instanceof Error) fail(stream.message);
+
+        await relay.sendEvent(event_1);
+        await relay.sendEvent(event_2);
+
+        const msg1 = await stream.chan.pop() as RelayResponse_Event;
+        const msg2 = await stream.chan.pop() as RelayResponse_Event;
+
+        assertEquals(event_1, msg1.event);
+        assertEquals(event_2, msg2.event);
+    } finally {
+        await relay.close();
+    }
 };
 
 export const limit = (url: string) => async () => {

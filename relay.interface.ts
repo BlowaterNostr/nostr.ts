@@ -1,13 +1,9 @@
-import { Channel } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import { NostrEvent, NostrFilters, RelayResponse_REQ_Message } from "./nostr.ts";
-import { WebSocketClosed } from "./relay-single.ts";
+import { NostrEvent, NostrFilter } from "./nostr.ts";
+import { SubscriptionStream, WebSocketClosed } from "./relay-single.ts";
 
 export type Subscriber = {
-    newSub: (subID: string, filter: NostrFilters) => Promise<
-        Error | {
-            filter: NostrFilters;
-            chan: Channel<RelayResponse_REQ_Message>;
-        }
+    newSub: (subID: string, ...filters: NostrFilter[]) => Promise<
+        Error | SubscriptionStream
     >;
 };
 

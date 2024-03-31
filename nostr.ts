@@ -18,7 +18,7 @@ export enum NostrKind {
     Group_Message = 1000,
 }
 
-export interface NostrFilters {
+export interface NostrFilter {
     ids?: Array<string>;
     authors?: Array<string>;
     kinds?: Array<NostrKind>;
@@ -93,7 +93,7 @@ export type ClientRequest_Message =
     | ClientRequest_Close;
 export type ClientRequest_Event = ["EVENT", NostrEvent];
 // potentially more filters, but I don't know how to represent in TS type
-export type ClientRequest_REQ = ["REQ", SubID, NostrFilters];
+export type ClientRequest_REQ = ["REQ", SubID, ...NostrFilter[]];
 export type ClientRequest_Close = ["CLOSE", SubID];
 
 export interface RequestFilter {
