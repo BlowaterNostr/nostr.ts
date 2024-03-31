@@ -2,11 +2,11 @@ import { assert } from "https://deno.land/std@0.202.0/assert/assert.ts";
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { assertInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_instance_of.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
-import { prepareEncryptedNostrEvent, prepareNormalNostrEvent } from "./event.ts";
-import { InMemoryAccountContext, NostrEvent, NostrKind } from "./nostr.ts";
+import { prepareNormalNostrEvent } from "./event.ts";
+import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
-import { PrivateKey, PublicKey } from "./key.ts";
+import { PrivateKey } from "./key.ts";
 
 export const open_close = (urls: string[]) => async () => {
     for (let url of urls) {

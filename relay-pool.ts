@@ -4,7 +4,7 @@ import {
     PutToClosedChannelError,
 } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { NoteID } from "./nip19.ts";
-import { NostrEvent, NostrFilters, RelayResponse_REQ_Message } from "./nostr.ts";
+import { NostrEvent, NostrFilter, RelayResponse_REQ_Message } from "./nostr.ts";
 import { Closer, EventSender, SubscriptionCloser } from "./relay.interface.ts";
 import {
     RelayDisconnectedByClient,
@@ -40,7 +40,7 @@ export class ConnectionPool
     private readonly subscriptionMap = new Map<
         string,
         {
-            filters: NostrFilters[];
+            filters: NostrFilter[];
             chan: Channel<{ res: RelayResponse_REQ_Message; url: string }>;
         }
     >();
@@ -162,7 +162,7 @@ export class ConnectionPool
 
     async newSub(
         subID: string,
-        ...filters: NostrFilters[]
+        ...filters: NostrFilter[]
     ) {
         if (this.subscriptionMap.has(subID)) {
             return new SubscriptionAlreadyExist(subID, "relay pool");

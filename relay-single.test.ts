@@ -1,4 +1,4 @@
-import { relays, wirednet } from "./relay-list.test.ts";
+import { relays } from "./relay-list.test.ts";
 import { BidirectionalNetwork, SingleRelayConnection, WebSocketClosed } from "./relay-single.ts";
 import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import {
@@ -29,7 +29,7 @@ Deno.test("send event", send_event(relays[0]));
 
 Deno.test("get_correct_kind", get_correct_kind(relays[0]));
 
-Deno.test("SingleRelayConnection newSub support multiple filters", newSub_multiple_filters(relays[0]));
+Deno.test("multiple filters", newSub_multiple_filters(relays[0]));
 
 Deno.test("limit", limit(relays[0]));
 

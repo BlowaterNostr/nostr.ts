@@ -5,7 +5,7 @@ import {
     _RelayResponse_OK,
     _RelayResponse_REQ_Message,
     NostrEvent,
-    NostrFilters,
+    NostrFilter,
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
@@ -83,7 +83,7 @@ export class SubscriptionAlreadyExist extends Error {
 }
 
 export type SubscriptionStream = {
-    filters: NostrFilters[];
+    filters: NostrFilter[];
     chan: csp.Channel<RelayResponse_REQ_Message>;
 };
 
@@ -249,7 +249,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
     }
 
-    async newSub(subID: string, ...filters: NostrFilters[]): Promise<
+    async newSub(subID: string, ...filters: NostrFilter[]): Promise<
         SubscriptionAlreadyExist | RelayDisconnectedByClient | SubscriptionStream
     > {
         if (this.log) {
@@ -414,7 +414,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 }
 
-async function sendSubscription(ws: BidirectionalNetwork, subID: string, ...filters: NostrFilters[]) {
+async function sendSubscription(ws: BidirectionalNetwork, subID: string, ...filters: NostrFilter[]) {
     const err = await ws.send(JSON.stringify([
         "REQ",
         subID,
