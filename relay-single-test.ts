@@ -114,7 +114,7 @@ export const newSub_multiple_filters = (url: string) => async () => {
         content: "test1",
     });
     const event_2 = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
-        kind: NostrKind.META_DATA,
+        kind: NostrKind.Long_Form,
         content: "test2",
     });
     try {
