@@ -109,29 +109,27 @@ export const get_correct_kind = (url: string) => async () => {
 
 export const newSub_multiple_filters = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
-    const ctx = InMemoryAccountContext.Generate();
+    const event_1 = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+        kind: NostrKind.TEXT_NOTE,
+        content: "test1",
+    });
+    const event_2 = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+        kind: NostrKind.META_DATA,
+        content: "test2",
+    });
     try {
         const stream = await relay.newSub(
             "multiple filters",
             {
-                kinds: [NostrKind.TEXT_NOTE],
+                ids: [event_1.id],
                 limit: 1,
             },
             {
-                kinds: [NostrKind.META_DATA],
+                authors: [event_2.pubkey],
                 limit: 1,
             },
         );
         if (stream instanceof Error) fail(stream.message);
-
-        const event_1 = await prepareNormalNostrEvent(ctx, {
-            kind: NostrKind.TEXT_NOTE,
-            content: "test1",
-        });
-        const event_2 = await prepareNormalNostrEvent(ctx, {
-            kind: NostrKind.META_DATA,
-            content: "test2",
-        });
 
         await relay.sendEvent(event_1);
         await relay.sendEvent(event_2);
@@ -139,8 +137,8 @@ export const newSub_multiple_filters = (url: string) => async () => {
         const msg1 = await stream.chan.pop() as RelayResponse_Event;
         const msg2 = await stream.chan.pop() as RelayResponse_Event;
 
-        assertEquals(NostrKind.TEXT_NOTE, msg1.event.kind);
-        assertEquals(NostrKind.META_DATA, msg2.event.kind);
+        assertEquals(event_1, msg1.event);
+        assertEquals(event_2, msg2.event);
     } finally {
         await relay.close();
     }
