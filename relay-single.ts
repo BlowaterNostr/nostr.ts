@@ -4,6 +4,7 @@ import {
     _RelayResponse,
     _RelayResponse_OK,
     _RelayResponse_REQ_Message,
+    ClientRequest_REQ,
     NostrEvent,
     NostrFilter,
     RelayResponse_REQ_Message,
@@ -415,11 +416,8 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 }
 
 async function sendSubscription(ws: BidirectionalNetwork, subID: string, ...filters: NostrFilter[]) {
-    const err = await ws.send(JSON.stringify([
-        "REQ",
-        subID,
-        ...filters,
-    ]));
+    const req: ClientRequest_REQ = ["REQ", subID, ...filters];
+    const err = await ws.send(JSON.stringify(req));
     if (err) {
         return err;
     }
