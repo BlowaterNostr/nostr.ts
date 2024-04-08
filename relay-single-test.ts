@@ -117,31 +117,33 @@ export const newSub_multiple_filters = (url: string) => async () => {
         kind: NostrKind.Long_Form,
         content: "test2",
     });
-    try {
-        const stream = await relay.newSub(
-            "multiple filters",
-            {
-                ids: [event_1.id],
-                limit: 1,
-            },
-            {
-                authors: [event_2.pubkey],
-                limit: 1,
-            },
-        );
-        if (stream instanceof Error) fail(stream.message);
-
-        await relay.sendEvent(event_1);
-        await relay.sendEvent(event_2);
-
-        const msg1 = await stream.chan.pop() as RelayResponse_Event;
-        const msg2 = await stream.chan.pop() as RelayResponse_Event;
-
-        assertEquals(event_1, msg1.event);
-        assertEquals(event_2, msg2.event);
-    } finally {
-        await relay.close();
+    {
+        const err1 = await relay.sendEvent(event_1);
+        if (err1 instanceof Error) fail(err1.message);
+        const err2 = await relay.sendEvent(event_2);
+        if (err2 instanceof Error) fail(err2.message);
     }
+
+    const stream = await relay.newSub(
+        "multiple filters",
+        {
+            ids: [event_1.id],
+            limit: 1,
+        },
+        {
+            authors: [event_2.pubkey],
+            limit: 1,
+        },
+    );
+    if (stream instanceof Error) fail(stream.message);
+
+    const msg1 = await stream.chan.pop() as RelayResponse_Event;
+    const msg2 = await stream.chan.pop() as RelayResponse_Event;
+
+    assertEquals(event_1, msg1.event);
+    assertEquals(event_2, msg2.event);
+
+    await relay.close();
 };
 
 export const limit = (url: string) => async () => {
@@ -152,24 +154,27 @@ export const limit = (url: string) => async () => {
         const sub = await relay.newSub(subID, { limit: 3 });
         if (sub instanceof Error) fail(sub.message);
 
-        await relay.sendEvent(
+        const err = await relay.sendEvent(
             await prepareNormalNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
                 content: "1",
             }),
         );
-        await relay.sendEvent(
+        if (err instanceof Error) fail(err.message);
+        const err2 = await relay.sendEvent(
             await prepareNormalNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
                 content: "2",
             }),
         );
-        await relay.sendEvent(
+        if (err2 instanceof Error) fail(err2.message);
+        const err3 = await relay.sendEvent(
             await prepareNormalNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
                 content: "3",
             }),
         );
+        if (err3 instanceof Error) fail(err3.message);
 
         let i = 0;
         for await (const msg of sub.chan) {
@@ -195,7 +200,7 @@ export const no_event = (url: string) => async () => {
         if (sub instanceof Error) fail(sub.message);
 
         for await (const msg of sub.chan) {
-            assertEquals(msg.type, "EOSE");
+            assertEquals(msg, { type: "EOSE", subID: "NoEvent" });
             break;
         }
     }
