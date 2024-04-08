@@ -84,15 +84,17 @@ export const send_event = (url: string) => async () => {
 export const get_correct_kind = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
     {
-        const stream = await relay.newSub("test", { limit: 1, kinds: [NostrKind.Encrypted_Custom_App_Data] });
-        if (stream instanceof Error) fail(stream.message);
-
-        await relay.sendEvent(
+        const err = await relay.sendEvent(
             await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
                 kind: NostrKind.Encrypted_Custom_App_Data,
                 content: "test",
             }),
         );
+        if (err instanceof Error) fail(err.message);
+    }
+    {
+        const stream = await relay.newSub("test", { limit: 1, kinds: [NostrKind.Encrypted_Custom_App_Data] });
+        if (stream instanceof Error) fail(stream.message);
 
         const msg = await stream.chan.pop();
         if (msg == csp.closed) {
