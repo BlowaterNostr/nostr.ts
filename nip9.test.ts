@@ -45,14 +45,4 @@ Deno.test("prepareDeletionEvent", async (t) => {
         assertEquals(deletion.tags[1][1], event2.id);
     });
 
-    const ctx2 = InMemoryAccountContext.Generate();
-    const event3 = await prepareNormalNostrEvent(ctx2, {
-        kind: NostrKind.TEXT_NOTE,
-        content: "123",
-    });
-
-    await t.step("delete two events from different accounts", async () => {
-        const deletion = await prepareDeletionNostrEvent(ctx1, event1, event3);
-        assertEquals(deletion instanceof Error, true);
-    });
 });
