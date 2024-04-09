@@ -93,7 +93,7 @@ export const send_deletion_event_for_replaceable_events = (url: string) => async
     const ctx = InMemoryAccountContext.Generate();
     {
         const event = await prepareNormalNostrEvent(ctx, {
-            content: "test send_deletion_event_for_replaceable_events",
+            content: JSON.stringify({ name: "test" }),
             kind: NostrKind.META_DATA,
         });
         const err1 = await relay.sendEvent(event);
