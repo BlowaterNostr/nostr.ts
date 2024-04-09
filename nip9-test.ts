@@ -60,7 +60,7 @@ export const replacement_event_without_dtag = () => async () => {
 };
 
 export const send_deletion_event = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url);
+    const relay = SingleRelayConnection.New(url, { log: true });
     const ctx = InMemoryAccountContext.Generate();
     {
         const event = await prepareNormalNostrEvent(ctx, {
