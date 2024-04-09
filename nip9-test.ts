@@ -1,10 +1,10 @@
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
-import { prepareDeletionNostrEvent, prepareNormalNostrEvent, PrivateKey } from "./nodejs/index.ts";
+import { prepareDeletionNostrEvent, prepareNormalNostrEvent } from "./nodejs/index.ts";
 import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 import { SingleRelayConnection } from "./relay-single.ts";
 
-export const prepareNormalDeletionEvent = () => async () => {
+export const normal_event = () => async () => {
     const ctx = InMemoryAccountContext.Generate();
     const event = await prepareNormalNostrEvent(ctx, {
         content: "test deletion",
@@ -22,7 +22,7 @@ export const prepareNormalDeletionEvent = () => async () => {
     assertEquals(deletion.tags[0], ["e", event.id]);
 };
 
-export const prepareReplacementDeletionEvent = () => async () => {
+export const replacement_event = () => async () => {
     const ctx = InMemoryAccountContext.Generate();
     const event = await prepareNormalNostrEvent(ctx, {
         kind: NostrKind.CONTACTS,
@@ -41,7 +41,7 @@ export const prepareReplacementDeletionEvent = () => async () => {
     assertEquals(deletion.tags[0], ["a", `${NostrKind.CONTACTS}:${event.pubkey}:test`]);
 };
 
-export const prepareReplacementDeletionEventWithoutDTag = () => async () => {
+export const replacement_event_without_dtag = () => async () => {
     const ctx = InMemoryAccountContext.Generate();
     const event = await prepareNormalNostrEvent(ctx, {
         kind: NostrKind.CONTACTS,
@@ -57,9 +57,9 @@ export const prepareReplacementDeletionEventWithoutDTag = () => async () => {
     assertEquals(deletion.kind, NostrKind.DELETE);
     assertEquals(deletion.content, "test deletion");
     assertEquals(deletion.tags[0], ["a", `${NostrKind.CONTACTS}:${event.pubkey}:`]);
-}
+};
 
-export const sendDeletionEvent = (url: string) => async () => {
+export const send_deletion_event = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
     const ctx = InMemoryAccountContext.Generate();
     {
