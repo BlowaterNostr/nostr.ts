@@ -4,61 +4,6 @@ import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 import { SingleRelayConnection } from "./relay-single.ts";
 
-export const normal_event = () => async () => {
-    const ctx = InMemoryAccountContext.Generate();
-    const event = await prepareNormalNostrEvent(ctx, {
-        content: "test deletion",
-        kind: NostrKind.TEXT_NOTE,
-    });
-    if (event instanceof Error) {
-        fail(event.message);
-    }
-    const deletion = await prepareDeletionNostrEvent(ctx, "test deletion", event);
-    if (deletion instanceof Error) {
-        fail(deletion.message);
-    }
-    assertEquals(deletion.kind, NostrKind.DELETE);
-    assertEquals(deletion.content, "test deletion");
-    assertEquals(deletion.tags[0], ["e", event.id]);
-};
-
-export const replacement_event = () => async () => {
-    const ctx = InMemoryAccountContext.Generate();
-    const event = await prepareNormalNostrEvent(ctx, {
-        kind: NostrKind.CONTACTS,
-        content: "test deletion",
-        tags: [["d", "test"]],
-    });
-    if (event instanceof Error) {
-        fail(event.message);
-    }
-    const deletion = await prepareDeletionNostrEvent(ctx, "test deletion", event);
-    if (deletion instanceof Error) {
-        fail(deletion.message);
-    }
-    assertEquals(deletion.kind, NostrKind.DELETE);
-    assertEquals(deletion.content, "test deletion");
-    assertEquals(deletion.tags[0], ["a", `${NostrKind.CONTACTS}:${event.pubkey}:test`]);
-};
-
-export const replacement_event_without_dtag = () => async () => {
-    const ctx = InMemoryAccountContext.Generate();
-    const event = await prepareNormalNostrEvent(ctx, {
-        kind: NostrKind.CONTACTS,
-        content: "test deletion",
-    });
-    if (event instanceof Error) {
-        fail(event.message);
-    }
-    const deletion = await prepareDeletionNostrEvent(ctx, "test deletion", event);
-    if (deletion instanceof Error) {
-        fail(deletion.message);
-    }
-    assertEquals(deletion.kind, NostrKind.DELETE);
-    assertEquals(deletion.content, "test deletion");
-    assertEquals(deletion.tags[0], ["a", `${NostrKind.CONTACTS}:${event.pubkey}:`]);
-};
-
 export const send_deletion_event = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url, { log: true });
     const ctx = InMemoryAccountContext.Generate();

@@ -1,7 +1,8 @@
-import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.202.0/testing/asserts.ts";
+import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
+import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { PrivateKey } from "./key.ts";
-import { getTags, InMemoryAccountContext, NostrKind, verifyEvent } from "./nostr.ts";
-import { prepareEncryptedNostrEvent, prepareNormalNostrEvent } from "./event.ts";
+import { InMemoryAccountContext, NostrKind, verifyEvent } from "./nostr.ts";
+import { prepareDeletionNostrEvent, prepareEncryptedNostrEvent, prepareNormalNostrEvent } from "./event.ts";
 
 Deno.test("Verify Event", async (t) => {
     let pri = PrivateKey.Generate();
@@ -44,4 +45,59 @@ Deno.test("wrong encryption key causing decryption failure", async () => {
     } else {
         fail(`should have error, get ${err}`);
     }
+});
+
+Deno.test("delete normal event", async () => {
+    const ctx = InMemoryAccountContext.Generate();
+    const event = await prepareNormalNostrEvent(ctx, {
+        content: "test deletion",
+        kind: NostrKind.TEXT_NOTE,
+    });
+    if (event instanceof Error) {
+        fail(event.message);
+    }
+    const deletion = await prepareDeletionNostrEvent(ctx, "test deletion", event);
+    if (deletion instanceof Error) {
+        fail(deletion.message);
+    }
+    assertEquals(deletion.kind, NostrKind.DELETE);
+    assertEquals(deletion.content, "test deletion");
+    assertEquals(deletion.tags[0], ["e", event.id]);
+});
+
+Deno.test("delete replacement event ", async () => {
+    const ctx = InMemoryAccountContext.Generate();
+    const event = await prepareNormalNostrEvent(ctx, {
+        kind: NostrKind.CONTACTS,
+        content: "test deletion",
+        tags: [["d", "test"]],
+    });
+    if (event instanceof Error) {
+        fail(event.message);
+    }
+    const deletion = await prepareDeletionNostrEvent(ctx, "test deletion", event);
+    if (deletion instanceof Error) {
+        fail(deletion.message);
+    }
+    assertEquals(deletion.kind, NostrKind.DELETE);
+    assertEquals(deletion.content, "test deletion");
+    assertEquals(deletion.tags[0], ["a", `${NostrKind.CONTACTS}:${event.pubkey}:test`]);
+});
+
+Deno.test("delete parameterized replacement event", async () => {
+    const ctx = InMemoryAccountContext.Generate();
+    const event = await prepareNormalNostrEvent(ctx, {
+        kind: NostrKind.CONTACTS,
+        content: "test deletion",
+    });
+    if (event instanceof Error) {
+        fail(event.message);
+    }
+    const deletion = await prepareDeletionNostrEvent(ctx, "test deletion", event);
+    if (deletion instanceof Error) {
+        fail(deletion.message);
+    }
+    assertEquals(deletion.kind, NostrKind.DELETE);
+    assertEquals(deletion.content, "test deletion");
+    assertEquals(deletion.tags[0], ["a", `${NostrKind.CONTACTS}:${event.pubkey}:`]);
 });
