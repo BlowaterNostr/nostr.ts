@@ -19,12 +19,13 @@ Deno.test("prepareDeletionEvent", async (t) => {
     }
 
     await t.step("delete one event", async () => {
-        const deletion = await prepareDeletionNostrEvent(ctx1, event1);
+        const deletion = await prepareDeletionNostrEvent(ctx1, "test1", event1);
         if (deletion instanceof Error) {
             fail(deletion.message);
         }
 
         assertEquals(deletion.kind, NostrKind.DELETE);
+        assertEquals(deletion.content, "test1");
         assertEquals(deletion.tags.length, 1);
         assertEquals(deletion.tags[0][1], event1.id);
     });
@@ -35,12 +36,13 @@ Deno.test("prepareDeletionEvent", async (t) => {
     });
 
     await t.step("delete two events", async () => {
-        const deletion = await prepareDeletionNostrEvent(ctx1, event1, event2);
+        const deletion = await prepareDeletionNostrEvent(ctx1, "test2", event1, event2);
         if (deletion instanceof Error) {
             fail(deletion.message);
         }
 
         assertEquals(deletion.tags.length, 2);
+        assertEquals(deletion.content, "test2");
         assertEquals(deletion.tags[0][1], event1.id);
         assertEquals(deletion.tags[1][1], event2.id);
     });

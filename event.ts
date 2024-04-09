@@ -50,6 +50,7 @@ export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind
 
 export async function prepareDeletionNostrEvent(
     sender: NostrAccountContext,
+    content: string,
     ...events: NostrEvent<NostrKind>[]
 ): Promise<NostrEvent<NostrKind.DELETE> | Error> {
 
@@ -59,7 +60,7 @@ export async function prepareDeletionNostrEvent(
         sender,
         {
             kind: NostrKind.DELETE,
-            content: "",
+            content,
             tags: Array.from(eTags).map((event_id: string) => ["e", event_id]),
             created_at: Math.floor(Date.now() / 1000),
         },
