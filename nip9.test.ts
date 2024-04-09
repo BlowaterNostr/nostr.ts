@@ -1,8 +1,10 @@
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
-import { prepareDeletionNostrEvent, prepareNormalNostrEvent } from "./nodejs/index.ts";
+import { PrivateKey, prepareDeletionNostrEvent, prepareNormalNostrEvent } from "./nodejs/index.ts";
 import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { prepareEncryptedNostrEvent } from "./event.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
+import { SingleRelayConnection } from "./relay-single.ts";
+import { relays } from "./relay-list.test.ts";
 
 Deno.test("prepareDeletionEvent", async (t) => {
     const ctx1 = InMemoryAccountContext.Generate();
@@ -46,5 +48,34 @@ Deno.test("prepareDeletionEvent", async (t) => {
         assertEquals(deletion.tags[0][1], event1.id);
         assertEquals(deletion.tags[1][1], event2.id);
     });
-
 });
+
+Deno.test("Deletion against a strfry relay", async (t) => {
+    const relay = SingleRelayConnection.New(relays[2]);
+    const ctx = InMemoryAccountContext.Generate();
+    const event = await prepareNormalNostrEvent(ctx, {
+        kind: NostrKind.TEXT_NOTE,
+        content: "test",
+    });
+    {
+        const err =  relay.sendEvent(event);
+        if (err instanceof Error) fail(err.message);
+    }
+    {
+        const event_2 = await relay.getEvent(event.id);
+        if (event_2 instanceof Error) fail(event_2.message);
+        assertEquals(event_2, event);
+    }
+    {
+        const deletion = await prepareDeletionNostrEvent(ctx, "test deletion", event);
+        if (deletion instanceof Error) {
+            fail(deletion.message);
+        }
+    }
+    {
+        const event_3 = await relay.getEvent(event.id);
+        if (event_3 instanceof Error) fail(event_3.message);
+        assertEquals(event_3, undefined);
+    }
+    await relay.close();
+})
