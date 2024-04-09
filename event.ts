@@ -52,11 +52,11 @@ export async function prepareDeletionNostrEvent(
     sender: NostrAccountContext,
     ...events: NostrEvent<NostrKind>[]
 ): Promise<NostrEvent<NostrKind.DELETE> | Error> {
-    if (events.some(e => e.pubkey !== sender.publicKey.hex)) {
+    if (events.some((e) => e.pubkey !== sender.publicKey.hex)) {
         return new Error("deletion events must be from the same account");
     }
 
-    const eTags = new Set(events.map(e => e.id));
+    const eTags = new Set(events.map((e) => e.id));
 
     return prepareNormalNostrEvent(
         sender,

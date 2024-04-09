@@ -54,5 +54,5 @@ Deno.test("prepareDeletionEvent", async (t) => {
     await t.step("delete two events from different accounts", async () => {
         const deletion = await prepareDeletionNostrEvent(ctx1, event1, event3);
         assertEquals(deletion instanceof Error, true);
-    })
+    });
 });
