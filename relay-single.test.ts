@@ -37,7 +37,7 @@ Deno.test("no_event", no_event(relays[0]));
 
 Deno.test("two_clients_communicate", two_clients_communicate(relays[0]));
 
-Deno.test("get_event_by_id", get_event_by_id(relays[0]));
+Deno.test("get_event_by_id", get_event_by_id(relays[2]));
 
 Deno.test("auto reconnection", async () => {
     let _state: WebSocketReadyState = "Open";
