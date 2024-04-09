@@ -72,9 +72,7 @@ export async function prepareDeletionNostrEvent(
             const dTag = e.tags.find((
                 tag,
             ) => (tag.length === 2 && tag[0] === "d" && typeof tag[1] === "string"));
-            if (dTag) {
-                aTags.add(`${e.kind}:${e.id}:${dTag[1]}`);
-            }
+            aTags.add(`${e.kind}:${e.pubkey}:${dTag?.[1] || ""}`);
         } else {
             eTags.add(e.id);
         }

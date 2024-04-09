@@ -38,8 +38,26 @@ export const prepareReplacementDeletionEvent = () => async () => {
     }
     assertEquals(deletion.kind, NostrKind.DELETE);
     assertEquals(deletion.content, "test deletion");
-    assertEquals(deletion.tags[0], ["a", `${NostrKind.CONTACTS}:${event.id}:test`]);
+    assertEquals(deletion.tags[0], ["a", `${NostrKind.CONTACTS}:${event.pubkey}:test`]);
 };
+
+export const prepareReplacementDeletionEventWithoutDTag = () => async () => {
+    const ctx = InMemoryAccountContext.Generate();
+    const event = await prepareNormalNostrEvent(ctx, {
+        kind: NostrKind.CONTACTS,
+        content: "test deletion",
+    });
+    if (event instanceof Error) {
+        fail(event.message);
+    }
+    const deletion = await prepareDeletionNostrEvent(ctx, "test deletion", event);
+    if (deletion instanceof Error) {
+        fail(deletion.message);
+    }
+    assertEquals(deletion.kind, NostrKind.DELETE);
+    assertEquals(deletion.content, "test deletion");
+    assertEquals(deletion.tags[0], ["a", `${NostrKind.CONTACTS}:${event.pubkey}:`]);
+}
 
 export const sendDeletionEvent = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
