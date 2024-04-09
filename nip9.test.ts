@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
-import { PrivateKey, prepareDeletionNostrEvent, prepareNormalNostrEvent } from "./nodejs/index.ts";
+import { prepareDeletionNostrEvent, prepareNormalNostrEvent, PrivateKey } from "./nodejs/index.ts";
 import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { prepareEncryptedNostrEvent } from "./event.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
@@ -58,7 +58,7 @@ Deno.test("Deletion against a strfry relay", async (t) => {
         content: "test",
     });
     {
-        const err =  relay.sendEvent(event);
+        const err = relay.sendEvent(event);
         if (err instanceof Error) fail(err.message);
     }
     {
@@ -78,4 +78,4 @@ Deno.test("Deletion against a strfry relay", async (t) => {
         assertEquals(event_3, undefined);
     }
     await relay.close();
-})
+});
