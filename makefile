@@ -1,4 +1,4 @@
-test:
+test: fmt
 	rm -rf cov_profile*
 	deno test --allow-net --trace-ops --coverage=cov_profile *.test.ts
 

@@ -39,11 +39,38 @@ export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind
     },
 ): Promise<NostrEvent<Kind>> {
     const event: UnsignedNostrEvent<Kind> = {
-        created_at: args.created_at ? args.created_at : Math.floor(Date.now() / 1000),
+        created_at: args.created_at ? Math.floor(args.created_at) : Math.floor(Date.now() / 1000),
         kind: args.kind,
         pubkey: sender.publicKey.hex,
         tags: args.tags || [],
         content: args.content,
     };
     return sender.signEvent<Kind>(event);
+}
+
+export async function prepareDeletionEvent(
+    author: NostrAccountContext,
+    content: string,
+    ...events: NostrEvent<NostrKind>[]
+): Promise<NostrEvent<NostrKind.DELETE> | Error> {
+    const eTags = new Set<string>();
+    const tags: Tag[] = [];
+
+    for (const e of events) {
+        if (eTags.has(e.id)) {
+            continue;
+        }
+        eTags.add(e.id);
+        tags.push(["e", e.id]);
+    }
+
+    return prepareNormalNostrEvent(
+        author,
+        {
+            kind: NostrKind.DELETE,
+            content,
+            tags,
+            created_at: Math.floor(Date.now() / 1000),
+        },
+    );
 }

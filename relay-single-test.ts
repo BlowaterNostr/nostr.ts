@@ -261,3 +261,32 @@ export const get_event_by_id = (url: string) => async () => {
     }
     await relay1.close();
 };
+
+export const get_replaceable_event = (url: string) => async () => {
+    const relay = SingleRelayConnection.New(url);
+    const ctx = InMemoryAccountContext.Generate();
+
+    const event1 = await prepareNormalNostrEvent(ctx, {
+        content: "1",
+        kind: NostrKind.META_DATA,
+        created_at: Date.now() / 1000,
+    });
+    {
+        const err = await relay.sendEvent(event1);
+        if (err instanceof Error) fail(err.message);
+    }
+
+    const event2 = await prepareNormalNostrEvent(ctx, {
+        content: "2",
+        kind: NostrKind.META_DATA,
+        created_at: Date.now() / 1000 + 1,
+    });
+    {
+        const err = await relay.sendEvent(event2);
+        if (err instanceof Error) fail(err.message);
+    }
+
+    const event_got = await relay.getReplaceableEvent(ctx.publicKey, NostrKind.META_DATA);
+    assertEquals(event_got, event2);
+    await relay.close();
+};

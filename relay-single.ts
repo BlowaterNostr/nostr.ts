@@ -1,4 +1,5 @@
 import { parseJSON } from "./_helper.ts";
+import { PublicKey } from "./key.ts";
 import { NoteID } from "./nip19.ts";
 import {
     _RelayResponse,
@@ -7,6 +8,7 @@ import {
     ClientRequest_REQ,
     NostrEvent,
     NostrFilter,
+    NostrKind,
     RelayResponse_REQ_Message,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
@@ -309,6 +311,33 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
         for await (const msg of events.chan) {
             const err = await this.closeSub(id);
+            if (err instanceof Error) return err;
+
+            if (msg.type == "EVENT") {
+                return msg.event;
+            } else if (msg.type == "NOTICE") {
+                return new Error(msg.note);
+            } else if (msg.type == "EOSE") {
+                return;
+            }
+        }
+    }
+
+    async getReplaceableEvent(pubkey: PublicKey, kind: NostrKind) {
+        const subID = `${pubkey.bech32()}:${kind}`;
+        const err = await this.closeSub(subID);
+        if (err instanceof Error) return err;
+
+        const events = await this.newSub(subID, {
+            authors: [pubkey.hex],
+            kinds: [kind],
+            limit: 1,
+        });
+        if (events instanceof Error) {
+            return events;
+        }
+        for await (const msg of events.chan) {
+            const err = await this.closeSub(subID);
             if (err instanceof Error) return err;
 
             if (msg.type == "EVENT") {
