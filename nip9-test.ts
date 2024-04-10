@@ -38,9 +38,9 @@ export const send_deletion_event_for_replaceable_events = (url: string) => async
     const ctx = InMemoryAccountContext.Generate();
     try {
         const event = await prepareNormalNostrEvent(ctx, {
-            content: JSON.stringify({ name: `test${Math.random()}` }),
-            kind: NostrKind.META_DATA,
-            created_at: Math.floor(Date.now() / 1000),
+            content: `test${Math.random()}`,
+            kind: NostrKind.Long_Form,
+            tags: [["d", "test-deletion"], ["title", "test title"]],
         });
         const err1 = await relay.sendEvent(event);
         if (err1 instanceof Error) fail(`Send Meta data error: ${err1.message}`);
