@@ -47,3 +47,28 @@ export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind
     };
     return sender.signEvent<Kind>(event);
 }
+
+export async function prepareDeletionNostrEvent(
+    sender: NostrAccountContext,
+    content: string,
+    ...events: NostrEvent<NostrKind>[]
+): Promise<NostrEvent<NostrKind.DELETE> | Error> {
+    const eTags = new Set<string>();
+    const tags: Tag[] = [];
+
+    events.forEach((e) => {
+        if (eTags.has(e.id)) return;
+        eTags.add(e.id);
+        tags.push(["e", e.id]);
+    });
+
+    return prepareNormalNostrEvent(
+        sender,
+        {
+            kind: NostrKind.DELETE,
+            content,
+            tags,
+            created_at: Math.floor(Date.now() / 1000),
+        },
+    );
+}
