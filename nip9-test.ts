@@ -4,6 +4,29 @@ import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 import { SingleRelayConnection } from "./relay-single.ts";
 
+export const store_deletion_event = (url: string) => async () => {
+    const relay = SingleRelayConnection.New(url, { log: true });
+    const ctx = InMemoryAccountContext.Generate();
+    try {
+        const event = await prepareNormalNostrEvent(ctx, {
+            content: "test send_deletion_event",
+            kind: NostrKind.TEXT_NOTE,
+        });
+        const err1 = await relay.sendEvent(event);
+        if (err1 instanceof Error) fail(err1.message);
+
+        const deletion = await prepareDeletionNostrEvent(ctx, "test deletion", event);
+        if (deletion instanceof Error) {
+            fail(deletion.message);
+        }
+        const event_1 = await relay.getEvent(deletion.id);
+        if (event_1 instanceof Error) fail(event_1.message);
+        assertEquals(event_1, deletion);
+    } finally {
+        await relay.close();
+    }
+};
+
 export const send_deletion_event = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url, { log: true });
     const ctx = InMemoryAccountContext.Generate();
