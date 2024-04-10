@@ -295,20 +295,20 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return res.message;
     }
 
-    async getEvent(id: NoteID | string) {
+    async getEvent(id: NoteID | string, subID?: string) {
         if (id instanceof NoteID) {
             id = id.hex;
         }
 
-        const err = await this.closeSub(id);
+        const err = await this.closeSub(subID || id);
         if (err instanceof Error) return err;
 
-        const events = await this.newSub(id, { ids: [id] });
+        const events = await this.newSub(subID || id, { ids: [id] });
         if (events instanceof Error) {
             return events;
         }
         for await (const msg of events.chan) {
-            const err = await this.closeSub(id);
+            const err = await this.closeSub(subID || id);
             if (err instanceof Error) return err;
 
             if (msg.type == "EVENT") {

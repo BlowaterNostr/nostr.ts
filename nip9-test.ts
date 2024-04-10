@@ -40,23 +40,26 @@ export const send_deletion_event_for_replaceable_events = (url: string) => async
         const event = await prepareNormalNostrEvent(ctx, {
             content: JSON.stringify({ name: `test${Math.random()}` }),
             kind: NostrKind.META_DATA,
+            created_at: Math.floor(Date.now() / 1000),
         });
         const err1 = await relay.sendEvent(event);
-        if (err1 instanceof Error) fail(err1.message);
+        if (err1 instanceof Error) fail(`Send Meta data error: ${err1.message}`);
 
-        const event_1 = await relay.getEvent(event.id);
-        if (event_1 instanceof Error) fail(event_1.message);
+        const event_1 = await relay.getEvent(event.id, `replaceable_events${Math.random()}`);
+        if (event_1 instanceof Error) fail(`Get event ${event.id} error: ${event_1.message}`);
         assertEquals(event_1, event, "event should be created");
 
         const deletion = await prepareDeletionNostrEvent(ctx, "test deletion", event);
         if (deletion instanceof Error) {
-            fail(deletion.message);
+            fail(`Prepare deletion event error: ${deletion.message}`);
         }
-        const err2 = relay.sendEvent(deletion);
-        if (err2 instanceof Error) fail(err2.message);
+        console.log(`deletion: ${JSON.stringify(deletion)}`);
 
-        const event_2 = await relay.getEvent(event.id);
-        if (event_2 instanceof Error) fail(event_2.message);
+        const err2 = relay.sendEvent(deletion);
+        if (err2 instanceof Error) fail(`Send deletion event error: ${err2.message}`);
+
+        const event_2 = await relay.getEvent(event.id, `replaceable_events${Math.random()}`);
+        if (event_2 instanceof Error) fail(`Get event ${event.id} again error: ${event_2.message}`);
         assertEquals(event_2, undefined, "event should be deleted");
     } finally {
         await relay.close();
