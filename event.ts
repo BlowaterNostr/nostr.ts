@@ -54,39 +54,20 @@ export async function prepareDeletionNostrEvent(
     ...events: NostrEvent<NostrKind>[]
 ): Promise<NostrEvent<NostrKind.DELETE> | Error> {
     const eTags = new Set<string>();
-    const aTags = new Set<string>();
-
-    const isReplaceableEvent = (e: NostrEvent<NostrKind>) => {
-        if (
-            e.kind === NostrKind.META_DATA || e.kind === NostrKind.CONTACTS ||
-            (e.kind >= 10000 && e.kind < 20000) ||
-            (e.kind >= 30000 && e.kind < 40000)
-        ) {
-            return true;
-        }
-        return false;
-    };
+    const tags: Tag[] = [];
 
     events.forEach((e) => {
-        if (isReplaceableEvent(e)) {
-            const dTag = e.tags.find((
-                tag,
-            ) => (tag.length === 2 && tag[0] === "d" && typeof tag[1] === "string"));
-            aTags.add(`${e.kind}:${e.pubkey}:${dTag?.[1] || ""}`);
-        } else {
-            eTags.add(e.id);
-        }
+        if (eTags.has(e.id)) return;
+        eTags.add(e.id);
+        tags.push(["e", e.id]);
     });
-
-    const eTagsArr: Tag[] = Array.from(eTags).map((event_id: string) => ["e", event_id]);
-    const aTagsArr: Tag[] = Array.from(aTags).map((identifier_str: string) => ["a", identifier_str]);
 
     return prepareNormalNostrEvent(
         sender,
         {
             kind: NostrKind.DELETE,
             content,
-            tags: eTagsArr.concat(aTagsArr),
+            tags,
             created_at: Math.floor(Date.now() / 1000),
         },
     );
