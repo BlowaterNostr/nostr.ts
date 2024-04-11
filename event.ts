@@ -56,10 +56,10 @@ export async function prepareDeletionEvent(
     const eTags = new Set<string>();
     const tags: Tag[] = [];
 
-    for(const e of events) {
+    for (const e of events) {
         if (eTags.has(e.id)) {
-            continue
-        };
+            continue;
+        }
         eTags.add(e.id);
         tags.push(["e", e.id]);
     }
