@@ -63,14 +63,28 @@ export const delete_replaceable_events = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url, { log: true });
     const ctx = InMemoryAccountContext.Generate();
     {
-        const event = await prepareNormalNostrEvent(ctx, {
-            content: "test delete_replaceable_events",
-            kind: NostrKind.META_DATA,
-        });
         {
-            const err1 = await relay.sendEvent(event);
-            if (err1 instanceof Error) fail(err1.message);
+            const event = await prepareNormalNostrEvent(ctx, {
+                content: "1",
+                kind: NostrKind.META_DATA,
+                created_at: Date.now() / 1000
+            });
+
+                const err = await relay.sendEvent(event);
+                if (err instanceof Error) fail(err.message);
+
         }
+        {
+            const event = await prepareNormalNostrEvent(ctx, {
+                content: "2",
+                kind: NostrKind.META_DATA,
+                created_at: Date.now() / 1000 + 1
+            });
+
+            const err = await relay.sendEvent(event);
+            if (err instanceof Error) fail(err.message);
+        }
+
 
         const deletion = await prepareDeletionEvent(ctx, "delete_replaceable_events", event);
         if (deletion instanceof Error) {

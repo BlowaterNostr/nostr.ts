@@ -49,21 +49,23 @@ export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind
 }
 
 export async function prepareDeletionEvent(
-    sender: NostrAccountContext,
+    author: NostrAccountContext,
     content: string,
     ...events: NostrEvent<NostrKind>[]
 ): Promise<NostrEvent<NostrKind.DELETE> | Error> {
     const eTags = new Set<string>();
     const tags: Tag[] = [];
 
-    events.forEach((e) => {
-        if (eTags.has(e.id)) return;
+    for(const e of events) {
+        if (eTags.has(e.id)) {
+            continue
+        };
         eTags.add(e.id);
         tags.push(["e", e.id]);
-    });
+    }
 
     return prepareNormalNostrEvent(
-        sender,
+        author,
         {
             kind: NostrKind.DELETE,
             content,

@@ -17,10 +17,6 @@ import {
 } from "./relay-single-test.ts";
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
-import { InMemoryAccountContext } from "./nostr.ts";
-import { NostrKind } from "./nostr.ts";
-import { prepareNormalNostrEvent } from "./event.ts";
-import { relayed } from "./relay-list.test.ts";
 import { wirednet } from "./relay-list.test.ts";
 
 Deno.test("SingleRelayConnection open & close", open_close(relays));
