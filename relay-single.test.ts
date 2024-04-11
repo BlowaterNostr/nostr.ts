@@ -1,10 +1,11 @@
-import { relays } from "./relay-list.test.ts";
+import { nos, relays } from "./relay-list.test.ts";
 import { BidirectionalNetwork, SingleRelayConnection, WebSocketClosed } from "./relay-single.ts";
 import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import {
     close_sub_keep_reading,
     get_correct_kind,
     get_event_by_id,
+    get_replaceable_event,
     limit,
     newSub_close,
     newSub_multiple_filters,
@@ -16,6 +17,11 @@ import {
 } from "./relay-single-test.ts";
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
+import { InMemoryAccountContext } from "./nostr.ts";
+import { NostrKind } from "./nostr.ts";
+import { prepareNormalNostrEvent } from "./event.ts";
+import { relayed } from "./relay-list.test.ts";
+import { wirednet } from "./relay-list.test.ts";
 
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
@@ -38,6 +44,11 @@ Deno.test("no_event", no_event(relays[0]));
 Deno.test("two_clients_communicate", two_clients_communicate(relays[0]));
 
 Deno.test("get_event_by_id", get_event_by_id(relays[0]));
+
+Deno.test("get replaceable event", async () => {
+    await get_replaceable_event(nos)();
+    await get_replaceable_event(wirednet)();
+});
 
 Deno.test("auto reconnection", async () => {
     let _state: WebSocketReadyState = "Open";

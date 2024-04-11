@@ -25,6 +25,7 @@ export interface NostrFilter {
     "#e"?: Array<string>;
     "#p"?: Array<string>;
     "#d"?: Array<string>; // https://github.com/nostr-protocol/nips/blob/master/33.md
+    "#a"?: string[]; // https://github.com/nostr-protocol/nips/blob/master/01.md#tags
     since?: number;
     until?: number;
     limit?: number;

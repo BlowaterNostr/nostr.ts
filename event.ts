@@ -39,7 +39,7 @@ export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind
     },
 ): Promise<NostrEvent<Kind>> {
     const event: UnsignedNostrEvent<Kind> = {
-        created_at: args.created_at ? args.created_at : Math.floor(Date.now() / 1000),
+        created_at: args.created_at ? Math.floor(args.created_at) : Math.floor(Date.now() / 1000),
         kind: args.kind,
         pubkey: sender.publicKey.hex,
         tags: args.tags || [],
@@ -48,7 +48,7 @@ export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind
     return sender.signEvent<Kind>(event);
 }
 
-export async function prepareDeletionNostrEvent(
+export async function prepareDeletionEvent(
     sender: NostrAccountContext,
     content: string,
     ...events: NostrEvent<NostrKind>[]
