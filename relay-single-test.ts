@@ -86,14 +86,14 @@ export const get_correct_kind = (url: string) => async () => {
     {
         const err = await relay.sendEvent(
             await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
-                kind: NostrKind.Encrypted_Custom_App_Data,
+                kind: NostrKind.Long_Form,
                 content: "test",
             }),
         );
         if (err instanceof Error) fail(err.message);
     }
     {
-        const stream = await relay.newSub("test", { limit: 1, kinds: [NostrKind.Encrypted_Custom_App_Data] });
+        const stream = await relay.newSub("test", { limit: 1, kinds: [NostrKind.Long_Form] });
         if (stream instanceof Error) fail(stream.message);
 
         const msg = await stream.chan.pop();
@@ -104,7 +104,7 @@ export const get_correct_kind = (url: string) => async () => {
             fail(`msg.type is ${msg.type}`);
         }
         assertEquals(msg.subID, "test");
-        assertEquals(msg.event.kind, NostrKind.Encrypted_Custom_App_Data);
+        assertEquals(msg.event.kind, NostrKind.Long_Form);
     }
     await relay.close();
 };

@@ -12,10 +12,9 @@ export enum NostrKind {
     DIRECT_MESSAGE = 4,
     DIRECT_MESSAGE_V2 = 44,
     DELETE = 5,
-    Encrypted_Custom_App_Data = 20231125,
-    Custom_App_Data = 30078, // https://github.com/nostr-protocol/nips/blob/master/78.md
     Long_Form = 30023, // https://github.com/nostr-protocol/nips/blob/master/23.md
-    Group_Message = 1000,
+    Custom_App_Data = 30078, // https://github.com/nostr-protocol/nips/blob/master/78.md
+    Client_Authentication = 22242,
 }
 
 export interface NostrFilter {
@@ -49,7 +48,8 @@ export type EventID = string;
 export type _RelayResponse =
     | _RelayResponse_REQ_Message
     | _RelayResponse_OK
-    | _RelayResponse_Notice;
+    | _RelayResponse_Notice
+    | _RelayResponse_AUTH;
 
 export type _RelayResponse_REQ_Message =
     | _RelayResponse_Event
@@ -59,6 +59,7 @@ export type _RelayResponse_Event = ["EVENT", SubID, NostrEvent];
 export type _RelayResponse_EOSE = ["EOSE", SubID]; // https://github.com/nostr-protocol/nips/blob/master/15.md
 export type _RelayResponse_Notice = ["NOTICE", string];
 export type _RelayResponse_OK = ["OK", EventID, boolean, string];
+export type _RelayResponse_AUTH = ["AUTH", string]; // https://github.com/nostr-protocol/nips/blob/master/42.md#new-client-relay-protocol-messages
 
 export type RelayResponse = RelayResponse_REQ_Message | RelayResponse_OK;
 export type RelayResponse_REQ_Message = RelayResponse_Event | RelayResponse_EOSE | RelayResponse_Notice;

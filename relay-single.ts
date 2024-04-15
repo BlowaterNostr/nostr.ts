@@ -1,6 +1,9 @@
+import { assertEquals } from "https://deno.land/std@0.202.0/testing/asserts.ts";
 import { parseJSON } from "./_helper.ts";
+import { prepareNormalNostrEvent } from "./event.ts";
 import { PublicKey } from "./key.ts";
 import { NoteID } from "./nip19.ts";
+import { NostrAccountContext } from "./nostr.ts";
 import {
     _RelayResponse,
     _RelayResponse_OK,
@@ -100,25 +103,54 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         string,
         SubscriptionStream
     >();
-    readonly send_promise_resolvers = new Map<
+    private readonly send_promise_resolvers = new Map<
         string,
         (res: { ok: boolean; message: string }) => void
     >();
     private error: Error | string | WebSocketError | undefined; // todo: check this error in public APIs
     private ws: BidirectionalNetwork | undefined;
 
-    status(): WebSocketReadyState {
-        if (this.ws == undefined) {
-            return "Closed";
+    public static async Connect(url: string) {
+    }
+
+    /**
+     * @deprecated use Connect
+     */
+    public static New(
+        url: string,
+        args?: {
+            wsCreator?: (url: string, log: boolean) => BidirectionalNetwork | Error;
+            log?: boolean;
+            ctx?: NostrAccountContext;
+        },
+    ): SingleRelayConnection {
+        if (args == undefined) {
+            args = {};
         }
-        return this.ws.status();
+        try {
+            if (!url.startsWith("wss://") && !url.startsWith("ws://")) {
+                url = "wss://" + url;
+            }
+            if (args.wsCreator == undefined) {
+                args.wsCreator = AsyncWebSocket.New;
+            }
+            const relay = new SingleRelayConnection(url, args.wsCreator, args.ctx, args.log || false);
+            return relay;
+        } catch (e) {
+            return e;
+        }
     }
 
     private constructor(
         readonly url: string,
         readonly wsCreator: (url: string, log: boolean) => BidirectionalNetwork | Error,
+        readonly ctx: NostrAccountContext | undefined,
         public log: boolean,
     ) {
+        this._constructor();
+    }
+
+    private _constructor() {
         (async () => {
             const ws = await this.connect();
             if (ws instanceof Error || ws == undefined) {
@@ -172,10 +204,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         console.error(relayResponse);
                         continue;
                     }
-
+                    const message_type = relayResponse[0];
                     if (
-                        relayResponse[0] === "EVENT" ||
-                        relayResponse[0] === "EOSE"
+                        message_type === "EVENT" ||
+                        message_type === "EOSE"
                     ) {
                         const subID = relayResponse[1];
                         const subscription = this.subscriptionMap.get(
@@ -188,68 +220,64 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         }
                         const chan = subscription.chan;
                         if (!chan.closed()) {
-                            if (relayResponse[0] === "EOSE") {
+                            if (message_type === "EOSE") {
                                 chan.put({
-                                    type: relayResponse[0],
+                                    type: message_type,
                                     subID: relayResponse[1],
                                 });
                             } else {
                                 chan.put({
-                                    type: relayResponse[0],
+                                    type: message_type,
                                     subID: relayResponse[1],
                                     event: relayResponse[2],
                                 });
                             }
                         }
-                    } else if (relayResponse[0] == "OK") {
+                    } else if (message_type == "OK") {
                         const resolver = this.send_promise_resolvers.get(relayResponse[1]);
                         if (resolver) {
                             const ok = relayResponse[2];
                             const message = relayResponse[3];
                             resolver({ ok, message });
                         }
+                    } else if (message_type == "AUTH") {
+                        console.log(relayResponse);
+                        if (this.ctx == undefined) {
+                            // todo: refactor this part
+                            return new Error("a ctx is needed");
+                        }
+                        const event = await prepareNormalNostrEvent(this.ctx, {
+                            content: "",
+                            kind: NostrKind.Client_Authentication,
+                            tags: [
+                                ["challenge", relayResponse[1]],
+                                ["relay", this.url],
+                            ],
+                        });
+                        const ok = await this.sendEvent(event);
+                        if (ok instanceof Error) {
+                            return ok;
+                        }
                     } else {
                         for (const sub of this.subscriptionMap.values()) {
                             sub.chan.put({
-                                type: "NOTICE",
+                                type: message_type,
                                 note: relayResponse[1],
                             });
                         }
-                        console.log(url, relayResponse); // NOTICE, OK and other non-standard response types
+                        console.log(this.url, relayResponse); // NOTICE, OK and other non-standard response types
                     }
                 }
             }
         })().then((res) => {
             if (res instanceof RelayDisconnectedByClient) return;
+            if (res instanceof Error) {
+                throw res;
+            }
             if (res != "RelayDisconnectedByClient") {
                 throw new Error("this promise should never resolve");
             }
         });
-    }
-
-    public static New(
-        url: string,
-        args?: {
-            wsCreator?: (url: string, log: boolean) => BidirectionalNetwork | Error;
-            connect?: boolean;
-            log?: boolean;
-        },
-    ): SingleRelayConnection {
-        if (args == undefined) {
-            args = {};
-        }
-        try {
-            if (!url.startsWith("wss://") && !url.startsWith("ws://")) {
-                url = "wss://" + url;
-            }
-            if (args.wsCreator == undefined) {
-                args.wsCreator = AsyncWebSocket.New;
-            }
-            const relay = new SingleRelayConnection(url, args.wsCreator, args.log || false);
-            return relay;
-        } catch (e) {
-            return e;
-        }
     }
 
     async newSub(subID: string, ...filters: NostrFilter[]): Promise<
@@ -441,6 +469,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
         const message = await ws.nextMessage();
         return message;
+    }
+
+    status(): WebSocketReadyState {
+        if (this.ws == undefined) {
+            return "Closed";
+        }
+        return this.ws.status();
     }
 }
 

@@ -18,6 +18,8 @@ import {
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 import { wirednet } from "./relay-list.test.ts";
+import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { InMemoryAccountContext } from "./nodejs/index.ts";
 
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
@@ -83,4 +85,14 @@ Deno.test("auto reconnection", async () => {
         assertEquals(relay.isClosedByClient(), false);
     }
     await relay.close();
+});
+
+// https://github.com/nostr-protocol/nips/blob/master/42.md
+Deno.test("nip42", async () => {
+    const relay = await SingleRelayConnection.Connect("wss://nostr.wine") as Error;
+    assertEquals(relay.message, "a ctx is needed");
+    {
+        const ctx = InMemoryAccountContext.Generate();
+        const relay = await SingleRelayConnection.Connect("wss://nostr.wine", ctx);
+    }
 });
