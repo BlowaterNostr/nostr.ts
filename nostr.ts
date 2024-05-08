@@ -302,12 +302,9 @@ export async function sign_event_v2<T extends { pubkey: string }>(
     }
 }
 
-export async function verify_event_v2<
-    T extends {
-        sig: string;
-        pubkey: string;
-    },
->(event: T) {
+export async function verify_event_v2<T extends { sig: string; pubkey: string }>(
+    event: T,
+) {
     const sha256 = utils.sha256;
     try {
         const event_copy: any = { ...event };
