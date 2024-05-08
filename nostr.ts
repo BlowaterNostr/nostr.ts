@@ -3,6 +3,7 @@ import { PrivateKey, PublicKey } from "./key.ts";
 import { getSharedSecret, schnorr, utils } from "./vendor/secp256k1.js";
 import { decrypt_with_shared_secret, encrypt, utf8Decode, utf8Encode } from "./nip4.ts";
 import nip44 from "./nip44.ts";
+import stringify from "https://esm.sh/json-stable-stringify@1.1.1";
 
 export enum NostrKind {
     META_DATA = 0,
@@ -283,6 +284,38 @@ export class InMemoryAccountContext implements NostrAccountContext {
 export async function verifyEvent(event: NostrEvent) {
     try {
         return schnorr.verify(event.sig, await calculateId(event), event.pubkey);
+    } catch (err) {
+        return false;
+    }
+}
+
+export async function sign_event_v2<T extends { pubkey: string }>(
+    event: T,
+    privateKey: PrivateKey,
+): Promise<T & { sig: string; id: string }> {
+    const sha256 = utils.sha256;
+    {
+        const buf = utf8Encode(stringify(event));
+        const id = hexEncode(await sha256(buf));
+        const sig = utf8Decode(hex.encode(await signId(id, privateKey.hex)));
+        return { ...event, id, sig };
+    }
+}
+
+export async function verify_event_v2<
+    T extends {
+        sig: string;
+        pubkey: string;
+    },
+>(event: T) {
+    const sha256 = utils.sha256;
+    try {
+        const event_copy: any = { ...event };
+        delete event_copy.sig;
+        delete event_copy.id;
+        const buf = utf8Encode(stringify(event_copy));
+        const id = hexEncode(await sha256(buf));
+        return schnorr.verify(event.sig, id, event.pubkey);
     } catch (err) {
         return false;
     }
