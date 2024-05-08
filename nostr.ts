@@ -290,8 +290,8 @@ export async function verifyEvent(event: NostrEvent) {
 }
 
 export async function sign_event_v2<T extends { pubkey: string }>(
-    event: T,
     privateKey: PrivateKey,
+    event: T,
 ): Promise<T & { sig: string; id: string }> {
     const sha256 = utils.sha256;
     {

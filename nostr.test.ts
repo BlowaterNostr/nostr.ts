@@ -5,13 +5,13 @@ import { verify_event_v2 } from "./nostr.ts";
 
 Deno.test("verify event v2", async () => {
     const pri = PrivateKey.Generate();
-    const event = await sign_event_v2({
+    const event = await sign_event_v2(pri, {
         pubkey: pri.toPublicKey().hex,
-        kind: "dm",
+        kind: "v2",
         data: {
             text: "whatever",
         },
-    }, pri);
+    });
     const ok = await verify_event_v2(event);
     assertEquals(ok, true);
 });
