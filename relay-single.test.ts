@@ -1,4 +1,4 @@
-import { nos, relays } from "./relay-list.test.ts";
+import { blowater, damus, relays } from "./relay-list.test.ts";
 import { BidirectionalNetwork, SingleRelayConnection, WebSocketClosed } from "./relay-single.ts";
 import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import {
@@ -31,7 +31,10 @@ Deno.test("send event", send_event(relays[0]));
 
 Deno.test("get_correct_kind", get_correct_kind(relays[0]));
 
-Deno.test("multiple filters", newSub_multiple_filters(relays[0]));
+Deno.test("multiple filters", async () => {
+    // await newSub_multiple_filters(relays[0])();
+    await newSub_multiple_filters(damus)();
+});
 
 Deno.test("limit", limit(relays[0]));
 
@@ -39,10 +42,13 @@ Deno.test("no_event", no_event(relays[0]));
 
 Deno.test("two_clients_communicate", two_clients_communicate(relays[0]));
 
-Deno.test("get_event_by_id", get_event_by_id(relays[0]));
+Deno.test("get_event_by_id", async () => {
+    // await get_event_by_id(relayed)();
+    await get_event_by_id(damus)();
+});
 
 Deno.test("get replaceable event", async () => {
-    await get_replaceable_event(nos)();
+    await get_replaceable_event(blowater)();
     await get_replaceable_event(wirednet)();
 });
 
