@@ -81,20 +81,20 @@ export async function prepareHttpAuthEvent(
         url: string;
         method: string;
         body?: FormData;
-    }
+    },
 ): Promise<NostrEvent<NostrKind.HTTP_AUTH> | Error> {
     const { url, method, body } = args;
     const tags: Tag[] = [
         ["u", url],
         ["method", method],
     ];
-    if(body) {
+    if (body) {
         const encoder = new TextEncoder();
         const data = encoder.encode(JSON.stringify(body));
         const hashBuffer = await crypto.subtle.digest("SHA-256", data);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashString = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-        tags.push(["payload", hashString])
+        const hashString = hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+        tags.push(["payload", hashString]);
     }
     return prepareNormalNostrEvent(
         author,
