@@ -17,6 +17,7 @@ export enum NostrKind {
     Custom_App_Data = 30078, // https://github.com/nostr-protocol/nips/blob/master/78.md
     Long_Form = 30023, // https://github.com/nostr-protocol/nips/blob/master/23.md
     Group_Message = 1000,
+    HTTP_AUTH = 27235, // https://github.com/nostr-protocol/nips/blob/master/98.md
 }
 
 export interface NostrFilter {
