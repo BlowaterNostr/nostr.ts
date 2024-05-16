@@ -1,4 +1,4 @@
-import { blowater, damus, relays, relayed } from "./relay-list.test.ts";
+import { blowater, damus, relayed, relays } from "./relay-list.test.ts";
 import { BidirectionalNetwork, SingleRelayConnection, WebSocketClosed } from "./relay-single.ts";
 import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import {
