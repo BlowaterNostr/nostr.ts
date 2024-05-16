@@ -1,6 +1,6 @@
 test: fmt
 	rm -rf cov_profile*
-	deno test --allow-read --allow-net --trace-ops --coverage=cov_profile *.test.ts
+	deno test --allow-net --trace-ops --coverage=cov_profile *.test.ts
 
 # https://deno.com/manual@main/basics/testing/coverage
 cov:

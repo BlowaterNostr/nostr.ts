@@ -47,7 +47,7 @@ export async function uploadFile(
     }
 }
 
-export async function prepareHttpAuthEvent(
+async function prepareHttpAuthEvent(
     author: NostrAccountContext,
     args: {
         url: string;
