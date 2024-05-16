@@ -21,26 +21,26 @@ import { wirednet } from "./relay-list.test.ts";
 
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
-Deno.test("SingleRelayConnection newSub & close", newSub_close(relayed_test));
+Deno.test("SingleRelayConnection newSub & close", newSub_close(relayed));
 
-Deno.test("SingleRelayConnection subscription already exists", sub_exits(relayed_test));
+Deno.test("SingleRelayConnection subscription already exists", sub_exits(relayed));
 
-Deno.test("SingleRelayConnection: close subscription and keep reading", close_sub_keep_reading(relayed_test));
+Deno.test("SingleRelayConnection: close subscription and keep reading", close_sub_keep_reading(relayed));
 
-Deno.test("send event", send_event(relayed_test));
+Deno.test("send event", send_event(relayed));
 
-Deno.test("get_correct_kind", get_correct_kind(relayed_test));
+Deno.test("get_correct_kind", get_correct_kind(relayed));
 
 Deno.test("multiple filters", async () => {
     // await newSub_multiple_filters(relays[0])();
     await newSub_multiple_filters(damus)();
 });
 
-Deno.test("limit", limit(relayed_test));
+Deno.test("limit", limit(relayed));
 
-Deno.test("no_event", no_event(relayed_test));
+Deno.test("no_event", no_event(relayed));
 
-Deno.test("two_clients_communicate", two_clients_communicate(relayed_test));
+Deno.test("two_clients_communicate", two_clients_communicate(relayed));
 
 Deno.test("get_event_by_id", async () => {
     // await get_event_by_id(relayed)();
