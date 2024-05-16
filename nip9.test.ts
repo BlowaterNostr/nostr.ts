@@ -1,6 +1,5 @@
 import { delete_regular_events, store_deletion_event } from "./nip9-test.ts";
 import { relayed } from "./relay-list.test.ts";
-import { blowater } from "./relay-list.test.ts";
 import { damus } from "./relay-list.test.ts";
 import { wirednet } from "./relay-list.test.ts";
 
