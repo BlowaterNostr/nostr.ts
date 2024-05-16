@@ -5,7 +5,7 @@ export const relayed = "wss://relayed-test.deno.dev";
 export const blowater = "wss://blowater.nostr1.com";
 
 export const relays = [
-    relayed,
+    relayed_test,
     wirednet,
     damus,
     nos,

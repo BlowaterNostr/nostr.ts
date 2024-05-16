@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.202.0/testing/asserts.ts";
 import { AsyncWebSocket, CloseReason, CloseTwice } from "./websocket.ts";
-import { relays } from "./relay-list.test.ts";
+import { relayed_test, relays } from "./relay-list.test.ts";
 import { WebSocketClosed } from "./relay-single.ts";
 
 Deno.test("websocket open & close", async () => {
@@ -21,7 +21,7 @@ Deno.test("websocket open & close", async () => {
 });
 
 Deno.test("websocket call untilOpen N times", async () => {
-    let ws = AsyncWebSocket.New(relays[0], true); // todo: maybe use a local ws server to speed up
+    let ws = AsyncWebSocket.New(relayed_test, true); // todo: maybe use a local ws server to speed up
     if (ws instanceof Error) {
         fail();
     }
@@ -33,7 +33,7 @@ Deno.test("websocket call untilOpen N times", async () => {
 
 Deno.test("websocket call untilOpen after closed", async () => {
     {
-        const ws = AsyncWebSocket.New(relays[0], true);
+        const ws = AsyncWebSocket.New(relayed_test, true);
         if (ws instanceof Error) {
             fail();
         }
@@ -43,7 +43,7 @@ Deno.test("websocket call untilOpen after closed", async () => {
         assertInstanceOf(err2, Error);
     }
     {
-        const ws2 = AsyncWebSocket.New(relays[0], true);
+        const ws2 = AsyncWebSocket.New(relayed_test, true);
         if (ws2 instanceof Error) {
             fail();
         }
