@@ -48,7 +48,10 @@ export const delete_regular_events = (url: string) => async () => {
                 fail(deletion.message);
             }
             const err2 = await relay.sendEvent(deletion);
-            if (err2 instanceof Error) fail(err2.message);
+            if (err2 instanceof Error) {
+                console.log(err2);
+                fail(err2.message);
+            }
 
             const nothing = await relay.getEvent(event.id);
             if (nothing instanceof Error) fail(nothing.message);

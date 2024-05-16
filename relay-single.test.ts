@@ -33,7 +33,7 @@ Deno.test("get_correct_kind", get_correct_kind(relayed));
 
 Deno.test("multiple filters", async () => {
     // await newSub_multiple_filters(relays[0])();
-    await newSub_multiple_filters(damus)();
+    await newSub_multiple_filters(relayed)();
 });
 
 Deno.test("limit", limit(relayed));
@@ -43,8 +43,8 @@ Deno.test("no_event", no_event(relayed));
 Deno.test("two_clients_communicate", two_clients_communicate(relayed));
 
 Deno.test("get_event_by_id", async () => {
-    // await get_event_by_id(relayed)();
-    await get_event_by_id(damus)();
+    await get_event_by_id(relayed)();
+    await get_event_by_id(blowater)();
 });
 
 Deno.test("get replaceable event", async () => {
