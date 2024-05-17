@@ -153,10 +153,6 @@ export const limit = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url);
 
     {
-        const subID = "limit";
-        const sub = await relay.newSub(subID, { kinds: [NostrKind.TEXT_NOTE], limit: 3 });
-        if (sub instanceof Error) fail(sub.message);
-
         const err = await relay.sendEvent(
             await prepareNormalNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
@@ -185,6 +181,10 @@ export const limit = (url: string) => async () => {
             }),
         );
         if (err4 instanceof Error) fail(err4.message);
+
+        const subID = "limit";
+        const sub = await relay.newSub(subID, { kinds: [NostrKind.TEXT_NOTE], limit: 3 });
+        if (sub instanceof Error) fail(sub.message);
 
         let i = 0;
         for await (const msg of sub.chan) {
