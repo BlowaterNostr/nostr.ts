@@ -16,7 +16,6 @@ Deno.test("Upload File", async () => {
         if (uploaded instanceof Error) {
             fail(uploaded.message);
         }
-        console.log("Uploaded", uploaded);
         assertEquals(uploaded.status, "success");
         assertEquals(uploaded.nip94_event?.tags[0][0], "url");
         assertEquals(uploaded.nip94_event?.tags[0][1].substring(0, 26), "https://image.nostr.build/");

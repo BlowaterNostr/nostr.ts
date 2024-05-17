@@ -1,14 +1,18 @@
 import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx";
+import { InMemoryAccountContext } from "./nostr.ts";
+
+const ctx = InMemoryAccountContext.Generate();
 
 const relay = await run({
-    port: 8080,
+    port: 8000,
     default_policy: {
         allowed_kinds: "all", // or none,
     },
-    system_key: "nsec1geplx78d053a7554j8xtrfgffknukmyc6w206r2dszdsl2t2zhnqw0g3fg",
+    system_key: ctx.privateKey.hex,
     default_information: {
         name: "Test Relay",
         description: "only for testing",
+        pubkey: ctx.publicKey.hex,
     },
 });
 if (relay instanceof Error) {
