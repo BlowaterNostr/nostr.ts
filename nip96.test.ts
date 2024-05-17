@@ -16,11 +16,13 @@ Deno.test("Upload File", async () => {
         if (uploaded instanceof Error) {
             fail(uploaded.message);
         }
-        assertEquals(uploaded.status, "success");
-        assertEquals(uploaded.nip94_event?.tags[0][0], "url");
-        assertEquals(uploaded.nip94_event?.tags[0][1].substring(0, 26), "https://image.nostr.build/");
-        assertEquals(uploaded.nip94_event?.tags[3], ["m", "image/jpeg"]);
-        assertEquals(uploaded.nip94_event?.tags[4], ["dim", "460x460"]);
+        if (uploaded.status === "error") {
+            fail(uploaded.message);
+        }
+        assertEquals(uploaded.nip94_event.tags[0][0], "url");
+        assertEquals(uploaded.nip94_event.tags[0][1].substring(0, 26), "https://image.nostr.build/");
+        assertEquals(uploaded.nip94_event.tags[3], ["m", "image/jpeg"]);
+        assertEquals(uploaded.nip94_event.tags[4], ["dim", "460x460"]);
     } catch (error) {
         fail(error);
     }

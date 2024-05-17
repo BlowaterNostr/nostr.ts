@@ -2,13 +2,16 @@ import { prepareNormalNostrEvent } from "./event.ts";
 import { NostrAccountContext, NostrEvent, NostrKind, Tag } from "./nostr.ts";
 
 export type UploadFileResponse = {
-    status: "success" | "error";
+    status: "success";
     message: string;
-    processing_url?: string;
-    nip94_event?: {
+    nip94_event: {
         tags: string[][];
         content: "";
     };
+    processing_url?: string;
+} | {
+    status: "error";
+    message: string;
 };
 
 export async function uploadFile(
