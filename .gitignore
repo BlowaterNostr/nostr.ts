@@ -4,4 +4,5 @@ nostr
 nodejs/index.js
 nodejs/index.mjs
 test.ts
-
+# SQLite files
+*.db

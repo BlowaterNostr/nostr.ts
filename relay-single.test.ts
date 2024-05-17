@@ -1,4 +1,4 @@
-import { blowater, damus, relays } from "./relay-list.test.ts";
+import { blowater, relayed, relays } from "./relay-list.test.ts";
 import { BidirectionalNetwork, SingleRelayConnection, WebSocketClosed } from "./relay-single.ts";
 import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
 import {
@@ -21,30 +21,30 @@ import { wirednet } from "./relay-list.test.ts";
 
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
-Deno.test("SingleRelayConnection newSub & close", newSub_close(relays[0]));
+Deno.test("SingleRelayConnection newSub & close", newSub_close(relayed));
 
-Deno.test("SingleRelayConnection subscription already exists", sub_exits(relays[0]));
+Deno.test("SingleRelayConnection subscription already exists", sub_exits(relayed));
 
-Deno.test("SingleRelayConnection: close subscription and keep reading", close_sub_keep_reading(relays[0]));
+Deno.test("SingleRelayConnection: close subscription and keep reading", close_sub_keep_reading(relayed));
 
-Deno.test("send event", send_event(relays[0]));
+Deno.test("send event", send_event(relayed));
 
-Deno.test("get_correct_kind", get_correct_kind(relays[0]));
+Deno.test("get_correct_kind", get_correct_kind(relayed));
 
 Deno.test("multiple filters", async () => {
     // await newSub_multiple_filters(relays[0])();
-    await newSub_multiple_filters(damus)();
+    await newSub_multiple_filters(relayed)();
 });
 
-Deno.test("limit", limit(relays[0]));
+Deno.test("limit", limit(relayed));
 
-Deno.test("no_event", no_event(relays[0]));
+Deno.test("no_event", no_event(relayed));
 
-Deno.test("two_clients_communicate", two_clients_communicate(relays[0]));
+Deno.test("two_clients_communicate", two_clients_communicate(relayed));
 
 Deno.test("get_event_by_id", async () => {
-    // await get_event_by_id(relayed)();
-    await get_event_by_id(damus)();
+    await get_event_by_id(relayed)();
+    await get_event_by_id(blowater)();
 });
 
 Deno.test("get replaceable event", async () => {
