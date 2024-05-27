@@ -149,6 +149,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     }
                     console.log("connection error", messsage);
                     if (messsage.type == "closed") {
+                        // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4
                         if (messsage.event.code == 1011) {
                             return new AuthError(messsage.event.reason);
                         }
