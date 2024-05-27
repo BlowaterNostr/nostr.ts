@@ -235,7 +235,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         })().then((res) => {
             if (res instanceof RelayDisconnectedByClient) return;
             console.error(res);
-            if(res instanceof Error) {
+            if (res instanceof Error) {
                 this.error = res;
             }
         });
@@ -267,7 +267,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 
     async newSub(subID: string, ...filters: NostrFilter[]) {
-        console.log("new", this.error)
+        console.log("new", this.error);
         if (this.error instanceof AuthError) {
             return this.error;
         }
