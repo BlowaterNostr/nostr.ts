@@ -148,7 +148,8 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         try {
             this.ws.send(str);
         } catch (e) {
-            return e as Error;
+            // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/send#invalidstateerror
+            return e as DOMException;
         }
     }
 

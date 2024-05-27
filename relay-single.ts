@@ -71,7 +71,7 @@ export type BidirectionalNetwork = {
     >;
     send: (
         str: string | ArrayBufferLike | Blob | ArrayBufferView,
-    ) => Promise<WebSocketClosed | Error | undefined>;
+    ) => Promise<WebSocketClosed | DOMException | undefined>;
     close: (
         code?: number,
         reason?: string,
@@ -104,7 +104,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         string,
         (res: { ok: boolean; message: string }) => void
     >();
-    private error: Error | AuthError | undefined; // todo: check this error in public APIs
+    private error: AuthError | undefined; // todo: check this error in public APIs
     private ws: BidirectionalNetwork | undefined;
 
     status(): WebSocketReadyState {
@@ -150,8 +150,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     console.log("connection error", messsage);
                     if (messsage.type == "closed") {
                         if (messsage.event.code == 1011) {
-                            this.error = new AuthError(messsage.event.reason);
-                            return this.error;
+                            return new AuthError(messsage.event.reason);
                         }
                     }
                     const err = await this.connect();
@@ -235,6 +234,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         })().then((res) => {
             if (res instanceof RelayDisconnectedByClient) return;
             console.error(res);
+            if(res instanceof Error) {
+                this.error = res;
+            }
         });
     }
 
@@ -263,9 +265,8 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         }
     }
 
-    async newSub(subID: string, ...filters: NostrFilter[]): Promise<
-        SubscriptionAlreadyExist | RelayDisconnectedByClient | SubscriptionStream
-    > {
+    async newSub(subID: string, ...filters: NostrFilter[]) {
+        console.log("new", this.error)
         if (this.error instanceof AuthError) {
             return this.error;
         }
@@ -433,7 +434,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         let ws: BidirectionalNetwork | Error | undefined;
         for (;;) {
             if (this.log) {
-                console.log(`(re)connecting ${this.url}, reason: ${this.error?.message}`);
+                console.log(`(re)connecting ${this.url}`);
             }
             if (this.isClosedByClient()) {
                 return new RelayDisconnectedByClient();
