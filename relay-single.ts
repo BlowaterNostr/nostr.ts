@@ -10,6 +10,7 @@ import {
     NostrFilter,
     NostrKind,
     RelayResponse_REQ_Message,
+    Signer,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
 import {
@@ -117,6 +118,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     private constructor(
         readonly url: string,
         readonly wsCreator: (url: string, log: boolean) => BidirectionalNetwork | Error,
+        readonly signer: Signer | undefined,
         public log: boolean,
     ) {
         (async () => {
@@ -252,6 +254,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             wsCreator?: (url: string, log: boolean) => BidirectionalNetwork | Error;
             connect?: boolean;
             log?: boolean;
+            signer?: Signer; // used for authentication
         },
     ): SingleRelayConnection {
         if (args == undefined) {
@@ -264,7 +267,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (args.wsCreator == undefined) {
                 args.wsCreator = AsyncWebSocket.New;
             }
-            const relay = new SingleRelayConnection(url, args.wsCreator, args.log || false);
+            const relay = new SingleRelayConnection(
+                url,
+                args.wsCreator,
+                args.signer,
+                args.log || false,
+            );
             return relay;
         } catch (e) {
             return e;
@@ -453,7 +461,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 }
             }
 
-            ws = this.wsCreator(this.url, this.log);
+            const url = new URL(this.url);
+            // todo: generate the auth event
+            url.searchParams.set("auth");
+            ws = this.wsCreator(url.toString(), this.log);
             if (ws instanceof Error) {
                 console.error(ws.name, ws.message, ws.cause);
                 if (ws.name == "SecurityError") {
