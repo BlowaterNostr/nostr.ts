@@ -147,7 +147,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             this.error = new Error(messsage.error.error);
                         }
                     }
-                    console.log("connection error", messsage);
                     if (messsage.type == "closed") {
                         // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4
                         // https://www.iana.org/assignments/websocket/websocket.xml#close-code-number
@@ -155,6 +154,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             return new AuthError(messsage.event.reason);
                         }
                     }
+                    console.log("connection error", messsage);
                     const err = await this.connect();
                     if (err instanceof RelayDisconnectedByClient) {
                         return err;
@@ -234,10 +234,14 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 }
             }
         })().then((res) => {
-            if (res instanceof RelayDisconnectedByClient) return;
-            console.error(res);
+            if (res instanceof RelayDisconnectedByClient) {
+                console.log(res);
+                return;
+            }
             if (res instanceof Error) {
                 this.error = res;
+            } else {
+                console.error(res);
             }
         });
     }
@@ -268,7 +272,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 
     async newSub(subID: string, ...filters: NostrFilter[]) {
-        console.log("new", this.error);
         if (this.error instanceof AuthError) {
             return this.error;
         }
@@ -415,7 +418,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         // this is a quick & dirty way for me to address it
         // old browser API sucks
         await csp.sleep(1);
-        console.log(`relay ${this.url} closed, status: ${this.status()}`);
+        if (this.log) {
+            console.log(`relay ${this.url} closed, status: ${this.status()}`);
+        }
     };
 
     [Symbol.asyncDispose] = () => {
@@ -489,7 +494,7 @@ export class RelayRejectedEvent extends Error {
     }
 }
 
-class AuthError extends Error {
+export class AuthError extends Error {
     constructor(msg: string) {
         super(msg);
         this.name = AuthError.name;
