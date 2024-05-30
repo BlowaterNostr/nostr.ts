@@ -1,6 +1,12 @@
 test: fmt
 	rm -rf cov_profile*
-	deno test --lock deno.test.lock --allow-net --trace-ops --trace-leaks --coverage=cov_profile *.test.ts
+	deno test --lock deno.test.lock \
+		--allow-net --allow-env \
+		--allow-read=relayed.db,relayed.db-journal \
+		--allow-write=relayed.db,relayed.db-journal \
+		--trace-leaks --coverage=cov_profile \
+		--unstable-kv \
+		*.test.ts
 
 # https://deno.com/manual@main/basics/testing/coverage
 cov:

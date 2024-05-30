@@ -9,6 +9,7 @@
     "https://deno.land/std@0.202.0/assert/_format.ts": "a69126e8a469009adf4cf2a50af889aca364c349797e63174884a52ff75cf4c7",
     "https://deno.land/std@0.202.0/assert/assert.ts": "9a97dad6d98c238938e7540736b826440ad8c1c1e54430ca4c4e623e585607ee",
     "https://deno.land/std@0.202.0/assert/assert_equals.ts": "d8ec8a22447fbaf2fc9d7c3ed2e66790fdb74beae3e482855d75782218d68227",
+    "https://deno.land/std@0.202.0/assert/assert_is_error.ts": "c21113094a51a296ffaf036767d616a78a2ae5f9f7bbd464cd0197476498b94b",
     "https://deno.land/std@0.202.0/assert/assertion_error.ts": "4d0bde9b374dfbcbe8ac23f54f567b77024fb67dbb1906a852d67fe050d42f56",
     "https://deno.land/std@0.202.0/assert/equal.ts": "9f1a46d5993966d2596c44e5858eec821859b45f783a5ee2f7a695dfc12d8ece",
     "https://deno.land/std@0.202.0/assert/fail.ts": "c36353d7ae6e1f7933d45f8ea51e358c8c4b67d7e7502028598fe1fea062e278",
@@ -107,14 +108,14 @@
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/channel.ts": "1e3dd025bdc5e892ce34b0f452d21ca4cef3b7b1dcf2a86546bb7dd42e6dc8b8",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/events.ts": "91971a40dcbf82b4964b4f339f255f81540db3f7a59e281179d34cb109f05205",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/graphql-schema.ts": "47cc27be0fe20274aa1336800e86b4051397f3c2c1cfe7149e8d17ef33ae0665",
-    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx": "18e047a437fce1a0c322c83031184b29b2dccd17174d7c22f9546273ecfb6d79",
+    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx": "5836c63ca2061750c99fe5e98af7cf671767ab19dc510017a347657c31626827",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/resolvers/event.ts": "2724bbe974712d1af906f5e262387fe9f1bb06485d6e01794b9a0526c0acfcf0",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/resolvers/event_deletion.ts": "417b509dd8058c53dd4911bbebedbcfc1a2d26f3c4585c9b35ef3c968d27c5dc",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/resolvers/nip11.ts": "3e5209fc8e3a00dbdaf8b1b7c1cb8e070c120a45ce7d96c9639735c83cec8305",
-    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/resolvers/policy.ts": "b65d767efbee0fb65b017e52900fc6336f4c78c9f3cbbf5b981d09722f1e5af5",
-    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/resolvers/root.ts": "a08a7d1c6090145d1349d05f2414d811f4df8f89cf23888beaf94fee5a8c9e74",
+    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/resolvers/policy.ts": "e1881222a6dfad1b276b5ab996da7beebeb0f62e6043fdb4dc90769827e62a97",
+    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/resolvers/root.ts": "42c01e14ed53ceb3cd6cf27084eaee6d3622855d3bfb7f6b283a0873d98e6dcd",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/routes/_404.tsx": "d38a1b385d27ecbb5e783a6251d3e499da5861bedae851fe05eaa4750b38fc62",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/routes/landing.tsx": "c48c495de1ee587b6533d8231af15ea17050422352be0f62bb60ce461170f998",
-    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/ws.ts": "f9614c27d0c052dda04e86559d4b77bd7688c12c8fd0cd7e96a8a23a41491f0d"
+    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/ws.ts": "bc2107b8bf8c3ee3f5a7d7da7850b17988f3acbfd90516def88f679a0f4ed673"
   }
 }

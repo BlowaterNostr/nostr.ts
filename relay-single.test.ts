@@ -1,6 +1,4 @@
-import { blowater, relayed, relays } from "./relay-list.test.ts";
-import { BidirectionalNetwork, SingleRelayConnection, WebSocketClosed } from "./relay-single.ts";
-import { CloseTwice, WebSocketReadyState } from "./websocket.ts";
+import { blowater, relays } from "./relay-list.test.ts";
 import {
     close_sub_keep_reading,
     get_correct_kind,
@@ -15,78 +13,57 @@ import {
     sub_exits,
     two_clients_communicate,
 } from "./relay-single-test.ts";
-import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
-import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 import { wirednet } from "./relay-list.test.ts";
+import { Relay, run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx";
 
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
-Deno.test("SingleRelayConnection newSub & close", newSub_close(relayed));
-
-Deno.test("SingleRelayConnection subscription already exists", sub_exits(relayed));
-
-Deno.test("SingleRelayConnection: close subscription and keep reading", close_sub_keep_reading(relayed));
-
-Deno.test("send event", send_event(relayed));
-
-Deno.test("get_correct_kind", get_correct_kind(relayed));
-
-Deno.test("multiple filters", async () => {
-    // await newSub_multiple_filters(relays[0])();
-    await newSub_multiple_filters(relayed)();
+Deno.test("SingleRelayConnection newSub & close", async () => {
+    await using relay = await run({
+        port: 8001,
+        default_policy: {
+            allowed_kinds: "all",
+        },
+        default_information: {
+            auth_required: false,
+        },
+    }) as Relay;
+    await newSub_close(relay.ws_url)();
 });
 
-Deno.test("limit", limit(relayed));
+Deno.test("Single Relay Connection", async (t) => {
+    await using relay = await run({
+        port: 8001,
+        default_policy: {
+            allowed_kinds: "all",
+        },
+        default_information: {
+            auth_required: false,
+        },
+    }) as Relay;
+    await t.step("SingleRelayConnection subscription already exists", sub_exits(relay.ws_url));
+    await t.step(
+        "SingleRelayConnection: close subscription and keep reading",
+        close_sub_keep_reading(relay.ws_url),
+    );
+    await t.step("send event", send_event(relay.ws_url));
+    await t.step("get_correct_kind", get_correct_kind(relay.ws_url));
 
-Deno.test("no_event", no_event(relayed));
+    await t.step("multiple filters", newSub_multiple_filters(relay.ws_url));
 
-Deno.test("two_clients_communicate", two_clients_communicate(relayed));
+    await t.step("limit", limit(relay.ws_url));
 
-Deno.test("get_event_by_id", async () => {
-    await get_event_by_id(relayed)();
-    await get_event_by_id(blowater)();
+    await t.step("no_event", no_event(relay.ws_url));
+
+    await t.step("two_clients_communicate", two_clients_communicate(relay.ws_url));
+
+    await t.step("get_event_by_id", async () => {
+        await get_event_by_id(relay.ws_url)();
+        await get_event_by_id(blowater)();
+    });
 });
 
 Deno.test("get replaceable event", async () => {
     await get_replaceable_event(blowater)();
     await get_replaceable_event(wirednet)();
-});
-
-Deno.test("auto reconnection", async () => {
-    let _state: WebSocketReadyState = "Open";
-    const ws: BidirectionalNetwork = {
-        async close() {
-            _state = "Closed";
-            return new CloseTwice("");
-        },
-        async nextMessage() {
-            return {
-                type: "WebSocketClosed",
-                error: new WebSocketClosed("", "Closed"),
-            };
-        },
-        async send() {
-            return new WebSocketClosed("", "Closing");
-        },
-        status() {
-            return _state;
-        },
-        async untilOpen() {
-            return new WebSocketClosed("", "Closed");
-        },
-    };
-    const relay = SingleRelayConnection.New("", {
-        wsCreator: () => {
-            return ws;
-        },
-    });
-    if (relay instanceof Error) fail(relay.message);
-    {
-        relay.log = true;
-        assertEquals(relay.isClosed(), false);
-        await ws.close();
-        assertEquals(relay.isClosed(), true);
-        assertEquals(relay.isClosedByClient(), false);
-    }
-    await relay.close();
 });

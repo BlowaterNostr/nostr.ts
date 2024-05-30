@@ -294,6 +294,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
         if (this.ws != undefined) {
             const err = await sendSubscription(this.ws, subID, ...filters);
+            if (err instanceof DOMException) {
+                return err;
+            }
             if (err instanceof Error) {
                 console.error(err);
             }

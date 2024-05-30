@@ -1,5 +1,5 @@
 import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
-import { relayed, relays } from "./relay-list.test.ts";
+import { relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
@@ -8,6 +8,7 @@ import { prepareNormalNostrEvent } from "./event.ts";
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { assertNotInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_not_instance_of.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
+import { Relay, run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
     const pool = new ConnectionPool();
@@ -15,14 +16,23 @@ Deno.test("ConnectionPool close gracefully 1", async () => {
 });
 
 Deno.test("ConnectionPool close gracefully 2", async () => {
+    await using relay = await run({
+        port: 8001,
+        default_policy: {
+            allowed_kinds: "all",
+        },
+        default_information: {
+            auth_required: false,
+        },
+    }) as Relay;
     // able to open & close
-    const relay = SingleRelayConnection.New(relayed);
-    if (relay instanceof Error) {
-        fail(relay.message);
+    const client = SingleRelayConnection.New(relay.ws_url);
+    if (client instanceof Error) {
+        fail(client.message);
     }
 
     const pool = new ConnectionPool();
-    const err = await pool.addRelay(relay);
+    const err = await pool.addRelay(client);
     assertNotInstanceOf(err, Error);
     await csp.sleep(300);
     await pool.close();
@@ -44,15 +54,23 @@ Deno.test("ConnectionPool open multiple relays concurrently & close", async () =
 
 Deno.test("ConnectionPool newSub & close", async () => {
     // able to open & close
-    const url = relayed;
-    const relay = SingleRelayConnection.New(url);
-    if (relay instanceof Error) {
-        fail(relay.message);
+    await using relay = await run({
+        port: 8001,
+        default_policy: {
+            allowed_kinds: "all",
+        },
+        default_information: {
+            auth_required: false,
+        },
+    }) as Relay;
+    const client = SingleRelayConnection.New(relay.ws_url);
+    if (client instanceof Error) {
+        fail(client.message);
     }
     const connectionPool = new ConnectionPool();
     {
-        const _relay = await connectionPool.addRelay(relay);
-        assertEquals(_relay, relay);
+        const _relay = await connectionPool.addRelay(client);
+        assertEquals(_relay, client);
     }
     const sub = await connectionPool.newSub("1", { kinds: [0], limit: 1 });
     if (sub instanceof Error) {
@@ -105,21 +123,30 @@ Deno.test("ConnectionPool close subscription", async (t) => {
 });
 
 Deno.test("ConnectionPool register the same relay twice", async () => {
-    const pool = new ConnectionPool();
+    await using relay = await run({
+        port: 8001,
+        default_policy: {
+            allowed_kinds: "all",
+        },
+        default_information: {
+            auth_required: false,
+        },
+    }) as Relay;
 
-    const relay = SingleRelayConnection.New(relayed);
-    if (relay instanceof Error) {
-        fail(relay.message);
+    const pool = new ConnectionPool();
+    const client = SingleRelayConnection.New(relay.ws_url);
+    if (client instanceof Error) {
+        fail(client.message);
     }
 
     {
-        const _relay = await pool.addRelay(relay);
-        assertEquals(_relay, relay);
+        const _relay = await pool.addRelay(client);
+        assertEquals(_relay, client);
     }
 
-    const _relay = await pool.addRelay(relay);
+    const _relay = await pool.addRelay(client);
     if (_relay instanceof SingleRelayConnection) {
-        assertEquals(_relay.url, relay.url);
+        assertEquals(_relay.url, client.url);
     } else {
         fail(_relay?.message);
     }
@@ -128,6 +155,15 @@ Deno.test("ConnectionPool register the same relay twice", async () => {
 });
 
 Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
+    await using relay = await run({
+        port: 8001,
+        default_policy: {
+            allowed_kinds: "all",
+        },
+        default_information: {
+            auth_required: false,
+        },
+    }) as Relay;
     const pool = new ConnectionPool();
 
     const chan = await pool.newSub("1", {
@@ -138,13 +174,13 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         fail(chan.message);
     }
 
-    const relay = SingleRelayConnection.New(relayed);
-    if (relay instanceof Error) {
-        fail(relay.message);
+    const client = SingleRelayConnection.New(relay.ws_url);
+    if (client instanceof Error) {
+        fail(client.message);
     }
 
-    const _relay = await pool.addRelay(relay);
-    assertEquals(_relay, relay);
+    const _relay = await pool.addRelay(client);
+    assertEquals(_relay, client);
 
     await pool.sendEvent(
         await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
@@ -158,7 +194,7 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         fail();
     }
     // don't care the value, just need to make sure that it's from the same relay
-    assertEquals(msg.url, relayed);
+    assertEquals(msg.url, relay.ws_url);
     await pool.close();
 });
 
