@@ -1,4 +1,5 @@
 import { parseJSON } from "./_helper.ts";
+import { prepareNormalNostrEvent } from "./event.ts";
 import { PublicKey } from "./key.ts";
 import { NoteID } from "./nip19.ts";
 import {
@@ -462,8 +463,12 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
 
             const url = new URL(this.url);
-            // todo: generate the auth event
-            url.searchParams.set("auth");
+            if(this.signer) {
+                url.searchParams.set("auth", btoa(JSON.stringify(await prepareNormalNostrEvent(this.signer, {
+                    kind: NostrKind.HTTP_AUTH,
+                    content: ""
+                }))));
+            }
             ws = this.wsCreator(url.toString(), this.log);
             if (ws instanceof Error) {
                 console.error(ws.name, ws.message, ws.cause);
