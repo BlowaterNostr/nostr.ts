@@ -17,39 +17,32 @@ Deno.test({
                 allowed_kinds: "all",
             },
             default_information: {
-                auth_required: false,
+                auth_required: true,
             },
         }) as Relay;
         await using client = SingleRelayConnection.New(relay.ws_url);
-
+        await sleep(1)
         const ctx = InMemoryAccountContext.Generate();
 
-        const sub = await client.newSub("1", {});
-        assertIsError(sub, DOMException, "readyState not OPEN");
-
-        await sleep(0); // wait 1 tick
-        assertEquals(client.status(), "Closed");
-        const sub2 = await client.newSub("2", {});
-        if (!(sub2 instanceof AuthError)) {
-            fail(JSON.stringify(sub2));
-        }
+        const event = await prepareNormalNostrEvent(ctx, {
+            kind: NostrKind.TEXT_NOTE,
+            content: "",
+        })
 
         const res = await client.sendEvent(
-            await prepareNormalNostrEvent(ctx, {
-                kind: NostrKind.TEXT_NOTE,
-                content: "",
-            }),
+            event
         );
-        if (!(res instanceof AuthError)) {
-            fail(JSON.stringify(res));
-        }
+        assertIsError(res, AuthError, "no auth event found")
+
+        const event_ = await client.getEvent(event.id)
+        assertIsError(event_, AuthError, "no auth event found")
         assertEquals(client.status(), "Closed");
     },
 });
 
 Deno.test({
     name: "auth accepted",
-    ignore: true,
+    ignore: false,
     fn: async () => {
         await using relay = await run({
             port: 8001,
@@ -65,6 +58,7 @@ Deno.test({
         const client = SingleRelayConnection.New(relay.ws_url, {
             signer: ctx,
         });
+        await sleep(1)
 
         const sub = await client.newSub("1", {});
         if (sub instanceof Error) {
@@ -74,7 +68,7 @@ Deno.test({
         }
         await sleep(1); // wait some time
 
-        const sub2 = await client.newSub("2", {});
+        const sub2 = await client.newSub("2", {kinds:[1]});
         if (sub2 instanceof Error) {
             fail(sub2.message);
         }
