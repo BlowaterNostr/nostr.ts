@@ -5,42 +5,54 @@ import { relayed } from "./relay-list.test.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
+import { Relay, run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx";
 
 Deno.test({
     name: "auth rejected",
     ignore: true,
     fn: async () => {
-    await using client = SingleRelayConnection.New(relayed);
-    const ctx = InMemoryAccountContext.Generate();
-    const sub = await client.newSub("1", {});
-    if (sub instanceof Error) {
-        // sub will not be an error because the websocket has connected successfully
-        // which is a design flaw of the Nostr protocol here
-        fail(sub.message);
-    }
-    assertEquals(client.status(), "Open");
-    await sleep(1000); // wait some time
-    assertEquals(client.status(), "Closed");
-    const sub2 = await client.newSub("2", {});
-    if (!(sub2 instanceof AuthError)) {
-        fail(JSON.stringify(sub2));
-    }
+        await using client = SingleRelayConnection.New(relayed);
+        const ctx = InMemoryAccountContext.Generate();
+        const sub = await client.newSub("1", {});
+        if (sub instanceof Error) {
+            // sub will not be an error because the websocket has connected successfully
+            // which is a design flaw of the Nostr protocol here
+            fail(sub.message);
+        }
+        assertEquals(client.status(), "Open");
+        await sleep(1000); // wait some time
+        assertEquals(client.status(), "Closed");
+        const sub2 = await client.newSub("2", {});
+        if (!(sub2 instanceof AuthError)) {
+            fail(JSON.stringify(sub2));
+        }
 
-    const res = await client.sendEvent(
-        await prepareNormalNostrEvent(ctx, {
-            kind: NostrKind.TEXT_NOTE,
-            content: "",
-        }),
-    );
-    if (!(res instanceof AuthError)) {
-        fail(JSON.stringify(res));
-    }
-    assertEquals(client.status(), "Closed");
-}});
+        const res = await client.sendEvent(
+            await prepareNormalNostrEvent(ctx, {
+                kind: NostrKind.TEXT_NOTE,
+                content: "",
+            }),
+        );
+        if (!(res instanceof AuthError)) {
+            fail(JSON.stringify(res));
+        }
+        assertEquals(client.status(), "Closed");
+    },
+});
 
 Deno.test("auth accepted", async () => {
+    await using relay = await run({
+        port: 8001,
+        default_policy: {
+            allowed_kinds: "all",
+        },
+        default_information: {
+            auth_required: true,
+        },
+    }) as Relay;
+
     const ctx = InMemoryAccountContext.Generate();
-    await using client = SingleRelayConnection.New(relayed, {
+    await using client = SingleRelayConnection.New(relay.ws_url, {
         signer: ctx,
     });
 
@@ -67,5 +79,5 @@ Deno.test("auth accepted", async () => {
         fail(JSON.stringify(res));
     }
     assertEquals(client.status(), "Open");
-    await client.close()
+    await client.close();
 });

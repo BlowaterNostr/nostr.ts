@@ -166,13 +166,13 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         }
 
         this.ws.close(code, reason);
-        const url = new URL(this.url)
-        console.log(this.status(), url.host+url.pathname, );
+        const url = new URL(this.url);
+        console.log(this.status(), url.host + url.pathname);
         if (force) {
             return;
         }
         await this.onClose.pop();
-        console.log(this.status(), url.host+url.pathname, this.closedEvent);
+        console.log(this.status(), url.host + url.pathname, this.closedEvent);
         return this.closedEvent;
     }
 

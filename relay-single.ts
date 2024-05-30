@@ -463,11 +463,16 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
 
             const url = new URL(this.url);
-            if(this.signer) {
-                url.searchParams.set("auth", btoa(JSON.stringify(await prepareNormalNostrEvent(this.signer, {
-                    kind: NostrKind.HTTP_AUTH,
-                    content: ""
-                }))));
+            if (this.signer) {
+                url.searchParams.set(
+                    "auth",
+                    btoa(JSON.stringify(
+                        await prepareNormalNostrEvent(this.signer, {
+                            kind: NostrKind.HTTP_AUTH,
+                            content: "",
+                        }),
+                    )),
+                );
             }
             ws = this.wsCreator(url.toString(), this.log);
             if (ws instanceof Error) {
