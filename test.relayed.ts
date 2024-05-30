@@ -8,11 +8,11 @@ const relay = await run({
     default_policy: {
         allowed_kinds: "all", // or none,
     },
-    system_key: ctx.privateKey.hex,
     default_information: {
         name: "Test Relay",
         description: "only for testing",
         pubkey: ctx.publicKey.hex,
+        auth_required: false,
     },
 });
 if (relay instanceof Error) {
