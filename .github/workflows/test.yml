@@ -27,8 +27,5 @@ jobs:
       - name: Verify formatting & other checks
         run: make check
 
-      - name: Run a relayed
-        run: make relayed
-
       - name: Run tests
         run: make test

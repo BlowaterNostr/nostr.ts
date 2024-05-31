@@ -25,11 +25,3 @@ check: fmt-check
 
 install:
 	deno install --allow-net --allow-read https://deno.land/std@0.202.0/http/file_server.ts
-
-relayed:
-	deno run \
-	--check --allow-net \
-	--allow-read=relayed.db,relayed.db-journal \
-	--allow-write=relayed.db,relayed.db-journal \
-	--allow-env=DENO_DEPLOYMENT_ID,DENO_DIR,DENO_SQLITE_PATH,DENO_SQLITE_LOCAL,HOME,relayed_pubkey \
-	--unstable-kv --unstable-ffi --allow-ffi ./test.relayed.ts &
