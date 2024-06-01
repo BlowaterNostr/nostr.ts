@@ -124,10 +124,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             } else {
                 return {
                     type: "OtherError",
-                    error: {
-                        error: msg.error.error,
-                        message: msg.error.message,
-                    },
+                    error: msg.error,
                 };
             }
         }
