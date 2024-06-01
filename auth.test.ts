@@ -21,21 +21,21 @@ Deno.test({
             },
         }) as Relay;
         await using client = SingleRelayConnection.New(relay.ws_url);
-        await sleep(1)
+        await sleep(1);
         const ctx = InMemoryAccountContext.Generate();
 
         const event = await prepareNormalNostrEvent(ctx, {
             kind: NostrKind.TEXT_NOTE,
             content: "",
-        })
+        });
 
         const res = await client.sendEvent(
-            event
+            event,
         );
-        assertIsError(res, AuthError, "no auth event found")
+        assertIsError(res, AuthError, "no auth event found");
 
-        const event_ = await client.getEvent(event.id)
-        assertIsError(event_, AuthError, "no auth event found")
+        const event_ = await client.getEvent(event.id);
+        assertIsError(event_, AuthError, "no auth event found");
         assertEquals(client.status(), "Closed");
     },
 });
@@ -44,6 +44,7 @@ Deno.test({
     name: "auth accepted",
     ignore: false,
     fn: async () => {
+        const ctx = InMemoryAccountContext.Generate();
         await using relay = await run({
             port: 8001,
             default_policy: {
@@ -51,14 +52,14 @@ Deno.test({
             },
             default_information: {
                 auth_required: true,
+                pubkey: ctx.publicKey.hex,
             },
         }) as Relay;
 
-        const ctx = InMemoryAccountContext.Generate();
-        const client = SingleRelayConnection.New(relay.ws_url, {
+        await using client = SingleRelayConnection.New(relay.ws_url, {
             signer: ctx,
         });
-        await sleep(1)
+        await sleep(1);
 
         const sub = await client.newSub("1", {});
         if (sub instanceof Error) {
@@ -68,7 +69,7 @@ Deno.test({
         }
         await sleep(1); // wait some time
 
-        const sub2 = await client.newSub("2", {kinds:[1]});
+        const sub2 = await client.newSub("2", { kinds: [1] });
         if (sub2 instanceof Error) {
             fail(sub2.message);
         }

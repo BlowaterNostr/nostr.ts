@@ -154,6 +154,8 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4
                         // https://www.iana.org/assignments/websocket/websocket.xml#close-code-number
                         if (messsage.event.code == 3000) {
+                            // todo: close all sub channels
+                            // todo: resolve all send_promise_resolvers to false
                             return new AuthError(messsage.event.reason);
                         }
                     }
@@ -354,6 +356,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (msg.type == "EVENT") {
                 return msg.event;
             } else if (msg.type == "NOTICE") {
+                // todo: give a concrete type
                 return new Error(msg.note);
             } else if (msg.type == "EOSE") {
                 return;
