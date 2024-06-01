@@ -21,14 +21,13 @@ Deno.test({
             },
         }) as Relay;
         await using client = SingleRelayConnection.New(relay.ws_url);
-        await sleep(1);
         const ctx = InMemoryAccountContext.Generate();
-
         const event = await prepareNormalNostrEvent(ctx, {
             kind: NostrKind.TEXT_NOTE,
             content: "",
         });
 
+        await sleep(5);
         const res = await client.sendEvent(
             event,
         );

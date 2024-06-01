@@ -106,7 +106,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         string,
         (res: { ok: boolean; message: string }) => void
     >();
-    private error: AuthError | undefined; // todo: check this error in public APIs
+    private error: AuthError | RelayDisconnectedByClient | undefined; // todo: check this error in public APIs
     private ws: BidirectionalNetwork | undefined;
 
     status(): WebSocketReadyState {
@@ -124,9 +124,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     ) {
         (async () => {
             const ws = await this.connect();
-            if (ws instanceof Error || ws == undefined) {
-                console.error(ws);
-                return;
+            if (ws instanceof Error) {
+                this.error = ws;
+                return ws;
             }
             this.ws = ws;
             for (;;) {
@@ -154,9 +154,22 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                         // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4
                         // https://www.iana.org/assignments/websocket/websocket.xml#close-code-number
                         if (messsage.event.code == 3000) {
-                            // todo: close all sub channels
-                            // todo: resolve all send_promise_resolvers to false
-                            return new AuthError(messsage.event.reason);
+                            // close all sub channels
+                            for (const stream of this.subscriptionMap) {
+                                const e = await this.closeSub(stream[0]);
+                                if (e instanceof Error) {
+                                    console.error(e);
+                                }
+                            }
+                            const err = new AuthError(messsage.event.reason);
+                            // resolve all send_promise_resolvers to false
+                            for (const [_, resolver] of this.send_promise_resolvers) {
+                                resolver({
+                                    ok: false,
+                                    message: err.message,
+                                });
+                            }
+                            return err;
                         }
                     }
                     console.log("connection error", messsage);
@@ -450,7 +463,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 
     public async connect() {
-        if (this.error instanceof AuthError) {
+        if (this.error instanceof Error) {
             return this.error;
         }
         let ws: BidirectionalNetwork | Error | undefined;

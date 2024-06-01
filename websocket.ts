@@ -149,6 +149,9 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             this.ws.send(str);
         } catch (e) {
             // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/send#invalidstateerror
+            if (e.message == "readyState not OPEN") {
+                return new WebSocketClosed(this.url, this.status());
+            }
             return e as DOMException;
         }
     }

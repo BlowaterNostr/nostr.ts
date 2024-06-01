@@ -20,6 +20,8 @@ Deno.test("relay store deletion event", async () => {
 });
 
 Deno.test("delete regular events", async () => {
+    await delete_regular_events(damus)();
+    await delete_regular_events(wirednet)();
     await using relay = await run({
         port: 8001,
         default_policy: {
@@ -29,7 +31,5 @@ Deno.test("delete regular events", async () => {
             auth_required: false,
         },
     }) as Relay;
-    await delete_regular_events(damus)();
-    await delete_regular_events(wirednet)();
     await delete_regular_events(relay.ws_url)();
 });
