@@ -1,4 +1,5 @@
 test: fmt
+	deno --version
 	rm -rf cov_profile*
 	deno test --lock deno.test.lock \
 		--allow-net --allow-env \
