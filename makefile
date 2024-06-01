@@ -19,7 +19,7 @@ fmt:
 	deno fmt
 
 fmt-check:
-	deno fmt  --check
+	deno fmt --check
 
 check: fmt-check
 	deno compile cli/nostr.ts
