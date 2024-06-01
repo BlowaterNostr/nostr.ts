@@ -269,7 +269,7 @@ export const get_event_by_id = (url: string) => async () => {
 };
 
 export const get_replaceable_event = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url);
+    const client = SingleRelayConnection.New(url);
     const ctx = InMemoryAccountContext.Generate();
 
     const event1 = await prepareNormalNostrEvent(ctx, {
@@ -278,7 +278,7 @@ export const get_replaceable_event = (url: string) => async () => {
         created_at: Date.now() / 1000,
     });
     {
-        const err = await relay.sendEvent(event1);
+        const err = await client.sendEvent(event1);
         if (err instanceof Error) fail(err.message);
     }
 
@@ -288,10 +288,11 @@ export const get_replaceable_event = (url: string) => async () => {
         created_at: Date.now() / 1000 + 1,
     });
     {
-        const err = await relay.sendEvent(event2);
+        const err = await client.sendEvent(event2);
         if (err instanceof Error) fail(err.message);
     }
 
-    const event_got = await relay.getReplaceableEvent(ctx.publicKey, NostrKind.META_DATA);
+    const event_got = await client.getReplaceableEvent(ctx.publicKey, NostrKind.META_DATA);
     assertEquals(event_got, event2);
+    await client.close();
 };

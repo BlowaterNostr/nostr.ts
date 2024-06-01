@@ -27,7 +27,7 @@ Deno.test({
             content: "",
         });
 
-        await sleep(5);
+        await sleep(10);
         const res = await client.sendEvent(
             event,
         );
