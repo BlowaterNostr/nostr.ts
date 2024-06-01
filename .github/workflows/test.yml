@@ -13,9 +13,6 @@ jobs:
   test:
     timeout-minutes: 3
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        deno-version: [1.43.0]
 
     steps:
       - name: Setup repo
@@ -23,6 +20,8 @@ jobs:
 
       - name: Setup Deno
         uses: denoland/setup-deno@v1
+        with:
+          deno-version: 1.43.0
 
       - name: Verify formatting & other checks
         run: make check
