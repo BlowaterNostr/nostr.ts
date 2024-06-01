@@ -16,7 +16,7 @@ Deno.test("ConnectionPool close gracefully 1", async () => {
 });
 
 Deno.test("ConnectionPool close gracefully 2", async () => {
-    await using relay = await run({
+    const relay = await run({
         port: 8001,
         default_policy: {
             allowed_kinds: "all",
@@ -30,12 +30,14 @@ Deno.test("ConnectionPool close gracefully 2", async () => {
     if (client instanceof Error) {
         fail(client.message);
     }
-
     const pool = new ConnectionPool();
-    const err = await pool.addRelay(client);
-    assertNotInstanceOf(err, Error);
-    await csp.sleep(300);
+    {
+        const err = await pool.addRelay(client);
+        assertNotInstanceOf(err, Error);
+        await csp.sleep(10);
+    }
     await pool.close();
+    await relay.shutdown();
 });
 
 Deno.test("ConnectionPool open multiple relays concurrently & close", async () => {
@@ -54,7 +56,7 @@ Deno.test("ConnectionPool open multiple relays concurrently & close", async () =
 
 Deno.test("ConnectionPool newSub & close", async () => {
     // able to open & close
-    await using relay = await run({
+    const relay = await run({
         port: 8001,
         default_policy: {
             allowed_kinds: "all",
@@ -83,6 +85,7 @@ Deno.test("ConnectionPool newSub & close", async () => {
         sub.chan.closed(),
         true,
     );
+    await relay.shutdown();
 });
 
 Deno.test("ConnectionPool: open,close,open again | no relay", async () => {
@@ -123,7 +126,7 @@ Deno.test("ConnectionPool close subscription", async (t) => {
 });
 
 Deno.test("ConnectionPool register the same relay twice", async () => {
-    await using relay = await run({
+    const relay = await run({
         port: 8001,
         default_policy: {
             allowed_kinds: "all",
@@ -152,10 +155,11 @@ Deno.test("ConnectionPool register the same relay twice", async () => {
     }
 
     await pool.close();
+    await relay.shutdown();
 });
 
 Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
-    await using relay = await run({
+    const relay = await run({
         port: 8001,
         default_policy: {
             allowed_kinds: "all",
@@ -196,6 +200,7 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
     // don't care the value, just need to make sure that it's from the same relay
     assertEquals(msg.url, relay.ws_url);
     await pool.close();
+    await relay.shutdown();
 });
 
 Deno.test("newSub 2 times & add relay url later", async (t) => {

@@ -19,7 +19,7 @@ import { Relay, run } from "https://raw.githubusercontent.com/BlowaterNostr/rela
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
 Deno.test("SingleRelayConnection newSub & close", async () => {
-    await using relay = await run({
+    const relay = await run({
         port: 8001,
         default_policy: {
             allowed_kinds: "all",
@@ -29,10 +29,11 @@ Deno.test("SingleRelayConnection newSub & close", async () => {
         },
     }) as Relay;
     await newSub_close(relay.ws_url)();
+    await relay.shutdown();
 });
 
 Deno.test("Single Relay Connection", async (t) => {
-    await using relay = await run({
+    const relay = await run({
         port: 8001,
         default_policy: {
             allowed_kinds: "all",
@@ -61,6 +62,7 @@ Deno.test("Single Relay Connection", async (t) => {
         await get_event_by_id(relay.ws_url)();
         await get_event_by_id(blowater)();
     });
+    await relay.shutdown();
 });
 
 Deno.test("get replaceable event", async () => {

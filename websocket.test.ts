@@ -24,7 +24,7 @@ Deno.test("websocket open & close", async () => {
 });
 
 Deno.test("websocket call untilOpen after closed", async () => {
-    await using relay = await run({
+    const relay = await run({
         port: 8001,
         default_policy: {
             allowed_kinds: "all",
@@ -54,6 +54,7 @@ Deno.test("websocket call untilOpen after closed", async () => {
         const err4 = await p;
         assertEquals(false, err4 instanceof CloseTwice);
     }
+    await relay.shutdown();
 });
 
 Deno.test("websocket close without waiting for openning", async () => {

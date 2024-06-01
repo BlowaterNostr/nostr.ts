@@ -11,7 +11,7 @@ Deno.test({
     name: "auth rejected",
     ignore: false,
     fn: async () => {
-        await using relay = await run({
+        const relay = await run({
             port: 8001,
             default_policy: {
                 allowed_kinds: "all",
@@ -20,7 +20,7 @@ Deno.test({
                 auth_required: true,
             },
         }) as Relay;
-        await using client = SingleRelayConnection.New(relay.ws_url);
+        const client = SingleRelayConnection.New(relay.ws_url);
         const ctx = InMemoryAccountContext.Generate();
         const event = await prepareNormalNostrEvent(ctx, {
             kind: NostrKind.TEXT_NOTE,
@@ -36,6 +36,9 @@ Deno.test({
         const event_ = await client.getEvent(event.id);
         assertIsError(event_, AuthError, "no auth event found");
         assertEquals(client.status(), "Closed");
+
+        await client.close();
+        await relay.shutdown();
     },
 });
 
@@ -44,7 +47,7 @@ Deno.test({
     ignore: false,
     fn: async () => {
         const ctx = InMemoryAccountContext.Generate();
-        await using relay = await run({
+        const relay = await run({
             port: 8001,
             default_policy: {
                 allowed_kinds: "all",
@@ -55,7 +58,7 @@ Deno.test({
             },
         }) as Relay;
 
-        await using client = SingleRelayConnection.New(relay.ws_url, {
+        const client = SingleRelayConnection.New(relay.ws_url, {
             signer: ctx,
         });
         await sleep(1);
@@ -83,5 +86,8 @@ Deno.test({
             fail(JSON.stringify(res));
         }
         assertEquals(client.status(), "Open");
+
+        await client.close();
+        await relay.shutdown();
     },
 });

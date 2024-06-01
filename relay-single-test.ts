@@ -9,62 +9,66 @@ import { PrivateKey } from "./key.ts";
 
 export const open_close = (urls: string[]) => async () => {
     for (let url of urls) {
-        await using _ = SingleRelayConnection.New(url);
+        const client = SingleRelayConnection.New(url);
+        await client.close();
     }
 };
 
 export const newSub_close = (url: string) => async () => {
     // able to open & close
-    const relay = SingleRelayConnection.New(url);
-    const sub = await relay.newSub("1", { kinds: [0], limit: 1 });
+    const client = SingleRelayConnection.New(url);
+    const sub = await client.newSub("1", { kinds: [0], limit: 1 });
     if (sub instanceof Error) fail(sub.message);
 
-    await relay.close();
+    await client.close();
     if (sub instanceof SubscriptionAlreadyExist) {
         fail("unreachable");
     }
     assertEquals(sub.chan.closed(), true);
+    await client.close();
 };
 
 export const sub_exits = (url: string) => async () => {
-    await using relay = SingleRelayConnection.New(url);
+    const client = SingleRelayConnection.New(url);
     {
         // open
         const subID = "1";
-        const chan = await relay.newSub(subID, { kinds: [0], limit: 1 });
+        const chan = await client.newSub(subID, { kinds: [0], limit: 1 });
         if (chan instanceof Error) fail(chan.message);
 
         // close
-        await relay.closeSub(subID);
+        await client.closeSub(subID);
         assertEquals(chan.chan.closed(), true);
 
         // open again
-        const sub2 = await relay.newSub(subID, { kinds: [0], limit: 1 });
+        const sub2 = await client.newSub(subID, { kinds: [0], limit: 1 });
         if (sub2 instanceof Error) fail(sub2.message);
         assertEquals(sub2.chan.closed(), false);
     }
     {
-        const _ = await relay.newSub("hi", { limit: 1 });
-        const sub = await relay.newSub("hi", { limit: 1 });
+        const _ = await client.newSub("hi", { limit: 1 });
+        const sub = await client.newSub("hi", { limit: 1 });
         assertInstanceOf(sub, SubscriptionAlreadyExist);
     }
+    await client.close();
 };
 
 export const close_sub_keep_reading = (url: string) => async () => {
-    await using relay = SingleRelayConnection.New(url);
+    const client = SingleRelayConnection.New(url);
     {
         const subID = "1";
-        const sub = await relay.newSub(subID, { limit: 1 });
+        const sub = await client.newSub(subID, { limit: 1 });
         if (sub instanceof Error) fail(sub.message);
-        await relay.closeSub(subID);
+        await client.closeSub(subID);
         assertEquals(sub.chan.closed(), true);
     }
+    await client.close();
 };
 
 export const send_event = (url: string) => async () => {
-    await using relay = SingleRelayConnection.New(url);
+    const client = SingleRelayConnection.New(url);
     {
-        const err = relay.sendEvent(
+        const err = client.sendEvent(
             await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
                 content: "",
                 kind: NostrKind.TEXT_NOTE,
@@ -72,10 +76,11 @@ export const send_event = (url: string) => async () => {
         );
         if (err instanceof Error) fail(err.message);
     }
+    await client.close();
 };
 
 export const get_correct_kind = (url: string) => async () => {
-    await using relay = SingleRelayConnection.New(url);
+    const relay = SingleRelayConnection.New(url);
     {
         const err = await relay.sendEvent(
             await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
@@ -99,10 +104,11 @@ export const get_correct_kind = (url: string) => async () => {
         assertEquals(msg.subID, "test");
         assertEquals(msg.event.kind, NostrKind.Encrypted_Custom_App_Data);
     }
+    await relay.close();
 };
 
 export const newSub_multiple_filters = (url: string) => async () => {
-    await using relay = SingleRelayConnection.New(url);
+    const relay = SingleRelayConnection.New(url);
     const event_1 = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
         kind: NostrKind.TEXT_NOTE,
         content: "test1",
@@ -136,12 +142,13 @@ export const newSub_multiple_filters = (url: string) => async () => {
 
     assertEquals(event_1, msg1.event);
     assertEquals(event_2, msg2.event);
+    await relay.close();
 };
 
 // maximum number of events relays SHOULD return in the initial query
 export const limit = (url: string) => async () => {
     const ctx = InMemoryAccountContext.Generate();
-    await using relay = SingleRelayConnection.New(url);
+    const relay = SingleRelayConnection.New(url);
     {
         const err = await relay.sendEvent(
             await prepareNormalNostrEvent(ctx, {
@@ -186,11 +193,12 @@ export const limit = (url: string) => async () => {
         }
         assertEquals(i, 3);
     }
+    await relay.close();
 };
 
 export const no_event = (url: string) => async () => {
     const ctx = InMemoryAccountContext.Generate();
-    await using relay = SingleRelayConnection.New(url);
+    const relay = SingleRelayConnection.New(url);
     {
         const subID = "NoEvent";
         const sub = await relay.newSub(subID, {
@@ -204,12 +212,13 @@ export const no_event = (url: string) => async () => {
             break;
         }
     }
+    await relay.close();
 };
 
 export const two_clients_communicate = (url: string) => async () => {
     const ctx = InMemoryAccountContext.Generate();
-    await using relay1 = SingleRelayConnection.New(url);
-    await using relay2 = SingleRelayConnection.New(url);
+    const relay1 = SingleRelayConnection.New(url);
+    const relay2 = SingleRelayConnection.New(url);
     {
         const sub = await relay1.newSub("relay1", {
             authors: [ctx.publicKey.hex],
@@ -233,10 +242,12 @@ export const two_clients_communicate = (url: string) => async () => {
             }
         }
     }
+    await relay1.close();
+    await relay2.close();
 };
 
 export const get_event_by_id = (url: string) => async () => {
-    await using client = SingleRelayConnection.New(url, { log: true });
+    const client = SingleRelayConnection.New(url, { log: true });
     const ctx = InMemoryAccountContext.Generate();
     {
         const event_1 = await client.getEvent(PrivateKey.Generate().hex);
@@ -254,10 +265,11 @@ export const get_event_by_id = (url: string) => async () => {
 
         assertEquals(event, event_2);
     }
+    await client.close();
 };
 
 export const get_replaceable_event = (url: string) => async () => {
-    await using relay = SingleRelayConnection.New(url);
+    const relay = SingleRelayConnection.New(url);
     const ctx = InMemoryAccountContext.Generate();
 
     const event1 = await prepareNormalNostrEvent(ctx, {
