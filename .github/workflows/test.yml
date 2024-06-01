@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        deno-version: [1.41.0]
+        deno-version: [1.43.6]
 
     steps:
       - name: Setup repo
