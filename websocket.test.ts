@@ -34,7 +34,8 @@ Deno.test("websocket call untilOpen after closed", async () => {
             auth_required: false,
             pubkey: PrivateKey.Generate().toPublicKey().hex,
         },
-    }) as Relay;
+    });
+    if (relay instanceof Error) fail(relay.message);
     {
         const ws = AsyncWebSocket.New(relay.ws_url, true);
         if (ws instanceof Error) {
@@ -56,7 +57,6 @@ Deno.test("websocket call untilOpen after closed", async () => {
         const err4 = await p;
         assertEquals(false, err4 instanceof CloseTwice);
     }
-    await relay.shutdown();
 });
 
 Deno.test("websocket close without waiting for openning", async () => {
