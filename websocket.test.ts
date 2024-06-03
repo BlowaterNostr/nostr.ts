@@ -57,6 +57,7 @@ Deno.test("websocket call untilOpen after closed", async () => {
         const err4 = await p;
         assertEquals(false, err4 instanceof CloseTwice);
     }
+    await relay.shutdown();
 });
 
 Deno.test("websocket close without waiting for openning", async () => {
