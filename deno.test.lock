@@ -159,7 +159,7 @@
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/channel.ts": "1e3dd025bdc5e892ce34b0f452d21ca4cef3b7b1dcf2a86546bb7dd42e6dc8b8",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/events.ts": "91971a40dcbf82b4964b4f339f255f81540db3f7a59e281179d34cb109f05205",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/graphql-schema.ts": "47cc27be0fe20274aa1336800e86b4051397f3c2c1cfe7149e8d17ef33ae0665",
-    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx": "5836c63ca2061750c99fe5e98af7cf671767ab19dc510017a347657c31626827",
+    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx": "cb01d2b255227f9ca599790b12486f150fee9e0eafe5145e08425a7f2ab1712d",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/resolvers/event.ts": "f2529cb5d40000438cf82efb30d5bd7258ef981f4e56f4b96605a908d140bd37",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/resolvers/event_deletion.ts": "417b509dd8058c53dd4911bbebedbcfc1a2d26f3c4585c9b35ef3c968d27c5dc",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/resolvers/nip11.ts": "3e5209fc8e3a00dbdaf8b1b7c1cb8e070c120a45ce7d96c9639735c83cec8305",

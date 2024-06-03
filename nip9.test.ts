@@ -2,6 +2,7 @@ import { Relay, run } from "https://raw.githubusercontent.com/BlowaterNostr/rela
 import { delete_regular_events, store_deletion_event } from "./nip9-test.ts";
 import { damus } from "./relay-list.test.ts";
 import { wirednet } from "./relay-list.test.ts";
+import { PrivateKey } from "./key.ts";
 
 Deno.test("relay store deletion event", async () => {
     await store_deletion_event(damus)();
@@ -14,6 +15,7 @@ Deno.test("relay store deletion event", async () => {
             },
             default_information: {
                 auth_required: false,
+                pubkey: PrivateKey.Generate().toPublicKey().hex,
             },
         }) as Relay;
 
@@ -32,6 +34,7 @@ Deno.test("delete regular events", async () => {
         },
         default_information: {
             auth_required: false,
+            pubkey: PrivateKey.Generate().toPublicKey().hex,
         },
     }) as Relay;
     await delete_regular_events(relay.ws_url)();

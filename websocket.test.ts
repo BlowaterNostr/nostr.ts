@@ -5,6 +5,7 @@ import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals
 import { assertInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_instance_of.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 import { Relay, run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx";
+import { PrivateKey } from "./key.ts";
 
 Deno.test("websocket open & close", async () => {
     let ps = [];
@@ -31,6 +32,7 @@ Deno.test("websocket call untilOpen after closed", async () => {
         },
         default_information: {
             auth_required: false,
+            pubkey: PrivateKey.Generate().toPublicKey().hex,
         },
     }) as Relay;
     {

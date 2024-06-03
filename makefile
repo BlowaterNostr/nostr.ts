@@ -1,8 +1,8 @@
 test: fmt
 	deno --version
 	rm -rf cov_profile*
-	deno test --lock deno.test.lock \
-		--allow-net --allow-env \
+	deno test -r --lock deno.test.lock \
+		--allow-net \
 		--allow-read=relayed.db,relayed.db-journal \
 		--allow-write=relayed.db,relayed.db-journal \
 		--trace-leaks --coverage=cov_profile \

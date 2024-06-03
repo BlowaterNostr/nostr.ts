@@ -11,6 +11,7 @@ Deno.test({
     name: "auth rejected",
     ignore: false,
     fn: async () => {
+        const ctx = InMemoryAccountContext.Generate();
         const relay = await run({
             port: 8001,
             default_policy: {
@@ -18,10 +19,10 @@ Deno.test({
             },
             default_information: {
                 auth_required: true,
+                pubkey: ctx.publicKey.hex,
             },
         }) as Relay;
         const client = SingleRelayConnection.New(relay.ws_url);
-        const ctx = InMemoryAccountContext.Generate();
         const event = await prepareNormalNostrEvent(ctx, {
             kind: NostrKind.TEXT_NOTE,
             content: "",

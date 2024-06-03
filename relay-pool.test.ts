@@ -9,6 +9,7 @@ import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals
 import { assertNotInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_not_instance_of.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 import { Relay, run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx";
+import { PrivateKey } from "./key.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
     const pool = new ConnectionPool();
@@ -23,6 +24,7 @@ Deno.test("ConnectionPool close gracefully 2", async () => {
         },
         default_information: {
             auth_required: false,
+            pubkey: PrivateKey.Generate().toPublicKey().hex,
         },
     }) as Relay;
     // able to open & close
@@ -63,6 +65,7 @@ Deno.test("ConnectionPool newSub & close", async () => {
         },
         default_information: {
             auth_required: false,
+            pubkey: PrivateKey.Generate().toPublicKey().hex,
         },
     }) as Relay;
     const client = SingleRelayConnection.New(relay.ws_url);
@@ -133,6 +136,7 @@ Deno.test("ConnectionPool register the same relay twice", async () => {
         },
         default_information: {
             auth_required: false,
+            pubkey: PrivateKey.Generate().toPublicKey().hex,
         },
     }) as Relay;
 
@@ -166,6 +170,7 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         },
         default_information: {
             auth_required: false,
+            pubkey: PrivateKey.Generate().toPublicKey().hex,
         },
     }) as Relay;
     const pool = new ConnectionPool();

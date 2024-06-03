@@ -15,6 +15,7 @@ import {
 } from "./relay-single-test.ts";
 import { wirednet } from "./relay-list.test.ts";
 import { Relay, run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx";
+import { PrivateKey } from "./key.ts";
 
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
@@ -26,6 +27,7 @@ Deno.test("SingleRelayConnection newSub & close", async () => {
         },
         default_information: {
             auth_required: false,
+            pubkey: PrivateKey.Generate().toPublicKey().hex,
         },
     }) as Relay;
     await newSub_close(relay.ws_url)();
@@ -40,6 +42,7 @@ Deno.test("Single Relay Connection", async (t) => {
         },
         default_information: {
             auth_required: false,
+            pubkey: PrivateKey.Generate().toPublicKey().hex,
         },
     }) as Relay;
     await t.step("SingleRelayConnection subscription already exists", sub_exits(relay.ws_url));
