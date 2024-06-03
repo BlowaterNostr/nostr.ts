@@ -1,5 +1,5 @@
 import { PublicKey } from "./key.ts";
-import { NostrAccountContext, NostrEvent, NostrKind, Tag, UnsignedNostrEvent } from "./nostr.ts";
+import { NostrAccountContext, NostrEvent, NostrKind, Signer, Tag, UnsignedNostrEvent } from "./nostr.ts";
 
 export async function prepareEncryptedNostrEvent<T extends NostrKind>(
     sender: NostrAccountContext,
@@ -30,7 +30,7 @@ export async function prepareEncryptedNostrEvent<T extends NostrKind>(
 }
 
 export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind>(
-    sender: NostrAccountContext,
+    sender: Signer,
     args: {
         kind: Kind;
         content: string;

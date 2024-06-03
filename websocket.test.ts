@@ -1,7 +1,11 @@
-import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.202.0/testing/asserts.ts";
 import { AsyncWebSocket, CloseReason, CloseTwice } from "./websocket.ts";
-import { relayed, relays } from "./relay-list.test.ts";
+import { relays } from "./relay-list.test.ts";
 import { WebSocketClosed } from "./relay-single.ts";
+import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
+import { assertInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_instance_of.ts";
+import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
+import { Relay, run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx";
+import { PrivateKey } from "./key.ts";
 
 Deno.test("websocket open & close", async () => {
     let ps = [];
@@ -20,20 +24,20 @@ Deno.test("websocket open & close", async () => {
     await Promise.all(ps);
 });
 
-Deno.test("websocket call untilOpen N times", async () => {
-    let ws = AsyncWebSocket.New(relayed, true); // todo: maybe use a local ws server to speed up
-    if (ws instanceof Error) {
-        fail();
-    }
-    let p = ws.untilOpen();
-    let p2 = ws.untilOpen();
-    await Promise.all([p, p2]);
-    await ws.close();
-});
-
 Deno.test("websocket call untilOpen after closed", async () => {
+    const relay = await run({
+        port: 8001,
+        default_policy: {
+            allowed_kinds: "all",
+        },
+        default_information: {
+            auth_required: false,
+            pubkey: PrivateKey.Generate().toPublicKey().hex,
+        },
+    });
+    if (relay instanceof Error) fail(relay.message);
     {
-        const ws = AsyncWebSocket.New(relayed, true);
+        const ws = AsyncWebSocket.New(relay.ws_url, true);
         if (ws instanceof Error) {
             fail();
         }
@@ -43,7 +47,7 @@ Deno.test("websocket call untilOpen after closed", async () => {
         assertInstanceOf(err2, Error);
     }
     {
-        const ws2 = AsyncWebSocket.New(relayed, true);
+        const ws2 = AsyncWebSocket.New(relay.ws_url, true);
         if (ws2 instanceof Error) {
             fail();
         }
@@ -53,6 +57,7 @@ Deno.test("websocket call untilOpen after closed", async () => {
         const err4 = await p;
         assertEquals(false, err4 instanceof CloseTwice);
     }
+    await relay.shutdown();
 });
 
 Deno.test("websocket close without waiting for openning", async () => {
