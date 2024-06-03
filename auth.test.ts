@@ -12,7 +12,7 @@ Deno.test({
     ignore: false,
     fn: async () => {
         const ctx = InMemoryAccountContext.Generate();
-        const relay = await run({
+        await using relay = await run({
             port: 8001,
             default_policy: {
                 allowed_kinds: "all",
@@ -22,7 +22,7 @@ Deno.test({
                 pubkey: ctx.publicKey.hex,
             },
         }) as Relay;
-        const client = SingleRelayConnection.New(relay.ws_url);
+        await using client = SingleRelayConnection.New(relay.ws_url);
         const event = await prepareNormalNostrEvent(ctx, {
             kind: NostrKind.TEXT_NOTE,
             content: "",
@@ -37,9 +37,6 @@ Deno.test({
         const event_ = await client.getEvent(event.id);
         assertIsError(event_, AuthError, "no auth event found");
         assertEquals(client.status(), "Closed");
-
-        await client.close();
-        await relay.shutdown();
     },
 });
 
