@@ -9,67 +9,66 @@ import { PrivateKey } from "./key.ts";
 
 export const open_close = (urls: string[]) => async () => {
     for (let url of urls) {
-        const relay = SingleRelayConnection.New(url);
-        await relay.close();
+        const client = SingleRelayConnection.New(url);
+        await client.close();
     }
 };
 
 export const newSub_close = (url: string) => async () => {
     // able to open & close
-    const relay = SingleRelayConnection.New(url);
-    const sub = await relay.newSub("1", { kinds: [0], limit: 1 });
+    const client = SingleRelayConnection.New(url);
+    const sub = await client.newSub("1", { kinds: [0], limit: 1 });
     if (sub instanceof Error) fail(sub.message);
 
-    await relay.close();
+    await client.close();
     if (sub instanceof SubscriptionAlreadyExist) {
         fail("unreachable");
     }
     assertEquals(sub.chan.closed(), true);
+    await client.close();
 };
 
 export const sub_exits = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url);
+    const client = SingleRelayConnection.New(url);
     {
         // open
         const subID = "1";
-        const chan = await relay.newSub(subID, { kinds: [0], limit: 1 });
+        const chan = await client.newSub(subID, { kinds: [0], limit: 1 });
         if (chan instanceof Error) fail(chan.message);
 
         // close
-        await relay.closeSub(subID);
+        await client.closeSub(subID);
         assertEquals(chan.chan.closed(), true);
 
         // open again
-        const sub2 = await relay.newSub(subID, { kinds: [0], limit: 1 });
+        const sub2 = await client.newSub(subID, { kinds: [0], limit: 1 });
         if (sub2 instanceof Error) fail(sub2.message);
         assertEquals(sub2.chan.closed(), false);
     }
     {
-        const _ = await relay.newSub("hi", { limit: 1 });
-        const sub = await relay.newSub("hi", { limit: 1 });
+        const _ = await client.newSub("hi", { limit: 1 });
+        const sub = await client.newSub("hi", { limit: 1 });
         assertInstanceOf(sub, SubscriptionAlreadyExist);
     }
-    await relay.close();
+    await client.close();
 };
 
 export const close_sub_keep_reading = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url);
-
+    const client = SingleRelayConnection.New(url);
     {
         const subID = "1";
-        const sub = await relay.newSub(subID, { limit: 1 });
+        const sub = await client.newSub(subID, { limit: 1 });
         if (sub instanceof Error) fail(sub.message);
-        await relay.closeSub(subID);
+        await client.closeSub(subID);
         assertEquals(sub.chan.closed(), true);
     }
-    await relay.close();
+    await client.close();
 };
 
 export const send_event = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url);
-
+    const client = SingleRelayConnection.New(url);
     {
-        const err = relay.sendEvent(
+        const err = client.sendEvent(
             await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
                 content: "",
                 kind: NostrKind.TEXT_NOTE,
@@ -77,7 +76,7 @@ export const send_event = (url: string) => async () => {
         );
         if (err instanceof Error) fail(err.message);
     }
-    await relay.close();
+    await client.close();
 };
 
 export const get_correct_kind = (url: string) => async () => {
@@ -143,7 +142,6 @@ export const newSub_multiple_filters = (url: string) => async () => {
 
     assertEquals(event_1, msg1.event);
     assertEquals(event_2, msg2.event);
-
     await relay.close();
 };
 
@@ -151,7 +149,6 @@ export const newSub_multiple_filters = (url: string) => async () => {
 export const limit = (url: string) => async () => {
     const ctx = InMemoryAccountContext.Generate();
     const relay = SingleRelayConnection.New(url);
-
     {
         const err = await relay.sendEvent(
             await prepareNormalNostrEvent(ctx, {
@@ -250,29 +247,29 @@ export const two_clients_communicate = (url: string) => async () => {
 };
 
 export const get_event_by_id = (url: string) => async () => {
-    const relay1 = SingleRelayConnection.New(url, { log: true });
+    const client = SingleRelayConnection.New(url, { log: true });
     const ctx = InMemoryAccountContext.Generate();
     {
-        const event_1 = await relay1.getEvent(PrivateKey.Generate().hex);
+        const event_1 = await client.getEvent(PrivateKey.Generate().hex);
         assertEquals(event_1, undefined);
 
         const event = await prepareNormalNostrEvent(ctx, {
             content: "get_event_by_id",
             kind: NostrKind.TEXT_NOTE,
         });
-        const err = await relay1.sendEvent(event);
+        const err = await client.sendEvent(event);
         if (err instanceof Error) fail(err.message);
 
-        const event_2 = await relay1.getEvent(event.id);
+        const event_2 = await client.getEvent(event.id);
         if (event_2 instanceof Error) fail(event_2.message);
 
         assertEquals(event, event_2);
     }
-    await relay1.close();
+    await client.close();
 };
 
 export const get_replaceable_event = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url);
+    const client = SingleRelayConnection.New(url);
     const ctx = InMemoryAccountContext.Generate();
 
     const event1 = await prepareNormalNostrEvent(ctx, {
@@ -281,7 +278,7 @@ export const get_replaceable_event = (url: string) => async () => {
         created_at: Date.now() / 1000,
     });
     {
-        const err = await relay.sendEvent(event1);
+        const err = await client.sendEvent(event1);
         if (err instanceof Error) fail(err.message);
     }
 
@@ -291,11 +288,11 @@ export const get_replaceable_event = (url: string) => async () => {
         created_at: Date.now() / 1000 + 1,
     });
     {
-        const err = await relay.sendEvent(event2);
+        const err = await client.sendEvent(event2);
         if (err instanceof Error) fail(err.message);
     }
 
-    const event_got = await relay.getReplaceableEvent(ctx.publicKey, NostrKind.META_DATA);
+    const event_got = await client.getReplaceableEvent(ctx.publicKey, NostrKind.META_DATA);
     assertEquals(event_got, event2);
-    await relay.close();
+    await client.close();
 };

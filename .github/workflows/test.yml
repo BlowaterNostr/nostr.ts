@@ -11,11 +11,8 @@ permissions:
 
 jobs:
   test:
-    timeout-minutes: 5
+    timeout-minutes: 3
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        deno-version: [1.41.0]
 
     steps:
       - name: Setup repo
@@ -23,12 +20,11 @@ jobs:
 
       - name: Setup Deno
         uses: denoland/setup-deno@v1
+        with:
+          deno-version: 1.44.0
 
       - name: Verify formatting & other checks
         run: make check
-
-      - name: Run a relayed
-        run: make relayed
 
       - name: Run tests
         run: make test

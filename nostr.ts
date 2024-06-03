@@ -155,11 +155,14 @@ export function getTags(event: NostrEvent): Tags {
 }
 
 // https://github.com/nostr-protocol/nips/blob/master/07.md
-export interface NostrAccountContext {
-    readonly publicKey: PublicKey;
-    signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
+export interface NostrAccountContext extends Signer {
     encrypt(pubkey: string, plaintext: string, algorithm: "nip44" | "nip4"): Promise<string | Error>;
     decrypt(pubkey: string, ciphertext: string, algorithm?: "nip44" | "nip4"): Promise<string | Error>;
+}
+
+export interface Signer {
+    readonly publicKey: PublicKey;
+    signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
 }
 
 export class DecryptionFailure extends Error {

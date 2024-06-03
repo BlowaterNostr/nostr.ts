@@ -1,4 +1,5 @@
 import { parseJSON } from "./_helper.ts";
+import { prepareNormalNostrEvent } from "./event.ts";
 import { PublicKey } from "./key.ts";
 import { NoteID } from "./nip19.ts";
 import {
@@ -10,6 +11,7 @@ import {
     NostrFilter,
     NostrKind,
     RelayResponse_REQ_Message,
+    Signer,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
 import {
@@ -71,7 +73,7 @@ export type BidirectionalNetwork = {
     >;
     send: (
         str: string | ArrayBufferLike | Blob | ArrayBufferView,
-    ) => Promise<WebSocketClosed | Error | undefined>;
+    ) => Promise<WebSocketClosed | DOMException | undefined>;
     close: (
         code?: number,
         reason?: string,
@@ -104,7 +106,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         string,
         (res: { ok: boolean; message: string }) => void
     >();
-    private error: Error | string | WebSocketError | undefined; // todo: check this error in public APIs
+    private error: AuthError | RelayDisconnectedByClient | undefined; // todo: check this error in public APIs
     private ws: BidirectionalNetwork | undefined;
 
     status(): WebSocketReadyState {
@@ -117,13 +119,14 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     private constructor(
         readonly url: string,
         readonly wsCreator: (url: string, log: boolean) => BidirectionalNetwork | Error,
+        readonly signer: Signer | undefined,
         public log: boolean,
     ) {
         (async () => {
             const ws = await this.connect();
-            if (ws instanceof Error || ws == undefined) {
-                console.error(ws);
-                return;
+            if (ws instanceof Error) {
+                this.error = ws;
+                return ws;
             }
             this.ws = ws;
             for (;;) {
@@ -138,9 +141,38 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     messsage.type == "OtherError" || messsage.type == "closed"
                 ) {
                     if (messsage.type != "closed") {
-                        this.error = messsage.error;
+                        if (messsage.error instanceof Error) {
+                            this.error = messsage.error;
+                        } else if (typeof messsage.error == "string") {
+                            this.error = new Error(messsage.error);
+                        } else {
+                            console.error(messsage);
+                            this.error = new Error(messsage.error.error);
+                        }
                     }
-                    console.log(messsage);
+                    if (messsage.type == "closed") {
+                        // https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4
+                        // https://www.iana.org/assignments/websocket/websocket.xml#close-code-number
+                        if (messsage.event.code == 3000) {
+                            // close all sub channels
+                            for (const stream of this.subscriptionMap) {
+                                const e = await this.closeSub(stream[0]);
+                                if (e instanceof Error) {
+                                    console.error(e);
+                                }
+                            }
+                            const err = new AuthError(messsage.event.reason);
+                            // resolve all send_promise_resolvers to false
+                            for (const [_, resolver] of this.send_promise_resolvers) {
+                                resolver({
+                                    ok: false,
+                                    message: err.message,
+                                });
+                            }
+                            return err;
+                        }
+                    }
+                    console.log("connection error", messsage);
                     const err = await this.connect();
                     if (err instanceof RelayDisconnectedByClient) {
                         return err;
@@ -220,9 +252,14 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 }
             }
         })().then((res) => {
-            if (res instanceof RelayDisconnectedByClient) return;
-            if (res != "RelayDisconnectedByClient") {
-                throw new Error("this promise should never resolve");
+            if (res instanceof RelayDisconnectedByClient) {
+                console.log(res);
+                return;
+            }
+            if (res instanceof Error) {
+                this.error = res;
+            } else {
+                console.error(res);
             }
         });
     }
@@ -233,6 +270,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             wsCreator?: (url: string, log: boolean) => BidirectionalNetwork | Error;
             connect?: boolean;
             log?: boolean;
+            signer?: Signer; // used for authentication
         },
     ): SingleRelayConnection {
         if (args == undefined) {
@@ -245,16 +283,22 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (args.wsCreator == undefined) {
                 args.wsCreator = AsyncWebSocket.New;
             }
-            const relay = new SingleRelayConnection(url, args.wsCreator, args.log || false);
+            const relay = new SingleRelayConnection(
+                url,
+                args.wsCreator,
+                args.signer,
+                args.log || false,
+            );
             return relay;
         } catch (e) {
             return e;
         }
     }
 
-    async newSub(subID: string, ...filters: NostrFilter[]): Promise<
-        SubscriptionAlreadyExist | RelayDisconnectedByClient | SubscriptionStream
-    > {
+    async newSub(subID: string, ...filters: NostrFilter[]) {
+        if (this.error instanceof AuthError) {
+            return this.error;
+        }
         if (this.log) {
             console.log(`${this.url} registers subscription ${subID}`, ...filters);
         }
@@ -265,6 +309,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
         if (this.ws != undefined) {
             const err = await sendSubscription(this.ws, subID, ...filters);
+            if (err instanceof DOMException) {
+                return err;
+            }
             if (err instanceof Error) {
                 console.error(err);
             }
@@ -278,6 +325,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     async sendEvent(event: NostrEvent) {
         if (this.ws == undefined) {
             return new WebSocketClosed(this.url, this.status());
+        }
+        if (this.error) {
+            return this.error;
         }
         const err = await this.ws.send(JSON.stringify([
             "EVENT",
@@ -298,6 +348,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 
     async getEvent(id: NoteID | string) {
+        if (this.error) {
+            return this.error;
+        }
         if (id instanceof NoteID) {
             id = id.hex;
         }
@@ -316,6 +369,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (msg.type == "EVENT") {
                 return msg.event;
             } else if (msg.type == "NOTICE") {
+                // todo: give a concrete type
                 return new Error(msg.note);
             } else if (msg.type == "EOSE") {
                 return;
@@ -392,7 +446,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         // this is a quick & dirty way for me to address it
         // old browser API sucks
         await csp.sleep(1);
-        console.log(`relay ${this.url} closed, status: ${this.status()}`);
+        if (this.log) {
+            console.log(`relay ${this.url} closed, status: ${this.status()}`);
+        }
+    };
+
+    [Symbol.asyncDispose] = () => {
+        return this.close();
     };
 
     isClosed(): boolean {
@@ -403,10 +463,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 
     public async connect() {
+        if (this.error instanceof Error) {
+            return this.error;
+        }
         let ws: BidirectionalNetwork | Error | undefined;
         for (;;) {
             if (this.log) {
-                console.log(`(re)connecting ${this.url}, reason: ${JSON.stringify(this.error)}`);
+                console.log(`(re)connecting ${this.url}`);
             }
             if (this.isClosedByClient()) {
                 return new RelayDisconnectedByClient();
@@ -418,7 +481,19 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 }
             }
 
-            ws = this.wsCreator(this.url, this.log);
+            const url = new URL(this.url);
+            if (this.signer) {
+                url.searchParams.set(
+                    "auth",
+                    btoa(JSON.stringify(
+                        await prepareNormalNostrEvent(this.signer, {
+                            kind: NostrKind.HTTP_AUTH,
+                            content: "",
+                        }),
+                    )),
+                );
+            }
+            ws = this.wsCreator(url.toString(), this.log);
             if (ws instanceof Error) {
                 console.error(ws.name, ws.message, ws.cause);
                 if (ws.name == "SecurityError") {
@@ -456,5 +531,12 @@ export class RelayRejectedEvent extends Error {
     constructor(msg: string, public readonly event: NostrEvent) {
         super(`${event.id}: ${msg}`);
         this.name = RelayRejectedEvent.name;
+    }
+}
+
+export class AuthError extends Error {
+    constructor(msg: string) {
+        super(msg);
+        this.name = AuthError.name;
     }
 }

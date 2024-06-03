@@ -124,10 +124,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             } else {
                 return {
                     type: "OtherError",
-                    error: {
-                        error: msg.error.error,
-                        message: msg.error.message,
-                    },
+                    error: msg.error,
                 };
             }
         }
@@ -148,7 +145,11 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         try {
             this.ws.send(str);
         } catch (e) {
-            return e as Error;
+            // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/send#invalidstateerror
+            if (e.message == "readyState not OPEN") {
+                return new WebSocketClosed(this.url, this.status());
+            }
+            return e as DOMException;
         }
     }
 
@@ -165,12 +166,13 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         }
 
         this.ws.close(code, reason);
-        console.log("closing Web Socket", this.url, this.status());
+        const url = new URL(this.url);
+        console.log(this.status(), url.host + url.pathname);
         if (force) {
             return;
         }
         await this.onClose.pop();
-        console.log("closing Web Socket", this.url, this.status(), this.closedEvent);
+        console.log(this.status(), url.host + url.pathname, this.closedEvent);
         return this.closedEvent;
     }
 
