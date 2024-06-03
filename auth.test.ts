@@ -45,7 +45,7 @@ Deno.test({
     ignore: false,
     fn: async () => {
         const ctx = InMemoryAccountContext.Generate();
-        const relay = await run({
+        await using relay = await run({
             port: 8001,
             default_policy: {
                 allowed_kinds: "all",
@@ -56,7 +56,7 @@ Deno.test({
             },
         }) as Relay;
 
-        const client = SingleRelayConnection.New(relay.ws_url, {
+        await using client = SingleRelayConnection.New(relay.ws_url, {
             signer: ctx,
         });
         await sleep(1);
@@ -84,8 +84,5 @@ Deno.test({
             fail(JSON.stringify(res));
         }
         assertEquals(client.status(), "Open");
-
-        await client.close();
-        await relay.shutdown();
     },
 });
