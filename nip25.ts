@@ -2,7 +2,7 @@ import { NostrAccountContext, NostrEvent, NostrKind, Tag } from "./nostr.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import * as nostr from "./nostr.ts";
 
-async function prepareReactionEvent(
+export async function prepareReactionEvent(
     author: NostrAccountContext,
     args: {
         content: string;
@@ -16,7 +16,6 @@ async function prepareReactionEvent(
     const tags: Tag[] = [
         ["e", targetEvent.id],
         ["p", targetEvent.pubkey],
-        ["k", targetEvent.kind.toString()],
     ];
     return prepareNormalNostrEvent(
         author,
