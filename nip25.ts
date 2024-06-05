@@ -1,4 +1,4 @@
-import { NostrEvent, NostrKind, Signer, Tag} from "./nostr.ts";
+import { NostrEvent, NostrKind, Signer, Tag } from "./nostr.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import * as nostr from "./nostr.ts";
 
