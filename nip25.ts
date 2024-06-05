@@ -1,9 +1,9 @@
-import { NostrAccountContext, NostrEvent, NostrKind, Tag } from "./nostr.ts";
+import { NostrEvent, NostrKind, Signer, Tag} from "./nostr.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import * as nostr from "./nostr.ts";
 
 export async function prepareReactionEvent(
-    author: NostrAccountContext,
+    author: Signer,
     args: {
         content: string;
         targetEvent: nostr.NostrEvent;
