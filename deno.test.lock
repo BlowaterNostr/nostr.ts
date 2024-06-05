@@ -154,7 +154,7 @@
     "https://raw.githubusercontent.com/BlowaterNostr/nostr.ts/main/relay.interface.ts": "9c5f7ba5f3d8a262fb512503127bf787eb7a50bcf4615fadb4b1550dd7c16195",
     "https://raw.githubusercontent.com/BlowaterNostr/nostr.ts/main/scure.js": "fbc4be16918272bd167fff1184a7f5bbd1a676bad2a73130bb530d78df893a99",
     "https://raw.githubusercontent.com/BlowaterNostr/nostr.ts/main/vendor/secp256k1.js": "69e32f6c686cc651ff2e6d4d22ed6e9b6f86b38311b405b47b2abdf3cb98eb4d",
-    "https://raw.githubusercontent.com/BlowaterNostr/nostr.ts/main/websocket.ts": "1462ace6a85aa9955e107c677022ac95f2afa650ecc997d8258ca6fef9136a06",
+    "https://raw.githubusercontent.com/BlowaterNostr/nostr.ts/main/websocket.ts": "f13d15d1ac3b932007a95731e41e960dbf686955df984df8a449308d74a785a4",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/_libs.ts": "2d4e3e33638b7433addf8fb03d811c00076f24f56f365976b9bd0177b59d66a3",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/channel.ts": "1e3dd025bdc5e892ce34b0f452d21ca4cef3b7b1dcf2a86546bb7dd42e6dc8b8",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/events.ts": "91971a40dcbf82b4964b4f339f255f81540db3f7a59e281179d34cb109f05205",

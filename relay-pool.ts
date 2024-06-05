@@ -4,7 +4,7 @@ import {
     PutToClosedChannelError,
 } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { NoteID } from "./nip19.ts";
-import { NostrEvent, NostrFilter, RelayResponse_REQ_Message } from "./nostr.ts";
+import { NostrEvent, NostrFilter, RelayResponse_REQ_Message, Signer } from "./nostr.ts";
 import { Closer, EventSender, SubscriptionCloser } from "./relay.interface.ts";
 import {
     RelayDisconnectedByClient,
@@ -49,11 +49,12 @@ export class ConnectionPool
 
     constructor(
         private args?: {
-            ws: (url: string, log: boolean) => AsyncWebSocket | Error;
+            ws?: (url: string, log: boolean) => AsyncWebSocket | Error;
+            signer?: Signer;
         },
         public log?: boolean,
     ) {
-        if (!args) {
+        if (args?.ws == undefined) {
             this.wsCreator = AsyncWebSocket.New;
         } else {
             this.wsCreator = args.ws;
@@ -71,24 +72,23 @@ export class ConnectionPool
         return this.connections.get(url);
     }
 
-    async addRelayURL(url: string): Promise<Error | SingleRelayConnection> {
+    async addRelayURL(url: string) {
         {
             const relay = this.connections.get(url);
             if (relay) {
                 return relay;
             }
         }
-        const relay = SingleRelayConnection.New(url, {
+        const client = SingleRelayConnection.New(url, {
             wsCreator: this.wsCreator,
+            log: true,
+            signer: this.args?.signer,
         });
-        if (relay instanceof Error) {
-            return relay;
-        }
-        const err = await this.addRelay(relay);
+        const err = await this.addRelay(client);
         if (err instanceof Error) {
             return err;
         }
-        return relay;
+        return client;
     }
 
     async addRelayURLs(urls: string[]) {
@@ -112,6 +112,9 @@ export class ConnectionPool
     async addRelay(relay: SingleRelayConnection) {
         if (this.closed) {
             return new ConnectionPoolClosed("connection pool has been closed");
+        }
+        if (relay.signer?.publicKey.hex != this.args?.signer?.publicKey.hex) {
+            return new Error("relay has a different signer than the pool's");
         }
         const _relay = this.connections.get(relay.url);
         if (_relay) {
