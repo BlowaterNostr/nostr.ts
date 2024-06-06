@@ -43,12 +43,12 @@ export type InviteMember = Event_Base & {
     kind: Kind_V2.InviteMember;
     expired_on?: string;
     limit_count?: number;
-}
+};
 
 export type JoinSpace = Event_Base & {
     kind: Kind_V2.JoinSpace;
     invite_event_id: string;
-}
+};
 
 export type Event_V2 = ChannelCreation | ChannelEdition | InviteMember | JoinSpace;
 
