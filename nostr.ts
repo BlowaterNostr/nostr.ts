@@ -5,6 +5,53 @@ import { decrypt_with_shared_secret, encrypt, utf8Decode, utf8Encode } from "./n
 import nip44 from "./nip44.ts";
 import stringify from "https://esm.sh/json-stable-stringify@1.1.1";
 
+export enum Kind_V2 {
+    ChannelCreation = "ChannelCreation",
+    ChannelEdition = "ChannelEdition",
+    RelayMember = "RelayMember",
+    InviteMember = "InviteMember",
+    JoinSpace = "JoinSpace",
+}
+
+type Event_Base = {
+    pubkey: string;
+    id: string;
+    sig: string;
+};
+
+export type ChannelCreation = Event_Base & {
+    kind: Kind_V2.ChannelCreation;
+    name: string;
+    scope: "server";
+};
+
+// EditChannel is a different type from CreateChannel because
+// a channel only has one creator but could have multiple admin to modify it
+export type ChannelEdition = Event_Base & {
+    kind: Kind_V2.ChannelEdition;
+    channel_id: string;
+    name: string;
+};
+
+export type EventRelayMembers = Event_Base & {
+    kind: Kind_V2.RelayMember;
+    created_at: number;
+    members: string[]; // the pubkey of members
+};
+
+export type InviteMember = Event_Base & {
+    kind: Kind_V2.InviteMember;
+    expired_on?: string;
+    limit_count?: number;
+}
+
+export type JoinSpace = Event_Base & {
+    kind: Kind_V2.JoinSpace;
+    invite_event_id: string;
+}
+
+export type Event_V2 = ChannelCreation | ChannelEdition | InviteMember | JoinSpace;
+
 export enum NostrKind {
     META_DATA = 0,
     TEXT_NOTE = 1,
