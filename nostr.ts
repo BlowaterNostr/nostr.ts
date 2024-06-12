@@ -41,6 +41,7 @@ export type EventRelayMembers = Event_Base & {
 
 export type InviteToSpace = Event_Base & {
     kind: Kind_V2.InviteToSpace;
+    invitee: string;
     expired_on?: string;
     limit_count?: number;
 };
@@ -210,6 +211,7 @@ export interface NostrAccountContext extends Signer {
 export interface Signer {
     readonly publicKey: PublicKey;
     signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
+    signEventV2<T extends { pubkey: string }>(event: T): Promise<T & { sig: string; id: string }>;
 }
 
 export class DecryptionFailure extends Error {
@@ -296,6 +298,16 @@ export class InMemoryAccountContext implements NostrAccountContext {
         const id = await calculateId(event);
         const sig = utf8Decode(hex.encode(await signId(id, this.privateKey.hex)));
         return { ...event, id, sig };
+    }
+
+    async signEventV2<T extends { pubkey: string }>(event: T): Promise<T & { sig: string; id: string }> {
+        const sha256 = utils.sha256;
+        {
+            const buf = utf8Encode(stringify(event));
+            const id = hexEncode(await sha256(buf));
+            const sig = utf8Decode(hex.encode(await signId(id, this.privateKey.hex)));
+            return { ...event, id, sig };
+        }
     }
 
     async encrypt(pubkey: string, plaintext: string, algorithm: "nip44" | "nip4"): Promise<string | Error> {
