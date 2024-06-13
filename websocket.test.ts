@@ -31,7 +31,7 @@ Deno.test("websocket call untilOpen after closed", async () => {
             allowed_kinds: "all",
         },
         auth_required: false,
-        pubkey: PrivateKey.Generate().toPublicKey(),
+        admin: PrivateKey.Generate().toPublicKey(),
     });
     if (relay instanceof Error) fail(relay.message);
     {

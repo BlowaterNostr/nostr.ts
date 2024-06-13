@@ -15,7 +15,7 @@ Deno.test("relay store deletion event", async () => {
                 allowed_kinds: "all",
             },
             auth_required: false,
-            pubkey: PrivateKey.Generate().toPublicKey(),
+            admin: PrivateKey.Generate().toPublicKey(),
         });
         if (relay instanceof Error) fail(relay.message);
 
@@ -33,7 +33,7 @@ Deno.test("delete regular events", async () => {
             allowed_kinds: "all",
         },
         auth_required: false,
-        pubkey: PrivateKey.Generate().toPublicKey(),
+        admin: PrivateKey.Generate().toPublicKey(),
     });
     if (relay instanceof Error) fail(relay.message);
     await delete_regular_events(relay.ws_url)();
