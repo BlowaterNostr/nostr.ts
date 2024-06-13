@@ -8,7 +8,7 @@ import stringify from "https://esm.sh/json-stable-stringify@1.1.1";
 export enum Kind_V2 {
     ChannelCreation = "ChannelCreation",
     ChannelEdition = "ChannelEdition",
-    RelayMember = "RelayMember",
+    SpaceMember = "SpaceMember",
     InviteToSpace = "InviteToSpace",
     AcceptInvitation = "AcceptInvitation",
 }
@@ -33,10 +33,10 @@ export type ChannelEdition = Event_Base & {
     name: string;
 };
 
-export type EventRelayMembers = Event_Base & {
-    kind: Kind_V2.RelayMember;
-    created_at: number;
-    members: string[]; // the pubkey of members
+export type SpaceMember = Event_Base & {
+    kind: Kind_V2.SpaceMember;
+    created_at: string;
+    member: string; // the pubkey of member
 };
 
 export type InviteToSpace = Event_Base & {
@@ -51,7 +51,7 @@ export type AcceptInvitation = Event_Base & {
     invite_event_id: string;
 };
 
-export type Event_V2 = ChannelCreation | ChannelEdition | InviteToSpace | AcceptInvitation;
+export type Event_V2 = ChannelCreation | ChannelEdition | InviteToSpace | AcceptInvitation | SpaceMember;
 
 export enum NostrKind {
     META_DATA = 0,
