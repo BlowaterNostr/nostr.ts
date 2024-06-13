@@ -1,6 +1,8 @@
+import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { parseJSON } from "./_helper.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import { PublicKey } from "./key.ts";
+import { getRelayInformation, RelayInformation } from "./nip11.ts";
 import { NoteID } from "./nip19.ts";
 import {
     _RelayResponse,
@@ -517,6 +519,26 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         const message = await ws.nextMessage();
         return message;
     }
+
+    getRelayInformation = async () => {
+        return getRelayInformation(this.url);
+    };
+
+    // before we have relay info as events,
+    // let's pull it periodically to have an async iterable API
+    getRelayInformationStream = async () => {
+        const chan = csp.chan<Error | RelayInformation>();
+        (async () => {
+            const info = await getRelayInformation(this.url);
+            const err = await chan.put(info);
+            if (err instanceof Error) {
+                // the channel is closed by outside, stop the stream
+                return;
+            }
+            await sleep(3000); // every 3 sec
+        })();
+        return chan;
+    };
 }
 
 async function sendSubscription(ws: BidirectionalNetwork, subID: string, ...filters: NostrFilter[]) {

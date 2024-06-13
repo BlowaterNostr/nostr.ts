@@ -26,3 +26,6 @@ check: fmt-check
 
 install:
 	deno install --allow-net --allow-read https://deno.land/std@0.202.0/http/file_server.ts
+
+build:
+	deno bundle *.ts mod.ts
