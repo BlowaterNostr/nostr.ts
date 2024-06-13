@@ -14,8 +14,9 @@ import {
     two_clients_communicate,
 } from "./relay-single-test.ts";
 import { wirednet } from "./relay-list.test.ts";
-import { Relay, run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx";
+import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
 import { PrivateKey } from "./key.ts";
+import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
 
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
@@ -29,7 +30,8 @@ Deno.test("SingleRelayConnection newSub & close", async () => {
             auth_required: false,
             pubkey: PrivateKey.Generate().toPublicKey().hex,
         },
-    }) as Relay;
+    });
+    if (relay instanceof Error) return fail(relay.message);
     await newSub_close(relay.ws_url)();
     await relay.shutdown();
 });
@@ -44,7 +46,8 @@ Deno.test("Single Relay Connection", async (t) => {
             auth_required: false,
             pubkey: PrivateKey.Generate().toPublicKey().hex,
         },
-    }) as Relay;
+    });
+    if (relay instanceof Error) return fail(relay.message);
     await t.step("SingleRelayConnection subscription already exists", sub_exits(relay.ws_url));
     await t.step(
         "SingleRelayConnection: close subscription and keep reading",

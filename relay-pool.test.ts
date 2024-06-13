@@ -8,7 +8,7 @@ import { prepareNormalNostrEvent } from "./event.ts";
 import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
 import { assertNotInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_not_instance_of.ts";
 import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
-import { Relay, run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.tsx";
+import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
 import { PrivateKey } from "./key.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
@@ -22,11 +22,10 @@ Deno.test("ConnectionPool close gracefully 2", async () => {
         default_policy: {
             allowed_kinds: "all",
         },
-        default_information: {
-            auth_required: false,
-            pubkey: PrivateKey.Generate().toPublicKey().hex,
-        },
-    }) as Relay;
+        admin: PrivateKey.Generate().toPublicKey(),
+        auth_required: false,
+    });
+    if (relay instanceof Error) fail(relay.message);
     // able to open & close
     const client = SingleRelayConnection.New(relay.ws_url);
     if (client instanceof Error) {
@@ -63,11 +62,10 @@ Deno.test("ConnectionPool newSub & close", async () => {
         default_policy: {
             allowed_kinds: "all",
         },
-        default_information: {
-            auth_required: false,
-            pubkey: PrivateKey.Generate().toPublicKey().hex,
-        },
-    }) as Relay;
+        auth_required: false,
+        admin: PrivateKey.Generate().toPublicKey().hex,
+    });
+    if (relay instanceof Error) fail(relay.message);
     const client = SingleRelayConnection.New(relay.ws_url);
     if (client instanceof Error) {
         fail(client.message);
@@ -134,11 +132,10 @@ Deno.test("ConnectionPool register the same relay twice", async () => {
         default_policy: {
             allowed_kinds: "all",
         },
-        default_information: {
-            auth_required: false,
-            pubkey: PrivateKey.Generate().toPublicKey().hex,
-        },
-    }) as Relay;
+        auth_required: false,
+        admin: PrivateKey.Generate().toPublicKey().hex,
+    });
+    if (relay instanceof Error) fail(relay.message);
 
     const pool = new ConnectionPool();
     const client = SingleRelayConnection.New(relay.ws_url);
@@ -168,11 +165,10 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         default_policy: {
             allowed_kinds: "all",
         },
-        default_information: {
-            auth_required: false,
-            pubkey: PrivateKey.Generate().toPublicKey().hex,
-        },
-    }) as Relay;
+        auth_required: false,
+        admin: PrivateKey.Generate().toPublicKey().hex,
+    });
+    if (relay instanceof Error) fail(relay.message);
     const pool = new ConnectionPool();
 
     const chan = await pool.newSub("1", {

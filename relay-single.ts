@@ -1,6 +1,7 @@
 import { parseJSON } from "./_helper.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import { PublicKey } from "./key.ts";
+import { getRelayInformation } from "./nip11.ts";
 import { NoteID } from "./nip19.ts";
 import {
     _RelayResponse,
@@ -517,6 +518,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         const message = await ws.nextMessage();
         return message;
     }
+
+    get_relay_information = async () => {
+        return getRelayInformation(this.url);
+    };
 }
 
 async function sendSubscription(ws: BidirectionalNetwork, subID: string, ...filters: NostrFilter[]) {
