@@ -26,10 +26,8 @@ Deno.test("SingleRelayConnection newSub & close", async () => {
         default_policy: {
             allowed_kinds: "all",
         },
-        default_information: {
-            auth_required: false,
-            pubkey: PrivateKey.Generate().toPublicKey().hex,
-        },
+        auth_required: false,
+        admin: PrivateKey.Generate().toPublicKey(),
     });
     if (relay instanceof Error) return fail(relay.message);
     await newSub_close(relay.ws_url)();
@@ -42,10 +40,8 @@ Deno.test("Single Relay Connection", async (t) => {
         default_policy: {
             allowed_kinds: "all",
         },
-        default_information: {
-            auth_required: false,
-            pubkey: PrivateKey.Generate().toPublicKey().hex,
-        },
+        auth_required: false,
+        admin: PrivateKey.Generate().toPublicKey(),
     });
     if (relay instanceof Error) return fail(relay.message);
     await t.step("SingleRelayConnection subscription already exists", sub_exits(relay.ws_url));

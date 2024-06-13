@@ -5,7 +5,6 @@ test: fmt
 		--allow-net \
 		--allow-read=relayed.db,relayed.db-journal \
 		--allow-write=relayed.db,relayed.db-journal \
-		--allow-env=relayed_pubkey \
 		--trace-leaks --coverage=cov_profile \
 		--unstable-kv \
 		*.test.ts

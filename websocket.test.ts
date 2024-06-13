@@ -30,10 +30,8 @@ Deno.test("websocket call untilOpen after closed", async () => {
         default_policy: {
             allowed_kinds: "all",
         },
-        default_information: {
-            auth_required: false,
-            pubkey: PrivateKey.Generate().toPublicKey().hex,
-        },
+        auth_required: false,
+        pubkey: PrivateKey.Generate().toPublicKey(),
     });
     if (relay instanceof Error) fail(relay.message);
     {
