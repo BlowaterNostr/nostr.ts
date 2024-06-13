@@ -9,8 +9,6 @@ export enum Kind_V2 {
     ChannelCreation = "ChannelCreation",
     ChannelEdition = "ChannelEdition",
     SpaceMember = "SpaceMember",
-    InviteToSpace = "InviteToSpace",
-    AcceptInvitation = "AcceptInvitation",
 }
 
 type Event_Base = {
@@ -39,19 +37,7 @@ export type SpaceMember = Event_Base & {
     member: string; // the pubkey of member
 };
 
-export type InviteToSpace = Event_Base & {
-    kind: Kind_V2.InviteToSpace;
-    invitee: string;
-    expired_on?: string;
-    limit_count?: number;
-};
-
-export type AcceptInvitation = Event_Base & {
-    kind: Kind_V2.AcceptInvitation;
-    invite_event_id: string;
-};
-
-export type Event_V2 = ChannelCreation | ChannelEdition | InviteToSpace | AcceptInvitation | SpaceMember;
+export type Event_V2 = ChannelCreation | ChannelEdition | SpaceMember;
 
 export enum NostrKind {
     META_DATA = 0,
