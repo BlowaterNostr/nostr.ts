@@ -21,6 +21,7 @@ export function parseRFC3339(time: string): Date | Error {
     try {
         return parse(time, "yyyy-MM-ddTHH:mm:ss.SSSZ");
     } catch (e) {
+        // Impossible
         return e as Error;
     }
 }
@@ -29,12 +30,8 @@ export function compareRFC3339(a: string, b: string): number | Error {
     const parsed_a = parseRFC3339(a);
     const parsed_b = parseRFC3339(b);
 
-    if (parsed_a instanceof Error) {
-        return parsed_a;
-    }
-    if (parsed_b instanceof Error) {
-        return parsed_b;
-    }
+    if (parsed_a instanceof Error) return parsed_a;
+    if (parsed_b instanceof Error) return parsed_b;
 
     return difference(parsed_a, parsed_b).milliseconds || 0; // Must include milliseconds
 }
