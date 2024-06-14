@@ -4,6 +4,7 @@ import { getSharedSecret, schnorr, utils } from "./vendor/secp256k1.js";
 import { decrypt_with_shared_secret, encrypt, utf8Decode, utf8Encode } from "./nip4.ts";
 import nip44 from "./nip44.ts";
 import stringify from "https://esm.sh/json-stable-stringify@1.1.1";
+import { nowRFC3339 } from "./_helper.ts";
 
 export enum Kind_V2 {
     ChannelCreation = "ChannelCreation",
@@ -15,6 +16,7 @@ type Event_Base = {
     pubkey: string;
     id: string;
     sig: string;
+    created_at: string;
 };
 
 export type ChannelCreation = Event_Base & {
@@ -33,7 +35,6 @@ export type ChannelEdition = Event_Base & {
 
 export type SpaceMember = Event_Base & {
     kind: Kind_V2.SpaceMember;
-    created_at: string;
     member: string; // the pubkey of member
 };
 
@@ -197,7 +198,9 @@ export interface NostrAccountContext extends Signer {
 export interface Signer {
     readonly publicKey: PublicKey;
     signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
-    signEventV2<T extends { pubkey: string }>(event: T): Promise<T & { sig: string; id: string }>;
+    signEventV2<T extends { kind: Kind_V2 }>(
+        event: T,
+    ): Promise<T & { sig: string; id: string; pubkey: string; created_at: string }>;
 }
 
 export class DecryptionFailure extends Error {
@@ -286,13 +289,17 @@ export class InMemoryAccountContext implements NostrAccountContext {
         return { ...event, id, sig };
     }
 
-    async signEventV2<T extends { pubkey: string }>(event: T): Promise<T & { sig: string; id: string }> {
+    async signEventV2<T extends { kind: Kind_V2 }>(
+        event: T,
+    ): Promise<T & { sig: string; id: string; pubkey: string; created_at: string }> {
         const sha256 = utils.sha256;
         {
             const buf = utf8Encode(stringify(event));
             const id = hexEncode(await sha256(buf));
             const sig = utf8Decode(hex.encode(await signId(id, this.privateKey.hex)));
-            return { ...event, id, sig };
+            const pubkey = this.publicKey.hex;
+            const created_at = nowRFC3339();
+            return { ...event, id, sig, pubkey, created_at };
         }
     }
 
@@ -338,6 +345,9 @@ export async function verifyEvent(event: NostrEvent) {
     }
 }
 
+/**
+ * @deprecated please use Singer.signEventV2() instead.
+ */
 export async function sign_event_v2<T extends { pubkey: string }>(
     privateKey: PrivateKey,
     event: T,
