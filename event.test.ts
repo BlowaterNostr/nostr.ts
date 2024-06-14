@@ -1,5 +1,4 @@
-import { fail } from "https://deno.land/std@0.224.0/assert/fail.ts";
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
+import { assertEquals, fail } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { PrivateKey } from "./key.ts";
 import { InMemoryAccountContext, NostrKind, verifyEvent } from "./nostr.ts";
 import { prepareEncryptedNostrEvent, prepareNormalNostrEvent } from "./event.ts";
