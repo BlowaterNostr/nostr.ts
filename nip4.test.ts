@@ -1,5 +1,5 @@
 import * as ende from "./nip4.ts";
-import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.202.0/testing/asserts.ts";
+import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { utf8Decode, utf8Encode } from "./nip4.ts";
 import { PrivateKey } from "./key.ts";
 import { InMemoryAccountContext, NostrKind } from "./nostr.ts";

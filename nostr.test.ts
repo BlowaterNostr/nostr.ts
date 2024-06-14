@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
 import { PrivateKey } from "./key.ts";
 import { sign_event_v2 } from "./nostr.ts";
 import { verify_event_v2 } from "./nostr.ts";

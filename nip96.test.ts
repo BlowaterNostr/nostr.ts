@@ -1,7 +1,7 @@
-import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
 import { uploadFile } from "./nip96.ts";
 import { InMemoryAccountContext } from "./nostr.ts";
-import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
+import { fail } from "https://deno.land/std@0.224.0/assert/fail.ts";
 
 Deno.test("Upload File", async () => {
     const ctx = InMemoryAccountContext.Generate();

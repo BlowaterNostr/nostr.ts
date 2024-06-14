@@ -1,7 +1,7 @@
-import * as hex from "https://deno.land/std@0.202.0/encoding/hex.ts";
+import { encodeHex } from "https://deno.land/std@0.224.0/encoding/hex.ts";
 import { PrivateKey, PublicKey } from "./key.ts";
 import { getSharedSecret, schnorr, utils } from "./vendor/secp256k1.js";
-import { decrypt_with_shared_secret, encrypt, utf8Decode, utf8Encode } from "./nip4.ts";
+import { decrypt_with_shared_secret, encrypt, utf8Encode } from "./nip4.ts";
 import nip44 from "./nip44.ts";
 import stringify from "https://esm.sh/json-stable-stringify@1.1.1";
 
@@ -284,7 +284,7 @@ export class InMemoryAccountContext implements NostrAccountContext {
         event: UnsignedNostrEvent<Kind>,
     ): Promise<NostrEvent<Kind>> {
         const id = await calculateId(event);
-        const sig = utf8Decode(hex.encode(await signId(id, this.privateKey.hex)));
+        const sig = encodeHex(await signId(id, this.privateKey.hex));
         return { ...event, id, sig };
     }
 
@@ -295,7 +295,7 @@ export class InMemoryAccountContext implements NostrAccountContext {
         {
             const buf = utf8Encode(stringify(event));
             const id = hexEncode(await sha256(buf));
-            const sig = utf8Decode(hex.encode(await signId(id, this.privateKey.hex)));
+            const sig = encodeHex(await signId(id, this.privateKey.hex));
             return { ...event, id, sig };
         }
     }
@@ -353,7 +353,7 @@ export async function sign_event_v2<T extends { pubkey: string }>(
     {
         const buf = utf8Encode(stringify(event));
         const id = hexEncode(await sha256(buf));
-        const sig = utf8Decode(hex.encode(await signId(id, privateKey.hex)));
+        const sig = encodeHex(await signId(id, privateKey.hex));
         return { ...event, id, sig };
     }
 }

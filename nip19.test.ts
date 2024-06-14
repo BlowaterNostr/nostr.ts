@@ -1,4 +1,4 @@
-import { assertEquals, assertIsError, fail } from "https://deno.land/std@0.202.0/testing/asserts.ts";
+import { assertEquals, assertIsError, fail } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { PrivateKey, PublicKey } from "./key.ts";
 import { AddressPointer, EventPointer, Nevent, NostrAddress, NostrProfile, NoteID } from "./nip19.ts";
 import { relays } from "./relay-list.test.ts";

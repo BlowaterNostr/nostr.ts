@@ -1,7 +1,7 @@
-import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
 import { prepareDeletionEvent, prepareNormalNostrEvent } from "./event.ts";
 import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
-import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
+import { fail } from "https://deno.land/std@0.224.0/assert/fail.ts";
 import { SingleRelayConnection } from "./relay-single.ts";
 
 export const store_deletion_event = (url: string) => async () => {
