@@ -1,8 +1,9 @@
 import { Kind_V2, Signer, SpaceMember } from "./nostr.ts";
 import { InvalidKey, PublicKey } from "./key.ts";
-import { nowRFC3339 } from "./_helper.ts";
+import { RFC3339 } from "./_helper.ts";
+import { format } from "https://deno.land/std@0.224.0/datetime/format.ts";
 
-export function prepareAddMember(author: Signer, member: string): Error | Promise<SpaceMember> {
+export function prepareSpaceMember(author: Signer, member: string): Error | Promise<SpaceMember> {
     const pubkey = PublicKey.FromString(member);
     if (pubkey instanceof InvalidKey) {
         return new Error(pubkey.message);
@@ -11,6 +12,6 @@ export function prepareAddMember(author: Signer, member: string): Error | Promis
         pubkey: author.publicKey.hex,
         kind: Kind_V2.SpaceMember,
         member,
-        created_at: nowRFC3339(),
+        created_at: format(new Date(), RFC3339),
     });
 }
