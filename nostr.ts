@@ -4,7 +4,6 @@ import { getSharedSecret, schnorr, utils } from "./vendor/secp256k1.js";
 import { decrypt_with_shared_secret, encrypt, utf8Decode, utf8Encode } from "./nip4.ts";
 import nip44 from "./nip44.ts";
 import stringify from "https://esm.sh/json-stable-stringify@1.1.1";
-import { nowRFC3339 } from "./_helper.ts";
 
 export enum Kind_V2 {
     ChannelCreation = "ChannelCreation",
@@ -198,9 +197,9 @@ export interface NostrAccountContext extends Signer {
 export interface Signer {
     readonly publicKey: PublicKey;
     signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
-    signEventV2<T extends { kind: Kind_V2 }>(
+    signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
         event: T,
-    ): Promise<T & { sig: string; id: string; pubkey: string; created_at: string }>;
+    ): Promise<T & { sig: string; id: string }>;
 }
 
 export class DecryptionFailure extends Error {
@@ -289,17 +288,15 @@ export class InMemoryAccountContext implements NostrAccountContext {
         return { ...event, id, sig };
     }
 
-    async signEventV2<T extends { kind: Kind_V2 }>(
+    async signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
         event: T,
-    ): Promise<T & { sig: string; id: string; pubkey: string; created_at: string }> {
+    ): Promise<T & { sig: string; id: string }> {
         const sha256 = utils.sha256;
         {
             const buf = utf8Encode(stringify(event));
             const id = hexEncode(await sha256(buf));
             const sig = utf8Decode(hex.encode(await signId(id, this.privateKey.hex)));
-            const pubkey = this.publicKey.hex;
-            const created_at = nowRFC3339();
-            return { ...event, id, sig, pubkey, created_at };
+            return { ...event, id, sig };
         }
     }
 
