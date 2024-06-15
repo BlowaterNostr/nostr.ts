@@ -197,6 +197,10 @@ export interface NostrAccountContext extends Signer {
 export interface Signer {
     readonly publicKey: PublicKey;
     signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
+}
+
+export interface Signer_V2 {
+    readonly publicKey: PublicKey;
     signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
         event: T,
     ): Promise<T & { sig: string; id: string }>;
@@ -253,7 +257,7 @@ export function blobToBase64(blob: Blob): Promise<string> {
     });
 }
 
-export class InMemoryAccountContext implements NostrAccountContext {
+export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
     static New(privateKey: PrivateKey) {
         return new InMemoryAccountContext(privateKey);
     }
