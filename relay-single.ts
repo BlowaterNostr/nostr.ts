@@ -529,13 +529,15 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     getRelayInformationStream = async () => {
         const chan = csp.chan<Error | RelayInformation>();
         (async () => {
-            const info = await getRelayInformation(this.url);
-            const err = await chan.put(info);
-            if (err instanceof Error) {
-                // the channel is closed by outside, stop the stream
-                return;
+            for (;;) {
+                const info = await getRelayInformation(this.url);
+                const err = await chan.put(info);
+                if (err instanceof Error) {
+                    // the channel is closed by outside, stop the stream
+                    return;
+                }
+                await sleep(3000); // every 3 sec
             }
-            await sleep(3000); // every 3 sec
         })();
         return chan;
     };
