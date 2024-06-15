@@ -16,7 +16,7 @@ import {
 import { wirednet } from "./relay-list.test.ts";
 import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
 import { PrivateKey } from "./key.ts";
-import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
+import { fail } from "https://deno.land/std@0.224.0/assert/fail.ts";
 
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 

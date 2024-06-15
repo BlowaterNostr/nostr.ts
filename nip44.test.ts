@@ -2,7 +2,7 @@ import nip44 from "./nip44.ts";
 import { bytesToHex, hexToBytes } from "https://esm.sh/@noble/hashes@1.3.3/utils";
 import { default as vec } from "./nip44.json" assert { type: "json" };
 import { schnorr } from "https://esm.sh/@noble/curves@1.3.0/secp256k1";
-import { assertEquals, assertMatch, fail } from "https://deno.land/std@0.202.0/testing/asserts.ts";
+import { assertEquals, assertMatch, fail } from "https://deno.land/std@0.224.0/assert/mod.ts";
 const v2vec = vec.v2;
 
 Deno.test("get_conversation_key", () => {

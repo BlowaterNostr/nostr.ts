@@ -1,9 +1,43 @@
-import * as hex from "https://deno.land/std@0.202.0/encoding/hex.ts";
+import { encodeHex } from "https://deno.land/std@0.224.0/encoding/hex.ts";
 import { PrivateKey, PublicKey } from "./key.ts";
 import { getSharedSecret, schnorr, utils } from "./vendor/secp256k1.js";
-import { decrypt_with_shared_secret, encrypt, utf8Decode, utf8Encode } from "./nip4.ts";
+import { decrypt_with_shared_secret, encrypt, utf8Encode } from "./nip4.ts";
 import nip44 from "./nip44.ts";
 import stringify from "https://esm.sh/json-stable-stringify@1.1.1";
+
+export enum Kind_V2 {
+    ChannelCreation = "ChannelCreation",
+    ChannelEdition = "ChannelEdition",
+    SpaceMember = "SpaceMember",
+}
+
+type Event_Base = {
+    pubkey: string;
+    id: string;
+    sig: string;
+    created_at: string;
+};
+
+export type ChannelCreation = Event_Base & {
+    kind: Kind_V2.ChannelCreation;
+    name: string;
+    scope: "server";
+};
+
+// EditChannel is a different type from CreateChannel because
+// a channel only has one creator but could have multiple admin to modify it
+export type ChannelEdition = Event_Base & {
+    kind: Kind_V2.ChannelEdition;
+    channel_id: string;
+    name: string;
+};
+
+export type SpaceMember = Event_Base & {
+    kind: Kind_V2.SpaceMember;
+    member: string; // the pubkey of member
+};
+
+export type Event_V2 = ChannelCreation | ChannelEdition | SpaceMember;
 
 export enum NostrKind {
     META_DATA = 0,
@@ -163,6 +197,9 @@ export interface NostrAccountContext extends Signer {
 export interface Signer {
     readonly publicKey: PublicKey;
     signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
+    signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
+        event: T,
+    ): Promise<T & { sig: string; id: string }>;
 }
 
 export class DecryptionFailure extends Error {
@@ -247,8 +284,20 @@ export class InMemoryAccountContext implements NostrAccountContext {
         event: UnsignedNostrEvent<Kind>,
     ): Promise<NostrEvent<Kind>> {
         const id = await calculateId(event);
-        const sig = utf8Decode(hex.encode(await signId(id, this.privateKey.hex)));
+        const sig = encodeHex(await signId(id, this.privateKey.hex));
         return { ...event, id, sig };
+    }
+
+    async signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
+        event: T,
+    ): Promise<T & { sig: string; id: string }> {
+        const sha256 = utils.sha256;
+        {
+            const buf = utf8Encode(stringify(event));
+            const id = hexEncode(await sha256(buf));
+            const sig = encodeHex(await signId(id, this.privateKey.hex));
+            return { ...event, id, sig };
+        }
     }
 
     async encrypt(pubkey: string, plaintext: string, algorithm: "nip44" | "nip4"): Promise<string | Error> {
@@ -290,19 +339,6 @@ export async function verifyEvent(event: NostrEvent) {
         return schnorr.verify(event.sig, await calculateId(event), event.pubkey);
     } catch (err) {
         return false;
-    }
-}
-
-export async function sign_event_v2<T extends { pubkey: string }>(
-    privateKey: PrivateKey,
-    event: T,
-): Promise<T & { sig: string; id: string }> {
-    const sha256 = utils.sha256;
-    {
-        const buf = utf8Encode(stringify(event));
-        const id = hexEncode(await sha256(buf));
-        const sig = utf8Decode(hex.encode(await signId(id, privateKey.hex)));
-        return { ...event, id, sig };
     }
 }
 

@@ -1,6 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.202.0/assert/assert_equals.ts";
-import { assertInstanceOf } from "https://deno.land/std@0.202.0/assert/assert_instance_of.ts";
-import { fail } from "https://deno.land/std@0.202.0/assert/fail.ts";
+import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import { InMemoryAccountContext, NostrKind, RelayResponse_Event } from "./nostr.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";

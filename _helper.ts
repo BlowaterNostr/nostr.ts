@@ -5,3 +5,6 @@ export function parseJSON<T>(content: string): T | Error {
         return e as Error;
     }
 }
+
+// Datetime format string for Event V2
+export const RFC3339 = "yyyy-MM-ddTHH:mm:ss.SSSZ";
