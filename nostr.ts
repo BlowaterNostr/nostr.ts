@@ -342,22 +342,6 @@ export async function verifyEvent(event: NostrEvent) {
     }
 }
 
-/**
- * @deprecated please use Singer.signEventV2() instead.
- */
-export async function sign_event_v2<T extends { pubkey: string }>(
-    privateKey: PrivateKey,
-    event: T,
-): Promise<T & { sig: string; id: string }> {
-    const sha256 = utils.sha256;
-    {
-        const buf = utf8Encode(stringify(event));
-        const id = hexEncode(await sha256(buf));
-        const sig = encodeHex(await signId(id, privateKey.hex));
-        return { ...event, id, sig };
-    }
-}
-
 export async function verify_event_v2<T extends { sig: string; pubkey: string }>(
     event: T,
 ) {
