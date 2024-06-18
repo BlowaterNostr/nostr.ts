@@ -9,11 +9,14 @@ import {
     _RelayResponse_OK,
     _RelayResponse_REQ_Message,
     ClientRequest_REQ,
+    Event_V2,
+    InMemoryAccountContext,
     NostrEvent,
     NostrFilter,
     NostrKind,
     RelayResponse_REQ_Message,
     Signer,
+    SpaceMember,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
 import {
@@ -24,6 +27,7 @@ import {
     WebSocketReadyState,
 } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { getSpaceMembers, prepareSpaceMember } from "./space-member.ts";
 
 export class WebSocketClosed extends Error {
     constructor(
@@ -121,7 +125,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     private constructor(
         readonly url: string,
         readonly wsCreator: (url: string, log: boolean) => BidirectionalNetwork | Error,
-        readonly signer: Signer | undefined,
+        readonly signer: InMemoryAccountContext | undefined,
         public log: boolean,
     ) {
         (async () => {
@@ -272,7 +276,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             wsCreator?: (url: string, log: boolean) => BidirectionalNetwork | Error;
             connect?: boolean;
             log?: boolean;
-            signer?: Signer; // used for authentication
+            signer?: InMemoryAccountContext; // used for authentication
         },
     ): SingleRelayConnection {
         if (args == undefined) {
@@ -540,6 +544,43 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
         })();
         return chan;
+    };
+
+    getSpaceMembers = async (): Promise<Error | SpaceMember[]> => {
+        return getSpaceMembers(this.url);
+    };
+
+    getSpaceMembersStream = async () => {
+        const chan = csp.chan<Error | SpaceMember[]>();
+        (async () => {
+            for (;;) {
+                const members = await getSpaceMembers(this.url);
+                const err = await chan.put(members);
+                if (err instanceof Error) {
+                    // the channel is closed by outside, stop the stream
+                    return;
+                }
+                await sleep(3000); // every 3 sec
+            }
+        })();
+        return chan;
+    };
+
+    addSpaceMember = async (member: string) => {
+        if (!this.signer) return new Error(`No signer`);
+        const spaceMemberEvent = await prepareSpaceMember(this.signer, member);
+        if (spaceMemberEvent instanceof Error) return spaceMemberEvent;
+        return await this.postEventV2(spaceMemberEvent);
+    };
+
+    private postEventV2 = async (event: Event_V2): Promise<Error | Response> => {
+        try {
+            const httpURL = new URL(this.url);
+            httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
+            return await fetch(httpURL, { method: "POST", body: JSON.stringify(event) });
+        } catch (e) {
+            return e as Error;
+        }
     };
 }
 

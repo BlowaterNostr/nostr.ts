@@ -294,3 +294,26 @@ export const get_replaceable_event = (url: string) => async () => {
     assertEquals(event_got, event2);
     await client.close();
 };
+
+export const get_space_members = (url: string, signer?: InMemoryAccountContext) => async () => {
+    // Although accessing the members of a space does not require authentication.
+    // However, if the space requires authentication, the signer must be passed in here.
+    const client = SingleRelayConnection.New(url, { signer });
+    {
+        const members = await client.getSpaceMembers();
+        if (members instanceof Error) fail(members.message);
+    }
+    await client.close();
+};
+
+export const add_space_member = (url: string, signer: InMemoryAccountContext) => async () => {
+    const client = SingleRelayConnection.New(url, { signer });
+    {
+        const new_member = InMemoryAccountContext.Generate();
+        const added = await client.addSpaceMember(new_member.publicKey.hex);
+        if (added instanceof Error) fail(added.message);
+        assertEquals(added.status, 200);
+        assertEquals(await added.text(), "");
+    }
+    await client.close();
+};
