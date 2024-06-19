@@ -86,7 +86,7 @@ Deno.test("space members", async (t) => {
         admin: ctx.publicKey.hex,
     });
     const auth_required = await run({
-        port: 8001,
+        port: 8002,
         default_policy: {
             allowed_kinds: "all",
         },
@@ -97,15 +97,13 @@ Deno.test("space members", async (t) => {
     if (auth_required instanceof Error) return fail(auth_required.message);
 
     await t.step("get members", async () => {
-        // await get_space_members("ws://localhost:8080")();
-        await get_space_members(relay.ws_url)();
-        await get_space_members(auth_required.ws_url, ctx)();
+        await get_space_members(relay.ws_url, { signer_v2: ctx })();
+        await get_space_members(auth_required.ws_url, { signer: ctx, signer_v2: ctx })();
     });
 
     await t.step("add member", async () => {
-        // await add_space_member("ws://localhost:8080", ctx)();
-        await add_space_member(relay.ws_url, ctx)();
-        await add_space_member(auth_required.ws_url, ctx)();
+        await add_space_member(relay.ws_url, { signer: ctx, signer_v2: ctx })();
+        await add_space_member(auth_required.ws_url, { signer: ctx, signer_v2: ctx })();
     });
 
     await relay.shutdown();

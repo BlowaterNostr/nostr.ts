@@ -6,16 +6,14 @@ import { getRelayInformation, RelayInformation } from "./nip11.ts";
 import { NoteID } from "./nip19.ts";
 import {
     _RelayResponse,
-    _RelayResponse_OK,
-    _RelayResponse_REQ_Message,
     ClientRequest_REQ,
     Event_V2,
-    InMemoryAccountContext,
     NostrEvent,
     NostrFilter,
     NostrKind,
     RelayResponse_REQ_Message,
     Signer,
+    Signer_V2,
     SpaceMember,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
@@ -125,8 +123,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     private constructor(
         readonly url: string,
         readonly wsCreator: (url: string, log: boolean) => BidirectionalNetwork | Error,
-        readonly signer: InMemoryAccountContext | undefined,
         public log: boolean,
+        readonly signer?: Signer,
+        readonly signer_v2?: Signer_V2,
     ) {
         (async () => {
             const ws = await this.connect();
@@ -276,7 +275,8 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             wsCreator?: (url: string, log: boolean) => BidirectionalNetwork | Error;
             connect?: boolean;
             log?: boolean;
-            signer?: InMemoryAccountContext; // used for authentication
+            signer?: Signer; // used for authentication
+            signer_v2?: Signer_V2; // used for sign event v2
         },
     ): SingleRelayConnection {
         if (args == undefined) {
@@ -289,13 +289,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (args.wsCreator == undefined) {
                 args.wsCreator = AsyncWebSocket.New;
             }
-            const relay = new SingleRelayConnection(
+            return new SingleRelayConnection(
                 url,
                 args.wsCreator,
-                args.signer,
                 args.log || false,
+                args.signer,
+                args.signer_v2,
             );
-            return relay;
         } catch (e) {
             return e;
         }
@@ -566,9 +566,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return chan;
     };
 
-    addSpaceMember = async (member: string) => {
-        if (!this.signer) return new Error(`No signer`);
-        const spaceMemberEvent = await prepareSpaceMember(this.signer, member);
+    addSpaceMember = async (member: PublicKey | string) => {
+        if (!this.signer_v2) return new SignerV2NotExist();
+        const spaceMemberEvent = await prepareSpaceMember(this.signer_v2, member);
         if (spaceMemberEvent instanceof Error) return spaceMemberEvent;
         return await this.postEventV2(spaceMemberEvent);
     };
@@ -603,5 +603,12 @@ export class AuthError extends Error {
     constructor(msg: string) {
         super(msg);
         this.name = AuthError.name;
+    }
+}
+
+export class SignerV2NotExist extends Error {
+    constructor() {
+        super(`Signer V2 does not exist`);
+        this.name = SignerV2NotExist.name;
     }
 }
