@@ -1,5 +1,10 @@
-export async function getRelayInformation(url: string) {
-    const httpURL = new URL(url);
+export async function getRelayInformation(url: string | URL) {
+    let httpURL;
+    try {
+        httpURL = new URL(url);
+    } catch (e) {
+        return e as TypeError;
+    }
     httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
 
     let res: Response;
