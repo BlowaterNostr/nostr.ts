@@ -1,5 +1,5 @@
-import { Kind_V2, NostrEvent, Signer_V2, SpaceMember } from "./nostr.ts";
-import { InvalidKey, PublicKey } from "./key.ts";
+import { Kind_V2, Signer_V2, SpaceMember } from "./nostr.ts";
+import { PublicKey } from "./key.ts";
 import { parseJSON, RFC3339 } from "./_helper.ts";
 import { format } from "https://deno.land/std@0.224.0/datetime/format.ts";
 
@@ -27,7 +27,9 @@ export async function getSpaceMembers(url: URL | string) {
         if (!res.ok) {
             return new RESTRequestFailed(res.status, await res.text());
         }
-        return parseJSON<SpaceMember[]>(await res.text());
+        const data = parseJSON<SpaceMember[]>(await res.text());
+        if (data instanceof Error) return data;
+        return data;
     } catch (e) {
         return e as Error;
     }

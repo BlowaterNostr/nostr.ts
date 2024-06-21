@@ -524,10 +524,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return message;
     }
 
-    getRelayInformation = async () => {
-        return getRelayInformation(this.url);
-    };
-
     // before we have relay info as events,
     // let's pull it periodically to have an async iterable API
     getRelayInformationStream = async () => {
@@ -544,10 +540,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
         })();
         return chan;
-    };
-
-    getSpaceMembers = async (): Promise<Error | SpaceMember[]> => {
-        return getSpaceMembers(this.url);
     };
 
     getSpaceMembersStream = async () => {
