@@ -1,17 +1,28 @@
-import { RESTRequestFailed } from "./space-member.ts";
-
-export async function getRelayInformation(url: string) {
+export async function getRelayInformation(url: string | URL) {
+    let httpURL;
     try {
-        const httpURL = new URL(url);
-        httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
-        const res = await fetch(httpURL, {
+        httpURL = new URL(url);
+    } catch (e) {
+        return e as TypeError;
+    }
+    httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
+
+    let res: Response;
+    try {
+        res = await fetch(httpURL, {
             headers: {
                 "accept": "application/nostr+json",
             },
         });
-        if (!res.ok) {
-            return new RESTRequestFailed(res.status, await res.text());
-        }
+    } catch (e) {
+        return e as TypeError;
+    }
+
+    if (!res.ok) {
+        return new Error(`Faild to get detail, ${res.status}: ${await res.text()}`);
+    }
+
+    try {
         const detail = await res.text();
         const info = JSON.parse(detail) as RelayInformation;
         if (!info.icon) {
