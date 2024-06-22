@@ -524,13 +524,17 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return message;
     }
 
+    getSpaceInformation = () => {
+        return getRelayInformation(this.url);
+    };
+
     // before we have relay info as events,
     // let's pull it periodically to have an async iterable API
-    getRelayInformationStream = async () => {
+    getRelayInformationStream = () => {
         const chan = csp.chan<Error | RelayInformation>();
         (async () => {
             for (;;) {
-                const info = await getRelayInformation(this.url);
+                const info = await this.getSpaceInformation();
                 const err = await chan.put(info);
                 if (err instanceof Error) {
                     // the channel is closed by outside, stop the stream
@@ -542,11 +546,15 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return chan;
     };
 
-    getSpaceMembersStream = async () => {
+    getSpaceMembers = () => {
+        return getSpaceMembers(this.url);
+    };
+
+    getSpaceMembersStream = () => {
         const chan = csp.chan<Error | SpaceMember[]>();
         (async () => {
             for (;;) {
-                const members = await getSpaceMembers(this.url);
+                const members = await this.getSpaceMembers();
                 const err = await chan.put(members);
                 if (err instanceof Error) {
                     // the channel is closed by outside, stop the stream
