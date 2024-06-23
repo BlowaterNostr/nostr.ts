@@ -98,6 +98,8 @@ export type SubscriptionStream = {
 
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
     private _isClosedByClient = false;
+    private spaceInformation: RelayInformation | undefined = undefined;
+    private spaceMembers: SpaceMember[] | undefined = undefined;
     isClosedByClient() {
         return this._isClosedByClient;
     }
@@ -535,7 +537,16 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         (async () => {
             for (;;) {
                 const info = await this.getSpaceInformation();
+                if (!(info instanceof Error)) {
+                    if (JSON.stringify(this.spaceInformation) == JSON.stringify(info)) {
+                        await sleep(3000); // every 3 sec
+                        continue;
+                    } else {
+                        this.spaceInformation = info;
+                    }
+                }
                 const err = await chan.put(info);
+
                 if (err instanceof Error) {
                     // the channel is closed by outside, stop the stream
                     return;
@@ -555,6 +566,14 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         (async () => {
             for (;;) {
                 const members = await this.getSpaceMembers();
+                if (!(members instanceof Error)) {
+                    if (JSON.stringify(this.spaceMembers) == JSON.stringify(members)) {
+                        await sleep(3000); // every 3 sec
+                        continue;
+                    } else {
+                        this.spaceMembers = members;
+                    }
+                }
                 const err = await chan.put(members);
                 if (err instanceof Error) {
                     // the channel is closed by outside, stop the stream

@@ -2,6 +2,7 @@ import { Kind_V2, Signer_V2, SpaceMember } from "./nostr.ts";
 import { PublicKey } from "./key.ts";
 import { parseJSON, RFC3339 } from "./_helper.ts";
 import { format } from "https://deno.land/std@0.224.0/datetime/format.ts";
+import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 
 export function prepareSpaceMember(
     author: Signer_V2,
@@ -18,8 +19,17 @@ export function prepareSpaceMember(
 }
 
 export async function getSpaceMembers(url: URL | string) {
+    const SpaceMembers = z.object({
+        pubkey: z.string(),
+        id: z.string(),
+        sig: z.string(),
+        created_at: z.string(),
+        kind: z.literal(Kind_V2.SpaceMember),
+        member: z.string(),
+    }).array();
+
     try {
-        const httpURL = (url instanceof URL) ? url : new URL(url);
+        const httpURL = new URL(url);
         httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
         httpURL.pathname = "/api/members";
 
@@ -29,7 +39,7 @@ export async function getSpaceMembers(url: URL | string) {
         }
         const data = parseJSON<SpaceMember[]>(await res.text());
         if (data instanceof Error) return data;
-        return data;
+        return SpaceMembers.parse(data);
     } catch (e) {
         return e as Error;
     }
