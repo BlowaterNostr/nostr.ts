@@ -99,7 +99,6 @@ export type SubscriptionStream = {
 
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
     private _isClosedByClient = false;
-    private spaceMembers: SpaceMember[] | undefined = undefined;
     isClosedByClient() {
         return this._isClosedByClient;
     }
@@ -537,6 +536,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         (async () => {
             let spaceInformation: RelayInformation | Error | undefined;
             for (;;) {
+                if (chan.closed()) return;
                 const info = await this.getSpaceInformation();
                 if (info instanceof Error || !deepEqual(spaceInformation, info)) {
                     spaceInformation = info;
@@ -559,20 +559,17 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     getSpaceMembersStream = () => {
         const chan = csp.chan<Error | SpaceMember[]>();
         (async () => {
+            let spaceMembers: SpaceMember[] | Error | undefined;
             for (;;) {
+                if (chan.closed()) return;
                 const members = await this.getSpaceMembers();
-                if (!(members instanceof Error)) {
-                    if (JSON.stringify(this.spaceMembers) == JSON.stringify(members)) {
-                        await sleep(3000); // every 3 sec
-                        continue;
-                    } else {
-                        this.spaceMembers = members;
+                if (members instanceof Error || !deepEqual(spaceMembers, members)) {
+                    spaceMembers = members;
+                    const err = await chan.put(members);
+                    if (err instanceof Error) {
+                        // the channel is closed by outside, stop the stream
+                        return;
                     }
-                }
-                const err = await chan.put(members);
-                if (err instanceof Error) {
-                    // the channel is closed by outside, stop the stream
-                    return;
                 }
                 await sleep(3000); // every 3 sec
             }
