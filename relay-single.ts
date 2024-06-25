@@ -26,6 +26,7 @@ import {
 } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { getSpaceMembers, prepareSpaceMember } from "./space-member.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
 export class WebSocketClosed extends Error {
     constructor(
@@ -98,7 +99,6 @@ export type SubscriptionStream = {
 
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
     private _isClosedByClient = false;
-    private spaceInformation: RelayInformation | undefined = undefined;
     private spaceMembers: SpaceMember[] | undefined = undefined;
     isClosedByClient() {
         return this._isClosedByClient;
@@ -535,21 +535,16 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     getRelayInformationStream = () => {
         const chan = csp.chan<Error | RelayInformation>();
         (async () => {
+            let spaceInformation: RelayInformation | Error | undefined;
             for (;;) {
                 const info = await this.getSpaceInformation();
-                if (!(info instanceof Error)) {
-                    if (JSON.stringify(this.spaceInformation) == JSON.stringify(info)) {
-                        await sleep(3000); // every 3 sec
-                        continue;
-                    } else {
-                        this.spaceInformation = info;
+                if (info instanceof Error || !deepEqual(spaceInformation, info)) {
+                    spaceInformation = info;
+                    const err = await chan.put(info);
+                    if (err instanceof Error) {
+                        // the channel is closed by outside, stop the stream
+                        return;
                     }
-                }
-                const err = await chan.put(info);
-
-                if (err instanceof Error) {
-                    // the channel is closed by outside, stop the stream
-                    return;
                 }
                 await sleep(3000); // every 3 sec
             }
@@ -629,5 +624,14 @@ export class SignerV2NotExist extends Error {
     constructor() {
         super(`Signer V2 does not exist`);
         this.name = SignerV2NotExist.name;
+    }
+}
+
+function deepEqual(a: any, b: any) {
+    try {
+        assertEquals(a, b);
+        return true;
+    } catch (e) {
+        return false;
     }
 }
