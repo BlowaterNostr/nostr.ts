@@ -4,7 +4,7 @@ import {
     PutToClosedChannelError,
 } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { NoteID } from "./nip19.ts";
-import { NostrEvent, NostrFilter, RelayResponse_REQ_Message, Signer } from "./nostr.ts";
+import { NostrEvent, NostrFilter, RelayResponse_REQ_Message, Signer, Signer_V2 } from "./nostr.ts";
 import { Closer, EventSender, SubscriptionCloser } from "./relay.interface.ts";
 import {
     RelayDisconnectedByClient,
@@ -51,6 +51,7 @@ export class ConnectionPool
         private args?: {
             ws?: (url: string, log: boolean) => AsyncWebSocket | Error;
             signer?: Signer;
+            signer_v2?: Signer_V2;
         },
         public log?: boolean,
     ) {
@@ -83,6 +84,7 @@ export class ConnectionPool
             wsCreator: this.wsCreator,
             log: true,
             signer: this.args?.signer,
+            signer_v2: this.args?.signer_v2,
         });
         const err = await this.addRelay(client);
         if (err instanceof Error) {

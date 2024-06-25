@@ -1,28 +1,17 @@
-export async function getRelayInformation(url: string | URL) {
-    let httpURL;
-    try {
-        httpURL = new URL(url);
-    } catch (e) {
-        return e as TypeError;
-    }
-    httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
+import { RESTRequestFailed } from "./_helper.ts";
 
-    let res: Response;
+export async function getRelayInformation(url: URL | string) {
     try {
-        res = await fetch(httpURL, {
+        const httpURL = new URL(url);
+        httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
+        const res = await fetch(httpURL, {
             headers: {
                 "accept": "application/nostr+json",
             },
         });
-    } catch (e) {
-        return e as TypeError;
-    }
-
-    if (!res.ok) {
-        return new Error(`Faild to get detail, ${res.status}: ${await res.text()}`);
-    }
-
-    try {
+        if (!res.ok) {
+            return new RESTRequestFailed(res.status, await res.text());
+        }
         const detail = await res.text();
         const info = JSON.parse(detail) as RelayInformation;
         if (!info.icon) {

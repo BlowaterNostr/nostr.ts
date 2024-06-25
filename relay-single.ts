@@ -6,14 +6,15 @@ import { getRelayInformation, RelayInformation } from "./nip11.ts";
 import { NoteID } from "./nip19.ts";
 import {
     _RelayResponse,
-    _RelayResponse_OK,
-    _RelayResponse_REQ_Message,
     ClientRequest_REQ,
+    Event_V2,
     NostrEvent,
     NostrFilter,
     NostrKind,
     RelayResponse_REQ_Message,
     Signer,
+    Signer_V2,
+    SpaceMember,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
 import {
@@ -24,6 +25,8 @@ import {
     WebSocketReadyState,
 } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { getSpaceMembers, prepareSpaceMember } from "./space-member.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
 export class WebSocketClosed extends Error {
     constructor(
@@ -121,8 +124,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     private constructor(
         readonly url: string,
         readonly wsCreator: (url: string, log: boolean) => BidirectionalNetwork | Error,
-        readonly signer: Signer | undefined,
         public log: boolean,
+        readonly signer?: Signer,
+        readonly signer_v2?: Signer_V2,
     ) {
         (async () => {
             const ws = await this.connect();
@@ -273,6 +277,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             connect?: boolean;
             log?: boolean;
             signer?: Signer; // used for authentication
+            signer_v2?: Signer_V2; // used for sign event v2
         },
     ): SingleRelayConnection {
         if (args == undefined) {
@@ -285,13 +290,13 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             if (args.wsCreator == undefined) {
                 args.wsCreator = AsyncWebSocket.New;
             }
-            const relay = new SingleRelayConnection(
+            return new SingleRelayConnection(
                 url,
                 args.wsCreator,
-                args.signer,
                 args.log || false,
+                args.signer,
+                args.signer_v2,
             );
-            return relay;
         } catch (e) {
             return e;
         }
@@ -520,26 +525,73 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return message;
     }
 
-    getRelayInformation = async () => {
+    getSpaceInformation = () => {
         return getRelayInformation(this.url);
     };
 
     // before we have relay info as events,
     // let's pull it periodically to have an async iterable API
-    getRelayInformationStream = async () => {
+    getRelayInformationStream = () => {
         const chan = csp.chan<Error | RelayInformation>();
         (async () => {
+            let spaceInformation: RelayInformation | Error | undefined;
             for (;;) {
-                const info = await getRelayInformation(this.url);
-                const err = await chan.put(info);
-                if (err instanceof Error) {
-                    // the channel is closed by outside, stop the stream
-                    return;
+                if (chan.closed()) return;
+                const info = await this.getSpaceInformation();
+                if (info instanceof Error || !deepEqual(spaceInformation, info)) {
+                    spaceInformation = info;
+                    const err = await chan.put(info);
+                    if (err instanceof Error) {
+                        // the channel is closed by outside, stop the stream
+                        return;
+                    }
                 }
                 await sleep(3000); // every 3 sec
             }
         })();
         return chan;
+    };
+
+    getSpaceMembers = () => {
+        return getSpaceMembers(this.url);
+    };
+
+    getSpaceMembersStream = () => {
+        const chan = csp.chan<Error | SpaceMember[]>();
+        (async () => {
+            let spaceMembers: SpaceMember[] | Error | undefined;
+            for (;;) {
+                if (chan.closed()) return;
+                const members = await this.getSpaceMembers();
+                if (members instanceof Error || !deepEqual(spaceMembers, members)) {
+                    spaceMembers = members;
+                    const err = await chan.put(members);
+                    if (err instanceof Error) {
+                        // the channel is closed by outside, stop the stream
+                        return;
+                    }
+                }
+                await sleep(3000); // every 3 sec
+            }
+        })();
+        return chan;
+    };
+
+    addSpaceMember = async (member: PublicKey | string) => {
+        if (!this.signer_v2) return new SignerV2NotExist();
+        const spaceMemberEvent = await prepareSpaceMember(this.signer_v2, member);
+        if (spaceMemberEvent instanceof Error) return spaceMemberEvent;
+        return await this.postEventV2(spaceMemberEvent);
+    };
+
+    private postEventV2 = async (event: Event_V2): Promise<Error | Response> => {
+        try {
+            const httpURL = new URL(this.url);
+            httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
+            return await fetch(httpURL, { method: "POST", body: JSON.stringify(event) });
+        } catch (e) {
+            return e as Error;
+        }
     };
 }
 
@@ -562,5 +614,21 @@ export class AuthError extends Error {
     constructor(msg: string) {
         super(msg);
         this.name = AuthError.name;
+    }
+}
+
+export class SignerV2NotExist extends Error {
+    constructor() {
+        super(`Signer V2 does not exist`);
+        this.name = SignerV2NotExist.name;
+    }
+}
+
+function deepEqual(a: any, b: any) {
+    try {
+        assertEquals(a, b);
+        return true;
+    } catch (e) {
+        return false;
     }
 }
