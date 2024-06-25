@@ -1,6 +1,6 @@
 import { Kind_V2, Signer_V2, SpaceMember } from "./nostr.ts";
 import { PublicKey } from "./key.ts";
-import { parseJSON, RFC3339 } from "./_helper.ts";
+import { parseJSON, RESTRequestFailed, RFC3339 } from "./_helper.ts";
 import { format } from "https://deno.land/std@0.224.0/datetime/format.ts";
 import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 
@@ -42,12 +42,5 @@ export async function getSpaceMembers(url: URL | string) {
         return SpaceMembers.parse(data);
     } catch (e) {
         return e as Error;
-    }
-}
-
-export class RESTRequestFailed extends Error {
-    constructor(public readonly status: number, public readonly message: string) {
-        super(`Failed to request rest api, ${status}: ${message}`);
-        this.name = RESTRequestFailed.name;
     }
 }

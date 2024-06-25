@@ -1,4 +1,4 @@
-import { RESTRequestFailed } from "./space-member.ts";
+import { RESTRequestFailed } from "./_helper.ts";
 
 export async function getRelayInformation(url: URL | string) {
     try {
