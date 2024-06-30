@@ -1,5 +1,6 @@
-import * as secp256k1 from "./vendor/secp256k1.js";
+import { schnorr, secp256k1 } from "https://esm.sh/v135/@noble/curves@1.3.0/secp256k1.js";
 import { bech32 } from "./scure.js";
+import { decodeHex, encodeHex } from "@std/encoding";
 
 export class PrivateKey {
     static Generate() {
@@ -23,7 +24,7 @@ export class PrivateKey {
             try {
                 const code = bech32.decode(key, 1500);
                 const data = new Uint8Array(bech32.fromWords(code.words));
-                const hex = secp256k1.utils.bytesToHex(data);
+                const hex = encodeHex(data);
                 return PrivateKey.FromHex(hex);
             } catch (e) {
                 return e as Error;
@@ -44,7 +45,7 @@ export class PrivateKey {
     public readonly hex: string;
 
     private constructor(key: string) {
-        const array = secp256k1.utils.hexToBytes(key);
+        const array = decodeHex(key);
         const words = bech32.toWords(array);
         this.bech32 = bech32.encode("nsec", words, 1500);
         this.hex = key;
@@ -88,7 +89,7 @@ export class PublicKey {
     }
 
     bech32(): string {
-        const array = secp256k1.utils.hexToBytes(this.hex);
+        const array = decodeHex(this.hex);
         const words = bech32.toWords(array);
         return bech32.encode("npub", words, 1500);
     }
@@ -101,8 +102,8 @@ export class PublicKey {
 }
 
 function toPublicKeyHex(privateKey: string): string {
-    return secp256k1.utils.bytesToHex(
-        secp256k1.schnorr.getPublicKey(privateKey),
+    return encodeHex(
+        schnorr.getPublicKey(privateKey),
     );
 }
 
@@ -115,7 +116,7 @@ function publicKeyHexFromNpub(key: string) {
         if (key.substring(0, 4) === "npub") {
             const code = bech32.decode(key, 1500);
             const data = new Uint8Array(bech32.fromWords(code.words));
-            return secp256k1.utils.bytesToHex(data);
+            return encodeHex(data);
         }
         return key;
     } catch (e) {
@@ -125,7 +126,7 @@ function publicKeyHexFromNpub(key: string) {
 
 // NIP 1 https://github.com/nostr-protocol/nips/blob/master/01.md
 function generatePrivateKeyHex(): string {
-    return secp256k1.utils.bytesToHex(secp256k1.utils.randomPrivateKey());
+    return encodeHex(secp256k1.utils.randomPrivateKey());
 }
 
 function isValidPublicKey(key: string) {

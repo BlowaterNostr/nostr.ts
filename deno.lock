@@ -2,19 +2,36 @@
   "version": "3",
   "packages": {
     "specifiers": {
+      "jsr:@std/assert@^0.226.0": "jsr:@std/assert@0.226.0",
       "jsr:@std/datetime@^0.224.1": "jsr:@std/datetime@0.224.1",
       "jsr:@std/encoding@^0.224.3": "jsr:@std/encoding@0.224.3",
+      "jsr:@std/internal@^1.0.0": "jsr:@std/internal@1.0.0",
+      "npm:@noble/hashes": "npm:@noble/hashes@1.3.2",
+      "npm:@noble/hashes@1.3.2": "npm:@noble/hashes@1.3.2",
       "npm:zod": "npm:zod@3.23.8"
     },
     "jsr": {
+      "@std/assert@0.226.0": {
+        "integrity": "0dfb5f7c7723c18cec118e080fec76ce15b4c31154b15ad2bd74822603ef75b3",
+        "dependencies": [
+          "jsr:@std/internal@^1.0.0"
+        ]
+      },
       "@std/datetime@0.224.1": {
         "integrity": "3b4d5062333a3fe2e8f94b343e05e8c34ec8b09e2e8311fe0e879a6773075830"
       },
       "@std/encoding@0.224.3": {
         "integrity": "5e861b6d81be5359fad4155e591acf17c0207b595112d1840998bb9f476dbdaf"
+      },
+      "@std/internal@1.0.0": {
+        "integrity": "ac6a6dfebf838582c4b4f61a6907374e27e05bedb6ce276e0f1608fe84e7cd9a"
       }
     },
     "npm": {
+      "@noble/hashes@1.3.2": {
+        "integrity": "sha512-MVC8EAQp7MvEcm30KWENFjgR+Mkmf+D189XJTkFIlwohU5hcBbn1ZkKq7KVTi2Hme3PMGF390DaL52beVrIihQ==",
+        "dependencies": {}
+      },
       "zod@3.23.8": {
         "integrity": "sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==",
         "dependencies": {}
@@ -92,6 +109,7 @@
     "https://esm.sh/v135/@noble/curves@1.3.0/denonext/abstract/utils.js": "0ff50d14245befb0ee4b0eae5f0292acc5fd0f6e5f385195654d7825f0a75669",
     "https://esm.sh/v135/@noble/curves@1.3.0/denonext/abstract/weierstrass.js": "f97e7a6ecf9f23a864538f7089645c17103f3809134c0bb99c29d56ce824e7b4",
     "https://esm.sh/v135/@noble/curves@1.3.0/denonext/secp256k1.js": "641ad16ddf79c7f4b69cba4d266078ef21f446cfc3fec83120f6de4f6dee84aa",
+    "https://esm.sh/v135/@noble/curves@1.3.0/secp256k1.js": "5252f1cfd6e12be71ea2826f76d171458040f168424e59d97a30cc5f54032460",
     "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/_assert.js": "8b3fcc3a8d18f25fded5ecb46250f2009f11e0586b0e1e33757d12b6d1b05591",
     "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/_sha2.js": "9571edb1dbcf00041aaa5b4d9bafb109bb9944bf47452fae653206a0242c2a0a",
     "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/crypto.js": "3d09b6d143b1cb8ec95375586a7d9a30a02b60cb1de984ba374c779f8e6c877a",
@@ -147,6 +165,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@blowater/csp@^1.0.0",
       "jsr:@std/assert@^0.226.0",
       "jsr:@std/datetime@^0.224.1",
       "jsr:@std/encoding@^0.224.3"
