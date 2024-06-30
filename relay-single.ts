@@ -1,4 +1,4 @@
-import { sleep } from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { sleep } from "@blowater/csp";
 import { parseJSON } from "./_helper.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import { PublicKey } from "./key.ts";
@@ -24,7 +24,7 @@ import {
     WebSocketError,
     WebSocketReadyState,
 } from "./websocket.ts";
-import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import * as csp from "@blowater/csp";
 import { getSpaceMembers, prepareSpaceMember } from "./space-member.ts";
 import { assertEquals } from "@std/assert";
 

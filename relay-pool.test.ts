@@ -2,7 +2,7 @@ import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
-import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import * as csp from "@blowater/csp";
 import { ConnectionPool } from "./relay-pool.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import { assertEquals, assertNotInstanceOf, fail } from "@std/assert";
