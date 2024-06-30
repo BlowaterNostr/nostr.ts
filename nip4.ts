@@ -1,14 +1,14 @@
 /*
 ende stands for encryption decryption
 */
-import * as secp from "./vendor/secp256k1.js";
+import { getSharedSecret } from "./vendor/secp256k1.js";
 
 export async function encrypt(
     publicKey: string,
     message: string,
     privateKey: string,
 ): Promise<string> {
-    const key = secp.getSharedSecret(privateKey, "02" + publicKey);
+    const key = getSharedSecret(privateKey, "02" + publicKey);
     const normalizedKey = getNormalizedX(key);
     const encoder = new TextEncoder();
     const iv = Uint8Array.from(randomBytes(16));
@@ -36,7 +36,7 @@ export async function decrypt(
     publicKey: string,
     data: string,
 ): Promise<string | Error> {
-    const key = secp.getSharedSecret(privateKey, "02" + publicKey); // this line is very slow
+    const key = getSharedSecret(privateKey, "02" + publicKey); // this line is very slow
     return decrypt_with_shared_secret(data, key);
 }
 

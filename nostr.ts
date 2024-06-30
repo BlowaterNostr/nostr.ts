@@ -1,9 +1,11 @@
 import { encodeHex } from "@std/encoding";
 import { PrivateKey, PublicKey } from "./key.ts";
-import { getSharedSecret, schnorr, utils } from "./vendor/secp256k1.js";
+import { schnorr } from "npm:@noble/curves@1.3.0/secp256k1";
 import { decrypt_with_shared_secret, encrypt, utf8Encode } from "./nip4.ts";
 import nip44 from "./nip44.ts";
-import stringify from "https://esm.sh/json-stable-stringify@1.1.1";
+import stringify from "npm:json-stable-stringify@1.1.1";
+import { sha256 } from "npm:@noble/hashes@1.3.3/sha256";
+import { getSharedSecret } from "./vendor/secp256k1.js";
 
 export enum Kind_V2 {
     ChannelCreation = "ChannelCreation",
@@ -216,9 +218,8 @@ export class DecryptionFailure extends Error {
 
 export async function calculateId(event: UnsignedNostrEvent) {
     const commit = eventCommitment(event);
-    const sha256 = utils.sha256;
     const buf = utf8Encode(commit);
-    return hexEncode(await sha256(buf));
+    return hexEncode(sha256(buf));
 }
 
 function eventCommitment(event: UnsignedNostrEvent): string {
@@ -295,10 +296,9 @@ export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
     async signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
         event: T,
     ): Promise<T & { sig: string; id: string }> {
-        const sha256 = utils.sha256;
         {
             const buf = utf8Encode(stringify(event));
-            const id = hexEncode(await sha256(buf));
+            const id = hexEncode(sha256(buf));
             const sig = encodeHex(await signId(id, this.privateKey.hex));
             return { ...event, id, sig };
         }
@@ -349,7 +349,6 @@ export async function verifyEvent(event: NostrEvent) {
 export async function verify_event_v2<T extends { sig: string; pubkey: string }>(
     event: T,
 ) {
-    const sha256 = utils.sha256;
     try {
         const event_copy: any = { ...event };
         delete event_copy.sig;

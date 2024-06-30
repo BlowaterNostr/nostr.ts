@@ -1,11 +1,11 @@
-import { chacha20 } from "https://esm.sh/@noble/ciphers@0.4.1/chacha";
-import { ensureBytes, equalBytes } from "https://esm.sh/@noble/ciphers@0.4.1/utils";
-import { secp256k1 } from "https://esm.sh/@noble/curves@1.3.0/secp256k1";
-import { expand as hkdf_expand, extract as hkdf_extract } from "https://esm.sh/@noble/hashes@1.3.3/hkdf";
-import { hmac } from "https://esm.sh/@noble/hashes@1.3.3/hmac";
-import { sha256 } from "https://esm.sh/@noble/hashes@1.3.3/sha256";
-import { concatBytes, randomBytes, utf8ToBytes } from "https://esm.sh/@noble/hashes@1.3.3/utils";
-import { base64 } from "https://esm.sh/@scure/base@1.1.5";
+import { chacha20 } from "npm:@noble/ciphers@0.4.1/chacha";
+import { ensureBytes, equalBytes } from "npm:@noble/ciphers@0.4.1/utils";
+import { secp256k1 } from "npm:@noble/curves@1.3.0/secp256k1";
+import { expand as hkdf_expand, extract as hkdf_extract } from "npm:@noble/hashes@1.3.3/hkdf";
+import { hmac } from "npm:@noble/hashes@1.3.3/hmac";
+import { sha256 } from "npm:@noble/hashes@1.3.3/sha256";
+import { concatBytes, randomBytes, utf8ToBytes } from "npm:@noble/hashes@1.3.3/utils";
+import { base64 } from "npm:@scure/base@1.1.5";
 
 const decoder = new TextDecoder();
 

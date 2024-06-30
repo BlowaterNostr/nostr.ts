@@ -1,4 +1,7 @@
 {
+    "name": "@blowater/nostr-sdk",
+    "version": "0.0.0-rc1",
+    "exports": "./nostr.ts",
     "fmt": {
         "indentWidth": 4,
         "lineWidth": 110,

@@ -1,9 +1,9 @@
-import { utils } from "./vendor/secp256k1.js";
 import { bech32 } from "./scure.js";
 import { utf8Decode, utf8Encode } from "./nip4.ts";
 import { PublicKey } from "./key.ts";
 import { NostrKind } from "./nostr.ts";
 import { decodeHex, encodeHex } from "@std/encoding";
+import { concatBytes } from "npm:@noble/hashes@1.3.3/utils";
 
 export class NoteID {
     static FromBech32(id: string): NoteID | Error {
@@ -64,7 +64,7 @@ function encodeTLV(tlv: TLV): Uint8Array {
             entries.push(entry);
         }
     }
-    return utils.concatBytes(...entries);
+    return concatBytes(...entries);
 }
 function parseTLV(data: Uint8Array): TLV | Error {
     const result: TLV = {};

@@ -1,4 +1,4 @@
-import { schnorr, secp256k1 } from "https://esm.sh/v135/@noble/curves@1.3.0/secp256k1.js";
+import { schnorr, secp256k1 } from "npm:@noble/curves@1.3.0/secp256k1";
 import { bech32 } from "./scure.js";
 import { decodeHex, encodeHex } from "@std/encoding";
 
