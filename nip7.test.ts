@@ -1,4 +1,4 @@
-import { assertEquals, fail } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, fail } from "@std/assert";
 import { PrivateKey } from "./key.ts";
 import { InMemoryAccountContext } from "./nostr.ts";
 

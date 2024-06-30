@@ -3,7 +3,7 @@ import { delete_regular_events, store_deletion_event } from "./nip9-test.ts";
 import { damus } from "./relay-list.test.ts";
 import { wirednet } from "./relay-list.test.ts";
 import { PrivateKey } from "./key.ts";
-import { fail } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { fail } from "@std/assert";
 
 Deno.test("relay store deletion event", async () => {
     await store_deletion_event(damus)();

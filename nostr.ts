@@ -1,4 +1,4 @@
-import { encodeHex } from "https://deno.land/std@0.224.0/encoding/hex.ts";
+import { encodeHex } from "@std/encoding";
 import { PrivateKey, PublicKey } from "./key.ts";
 import { getSharedSecret, schnorr, utils } from "./vendor/secp256k1.js";
 import { decrypt_with_shared_secret, encrypt, utf8Encode } from "./nip4.ts";

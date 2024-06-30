@@ -3,5 +3,10 @@
         "indentWidth": 4,
         "lineWidth": 110,
         "exclude": ["cov_profile"]
+    },
+    "imports": {
+        "@std/assert": "jsr:@std/assert@^0.226.0",
+        "@std/datetime": "jsr:@std/datetime@^0.224.1",
+        "@std/encoding": "jsr:@std/encoding@^0.224.3"
     }
 }

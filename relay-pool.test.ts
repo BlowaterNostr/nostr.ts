@@ -5,7 +5,7 @@ import { AsyncWebSocket } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { ConnectionPool } from "./relay-pool.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
-import { assertEquals, assertNotInstanceOf, fail } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertNotInstanceOf, fail } from "@std/assert";
 import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
 import { PrivateKey } from "./key.ts";
 

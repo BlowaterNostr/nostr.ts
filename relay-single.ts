@@ -26,7 +26,7 @@ import {
 } from "./websocket.ts";
 import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
 import { getSpaceMembers, prepareSpaceMember } from "./space-member.ts";
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 
 export class WebSocketClosed extends Error {
     constructor(

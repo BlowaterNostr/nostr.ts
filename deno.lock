@@ -1,5 +1,26 @@
 {
   "version": "3",
+  "packages": {
+    "specifiers": {
+      "jsr:@std/datetime@^0.224.1": "jsr:@std/datetime@0.224.1",
+      "jsr:@std/encoding@^0.224.3": "jsr:@std/encoding@0.224.3",
+      "npm:zod": "npm:zod@3.23.8"
+    },
+    "jsr": {
+      "@std/datetime@0.224.1": {
+        "integrity": "3b4d5062333a3fe2e8f94b343e05e8c34ec8b09e2e8311fe0e879a6773075830"
+      },
+      "@std/encoding@0.224.3": {
+        "integrity": "5e861b6d81be5359fad4155e591acf17c0207b595112d1840998bb9f476dbdaf"
+      }
+    },
+    "npm": {
+      "zod@3.23.8": {
+        "integrity": "sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==",
+        "dependencies": {}
+      }
+    }
+  },
   "redirects": {
     "https://esm.sh/v135/@types/json-stable-stringify@~1/index.d.ts": "https://esm.sh/v135/@types/json-stable-stringify@1.0.36/index.d.ts"
   },
@@ -123,5 +144,12 @@
     "https://esm.sh/v135/set-function-length@1.2.1/denonext/set-function-length.mjs": "1af2f38f3851e0d1a0d48bfaa96659e405dfe9229bc44ea3b39a147924fd0e5f",
     "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts": "4469313196bb1385ad38d13b72db0dbaf09a512c78d821144bc72b96c807417b",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts": "2ba3aadf6448e08c69495c618a860646789e96bc33287408bf30c1b480cf8fba"
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/assert@^0.226.0",
+      "jsr:@std/datetime@^0.224.1",
+      "jsr:@std/encoding@^0.224.3"
+    ]
   }
 }
