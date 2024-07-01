@@ -28,7 +28,7 @@ Deno.test("Verify Event", async (t) => {
 
 Deno.test({
     name: "wrong encryption key causing decryption failure",
-    ignore: true,
+    ignore: false,
     fn: async () => {
         const ctx = InMemoryAccountContext.New(PrivateKey.Generate());
         const key = PrivateKey.Generate().hex;

@@ -1,4 +1,4 @@
-import { bech32 } from "./scure.js";
+import { bech32 } from "./scure.ts";
 import { utf8Decode, utf8Encode } from "./nip4.ts";
 import { PublicKey } from "./key.ts";
 import { NostrKind } from "./nostr.ts";

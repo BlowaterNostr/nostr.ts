@@ -203,7 +203,8 @@
       "jsr:@std/encoding@0.224.3",
       "npm:@noble/ciphers@0.4.1",
       "npm:@noble/curves@1.4.0",
-      "npm:@noble/hashes@1.4.0"
+      "npm:@noble/hashes@1.4.0",
+      "npm:zod@3.23.8"
     ]
   }
 }

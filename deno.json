@@ -18,6 +18,7 @@
         "@noble/secp256k1": "jsr:@noble/secp256k1@2.1.0",
         "@noble/curves": "npm:@noble/curves@1.4.0",
         "@noble/hashes": "npm:@noble/hashes@1.4.0",
-        "@noble/ciphers": "npm:@noble/ciphers@0.4.1"
+        "@noble/ciphers": "npm:@noble/ciphers@0.4.1",
+        "zod": "npm:zod@3.23.8"
     }
 }

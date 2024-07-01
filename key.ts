@@ -1,4 +1,4 @@
-import { bech32 } from "./scure.js";
+import { bech32 } from "./scure.ts";
 import { decodeHex, encodeHex } from "@std/encoding";
 import { utils } from "@noble/secp256k1";
 import { schnorr } from "@noble/curves/secp256k1";
