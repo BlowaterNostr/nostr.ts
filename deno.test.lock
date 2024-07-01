@@ -2,11 +2,11 @@
   "version": "3",
   "packages": {
     "specifiers": {
-      "jsr:@blowater/csp@^1.0.0": "jsr:@blowater/csp@1.0.0",
-      "jsr:@noble/secp256k1@^2.1.0": "jsr:@noble/secp256k1@2.1.0",
-      "jsr:@std/assert@^0.226.0": "jsr:@std/assert@0.226.0",
-      "jsr:@std/datetime@^0.224.1": "jsr:@std/datetime@0.224.1",
-      "jsr:@std/encoding@^0.224.3": "jsr:@std/encoding@0.224.3",
+      "jsr:@blowater/csp@1.0.0": "jsr:@blowater/csp@1.0.0",
+      "jsr:@noble/secp256k1@2.1.0": "jsr:@noble/secp256k1@2.1.0",
+      "jsr:@std/assert@0.226.0": "jsr:@std/assert@0.226.0",
+      "jsr:@std/datetime@0.224.1": "jsr:@std/datetime@0.224.1",
+      "jsr:@std/encoding@0.224.3": "jsr:@std/encoding@0.224.3",
       "jsr:@std/internal@^1.0.0": "jsr:@std/internal@1.0.0",
       "npm:@noble/ciphers@0.4.1": "npm:@noble/ciphers@0.4.1",
       "npm:@noble/curves@1.4.0": "npm:@noble/curves@1.4.0",
@@ -193,16 +193,15 @@
       }
     }
   },
-  "remote": {
-    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts": "2ba3aadf6448e08c69495c618a860646789e96bc33287408bf30c1b480cf8fba"
-  },
+  "remote": {},
   "workspace": {
     "dependencies": [
-      "jsr:@blowater/csp@^1.0.0",
-      "jsr:@noble/secp256k1@^2.1.0",
-      "jsr:@std/assert@^0.226.0",
-      "jsr:@std/datetime@^0.224.1",
-      "jsr:@std/encoding@^0.224.3",
+      "jsr:@blowater/csp@1.0.0",
+      "jsr:@noble/secp256k1@2.1.0",
+      "jsr:@std/assert@0.226.0",
+      "jsr:@std/datetime@0.224.1",
+      "jsr:@std/encoding@0.224.3",
+      "npm:@noble/ciphers@0.4.1",
       "npm:@noble/curves@1.4.0",
       "npm:@noble/hashes@1.4.0"
     ]
