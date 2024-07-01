@@ -4,10 +4,10 @@ import * as nip44 from "./nip44.ts";
 
 import { encodeHex } from "@std/encoding";
 import { getSharedSecret } from "@noble/secp256k1";
+import { schnorr } from "@noble/curves/secp256k1";
+import { sha256 } from "@noble/hashes/sha256";
 
-import { schnorr } from "npm:@noble/curves@1.3.0/secp256k1";
 import stringify from "npm:json-stable-stringify@1.1.1";
-import { sha256 } from "npm:@noble/hashes@1.3.3/sha256";
 
 export enum Kind_V2 {
     ChannelCreation = "ChannelCreation",

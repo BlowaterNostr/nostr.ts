@@ -9,9 +9,8 @@
       "jsr:@std/encoding@^0.224.3": "jsr:@std/encoding@0.224.3",
       "jsr:@std/internal@^1.0.0": "jsr:@std/internal@1.0.0",
       "npm:@noble/ciphers@0.4.1": "npm:@noble/ciphers@0.4.1",
-      "npm:@noble/curves@1.3.0": "npm:@noble/curves@1.3.0",
       "npm:@noble/curves@1.4.0": "npm:@noble/curves@1.4.0",
-      "npm:@noble/hashes@1.3.3": "npm:@noble/hashes@1.3.3",
+      "npm:@noble/hashes@1.4.0": "npm:@noble/hashes@1.4.0",
       "npm:@scure/bip32@1.3.2": "npm:@scure/bip32@1.3.2",
       "npm:@scure/bip39@1.2.1": "npm:@scure/bip39@1.2.1",
       "npm:json-stable-stringify@1.1.1": "npm:json-stable-stringify@1.1.1",
@@ -49,12 +48,6 @@
         "integrity": "sha512-oYclrNgRaM9SsBUBVbb8M6DTV7ZHRTKugureoYEncY5c65HOmRzvSiTE3y5CYaPYJA/GVkrhXEoF0M3Ya9PMnw==",
         "dependencies": {
           "@noble/hashes": "@noble/hashes@1.3.2"
-        }
-      },
-      "@noble/curves@1.3.0": {
-        "integrity": "sha512-t01iSXPuN+Eqzb4eBX0S5oubSqXbK/xXa1Ne18Hj8f9pStxztHCE2gfboSp/dZRLSqfuLpRK2nDXDK+W9puocA==",
-        "dependencies": {
-          "@noble/hashes": "@noble/hashes@1.3.3"
         }
       },
       "@noble/curves@1.4.0": {
@@ -201,20 +194,6 @@
     }
   },
   "remote": {
-    "https://esm.sh/@noble/curves@1.3.0/secp256k1": "5252f1cfd6e12be71ea2826f76d171458040f168424e59d97a30cc5f54032460",
-    "https://esm.sh/v135/@noble/curves@1.3.0/denonext/_shortw_utils.js": "8d690a8fbb0100093f6ab96457c634465eb4bd79f07adb30bbda5234d189c5e8",
-    "https://esm.sh/v135/@noble/curves@1.3.0/denonext/abstract/curve.js": "280130b0d3e1f15037b449b5870e1f39f5db99f8c310f85a9d4ab129d6dfa583",
-    "https://esm.sh/v135/@noble/curves@1.3.0/denonext/abstract/hash-to-curve.js": "591fb0f81529b2dc9f7ea61a0b988ab659564688ce33bd6c95b0e55c698cb338",
-    "https://esm.sh/v135/@noble/curves@1.3.0/denonext/abstract/modular.js": "f6a63a4725fe208141f87a773ba9485813ffd5291129656fd073f832fbcd4437",
-    "https://esm.sh/v135/@noble/curves@1.3.0/denonext/abstract/utils.js": "0ff50d14245befb0ee4b0eae5f0292acc5fd0f6e5f385195654d7825f0a75669",
-    "https://esm.sh/v135/@noble/curves@1.3.0/denonext/abstract/weierstrass.js": "f97e7a6ecf9f23a864538f7089645c17103f3809134c0bb99c29d56ce824e7b4",
-    "https://esm.sh/v135/@noble/curves@1.3.0/denonext/secp256k1.js": "641ad16ddf79c7f4b69cba4d266078ef21f446cfc3fec83120f6de4f6dee84aa",
-    "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/_assert.js": "f8882bd96e2a6d1834a445c5af97f927b1ba028f34963c8570568e33385c4419",
-    "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/_sha2.js": "7b27807ccd3cf7c3b90ce23b17bc9c5d791a72e41dd2e01a4debd9727990bca9",
-    "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/crypto.js": "cf6efbafcbb35e03bcb3a36cccd3d6d1f9bc4ba23f44a79551929a28c83e7901",
-    "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/hmac.js": "c7a0a4fa8e369846713459398dfa1dc373ae5e6fa0eb7280f33dfd3f55a5c8fc",
-    "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/sha256.js": "762e0b0cbde1990fc905eb816d30cdc0cf7dd4c23d123408c6963294f124f97d",
-    "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/utils.js": "701831e12a7e656df467b62f929ac9536ababef1b9b7445c7f87512366ae3933",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts": "2ba3aadf6448e08c69495c618a860646789e96bc33287408bf30c1b480cf8fba"
   },
   "workspace": {
@@ -223,7 +202,9 @@
       "jsr:@noble/secp256k1@^2.1.0",
       "jsr:@std/assert@^0.226.0",
       "jsr:@std/datetime@^0.224.1",
-      "jsr:@std/encoding@^0.224.3"
+      "jsr:@std/encoding@^0.224.3",
+      "npm:@noble/curves@1.4.0",
+      "npm:@noble/hashes@1.4.0"
     ]
   }
 }

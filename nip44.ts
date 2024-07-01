@@ -1,12 +1,12 @@
 import { decodeBase64, encodeBase64 } from "@std/encoding";
-import { chacha20 } from "npm:@noble/ciphers@0.4.1/chacha";
-import { ensureBytes, equalBytes } from "npm:@noble/ciphers@0.4.1/utils";
 
-import { expand as hkdf_expand, extract as hkdf_extract } from "npm:@noble/hashes@1.3.3/hkdf";
-import { hmac } from "npm:@noble/hashes@1.3.3/hmac";
-import { sha256 } from "npm:@noble/hashes@1.3.3/sha256";
-import { concatBytes, randomBytes } from "npm:@noble/hashes@1.3.3/utils";
-import { secp256k1 } from "npm:@noble/curves@1.4.0/secp256k1";
+import { chacha20 } from "@noble/ciphers/chacha";
+import { ensureBytes, equalBytes } from "@noble/ciphers/utils";
+import { expand as hkdf_expand, extract as hkdf_extract } from "@noble/hashes/hkdf";
+import { hmac } from "@noble/hashes/hmac";
+import { sha256 } from "@noble/hashes/sha256";
+import { concatBytes, randomBytes } from "@noble/hashes/utils";
+import { secp256k1 } from "@noble/curves/secp256k1";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();

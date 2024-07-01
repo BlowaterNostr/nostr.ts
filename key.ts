@@ -1,7 +1,7 @@
 import { bech32 } from "./scure.js";
 import { decodeHex, encodeHex } from "@std/encoding";
 import { utils } from "@noble/secp256k1";
-import { schnorr } from "npm:@noble/curves@1.4.0/secp256k1";
+import { schnorr } from "@noble/curves/secp256k1";
 
 export class PrivateKey {
     static Generate() {

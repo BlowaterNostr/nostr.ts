@@ -3,7 +3,7 @@ import { utf8Decode, utf8Encode } from "./nip4.ts";
 import { PublicKey } from "./key.ts";
 import { NostrKind } from "./nostr.ts";
 import { decodeHex, encodeHex } from "@std/encoding";
-import { concatBytes } from "npm:@noble/hashes@1.3.3/utils";
+import { concatBytes } from "@noble/hashes/utils";
 
 export class NoteID {
     static FromBech32(id: string): NoteID | Error {
