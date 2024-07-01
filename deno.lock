@@ -307,7 +307,7 @@
     "https://esm.sh/v135/jsonify@0.0.1/denonext/jsonify.mjs": "958f96e48d994f565ec0c3942f90f11fdc2679c7c013689a71914c04481704c6",
     "https://esm.sh/v135/object-keys@1.1.1/denonext/object-keys.mjs": "9b1c41ea017ff80bc11f70885530199fbca620a7ac9b5b2bef20c8fb9829a4de",
     "https://esm.sh/v135/set-function-length@1.2.1/denonext/set-function-length.mjs": "1af2f38f3851e0d1a0d48bfaa96659e405dfe9229bc44ea3b39a147924fd0e5f",
-    "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts": "4469313196bb1385ad38d13b72db0dbaf09a512c78d821144bc72b96c807417b",
+    "@blowater/csp": "4469313196bb1385ad38d13b72db0dbaf09a512c78d821144bc72b96c807417b",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts": "2ba3aadf6448e08c69495c618a860646789e96bc33287408bf30c1b480cf8fba"
   },
   "workspace": {
