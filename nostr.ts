@@ -371,3 +371,5 @@ export * from "./nip96.ts";
 export * from "./relay-single.ts";
 export * from "./relay-pool.ts";
 export * from "./websocket.ts";
+export * from "./event.ts";
+export * from "./key.ts";
