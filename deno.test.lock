@@ -11,8 +11,10 @@
       "npm:@noble/curves@1.3.0": "npm:@noble/curves@1.3.0",
       "npm:@noble/hashes@1.3.3": "npm:@noble/hashes@1.3.3",
       "npm:@scure/base@1.1.5": "npm:@scure/base@1.1.5",
+      "npm:@scure/bip32@1.3.2": "npm:@scure/bip32@1.3.2",
+      "npm:@scure/bip39@1.2.1": "npm:@scure/bip39@1.2.1",
       "npm:json-stable-stringify@1.1.1": "npm:json-stable-stringify@1.1.1",
-      "npm:zod": "npm:zod@3.23.8"
+      "npm:zod@3.23.8": "npm:zod@3.23.8"
     },
     "jsr": {
       "@blowater/csp@1.0.0": {
@@ -39,11 +41,21 @@
         "integrity": "sha512-QCOA9cgf3Rc33owG0AYBB9wszz+Ul2kramWN8tXG44Gyciud/tbkEqvxRF/IpqQaBpRBNi9f4jdNxqB2CQCIXg==",
         "dependencies": {}
       },
+      "@noble/curves@1.2.0": {
+        "integrity": "sha512-oYclrNgRaM9SsBUBVbb8M6DTV7ZHRTKugureoYEncY5c65HOmRzvSiTE3y5CYaPYJA/GVkrhXEoF0M3Ya9PMnw==",
+        "dependencies": {
+          "@noble/hashes": "@noble/hashes@1.3.2"
+        }
+      },
       "@noble/curves@1.3.0": {
         "integrity": "sha512-t01iSXPuN+Eqzb4eBX0S5oubSqXbK/xXa1Ne18Hj8f9pStxztHCE2gfboSp/dZRLSqfuLpRK2nDXDK+W9puocA==",
         "dependencies": {
           "@noble/hashes": "@noble/hashes@1.3.3"
         }
+      },
+      "@noble/hashes@1.3.2": {
+        "integrity": "sha512-MVC8EAQp7MvEcm30KWENFjgR+Mkmf+D189XJTkFIlwohU5hcBbn1ZkKq7KVTi2Hme3PMGF390DaL52beVrIihQ==",
+        "dependencies": {}
       },
       "@noble/hashes@1.3.3": {
         "integrity": "sha512-V7/fPHgl+jsVPXqqeOzT8egNj2iBIVt+ECeMMG8TdcnTikP3oaBtUVqpT/gYCR68aEBJSF+XbYUxStjbFMqIIA==",
@@ -52,6 +64,21 @@
       "@scure/base@1.1.5": {
         "integrity": "sha512-Brj9FiG2W1MRQSTB212YVPRrcbjkv48FoZi/u4l/zds/ieRrqsh7aUf6CLwkAq61oKXr/ZlTzlY66gLIj3TFTQ==",
         "dependencies": {}
+      },
+      "@scure/bip32@1.3.2": {
+        "integrity": "sha512-N1ZhksgwD3OBlwTv3R6KFEcPojl/W4ElJOeCZdi+vuI5QmTFwLq3OFf2zd2ROpKvxFdgZ6hUpb0dx9bVNEwYCA==",
+        "dependencies": {
+          "@noble/curves": "@noble/curves@1.2.0",
+          "@noble/hashes": "@noble/hashes@1.3.3",
+          "@scure/base": "@scure/base@1.1.5"
+        }
+      },
+      "@scure/bip39@1.2.1": {
+        "integrity": "sha512-Z3/Fsz1yr904dduJD0NpiyRHhRYHdcnyh73FZWiV+/qhWi83wNJ3NWolYqCEN+ZWsUz2TWwajJggcRE9r1zUYg==",
+        "dependencies": {
+          "@noble/hashes": "@noble/hashes@1.3.3",
+          "@scure/base": "@scure/base@1.1.5"
+        }
       },
       "call-bind@1.0.7": {
         "integrity": "sha512-GHTSNSYICQ7scH7sZ+M2rFopRoLh8t2bLSW6BbgrtLsahOIB5iyAVJf9GjWK3cYTDaMj4XdBpM1cA6pIS0Kv2w==",
@@ -161,16 +188,6 @@
   },
   "remote": {
     "https://esm.sh/@noble/curves@1.3.0/secp256k1": "5252f1cfd6e12be71ea2826f76d171458040f168424e59d97a30cc5f54032460",
-    "https://esm.sh/@scure/bip32@1.3.2": "c7686eb58180f1d2ecad39ae00597c7cad0c4044d58dd6236a4f5b60798c48f8",
-    "https://esm.sh/@scure/bip39@1.2.1": "e0fe0ddfd843aca49cd3628e428e6078332487de05b444512c32d8b021bfba00",
-    "https://esm.sh/@scure/bip39@1.2.1/wordlists/english": "002e9a9d0ce299f89d15a43333c5f2d1131fa96619566b21a3a2d1a5479cb06a",
-    "https://esm.sh/v135/@noble/curves@1.2.0/denonext/_shortw_utils.js": "47a889dd52d7b29e8bc0d641597239d0ae0b1f10a9ee3b114c3dbd273172e9af",
-    "https://esm.sh/v135/@noble/curves@1.2.0/denonext/abstract/curve.js": "d4ac165ea7e6b5e401112e5c91d38a258fc6fe1dc3afa1c391cc2e74141d2228",
-    "https://esm.sh/v135/@noble/curves@1.2.0/denonext/abstract/hash-to-curve.js": "eb943276f11698b72a1da4dc51458edac705a3d827b0add5038a15c7aa6ab770",
-    "https://esm.sh/v135/@noble/curves@1.2.0/denonext/abstract/modular.js": "6d0fba13e486d0929f4ab81f7774d75b2254b934e0be7dd3fd96b959c0dd7600",
-    "https://esm.sh/v135/@noble/curves@1.2.0/denonext/abstract/utils.js": "33d6521fbb6756d058dff59616da1e55a55972b4848976c27e81c4b4bc36c0e4",
-    "https://esm.sh/v135/@noble/curves@1.2.0/denonext/abstract/weierstrass.js": "5cb85ed9ad826f7e623f0052a55a865ad957eab06c30697804157844e82416a9",
-    "https://esm.sh/v135/@noble/curves@1.2.0/denonext/secp256k1.js": "da024e491d38a1407d3bdf54f669bbefb879b710dfae945d4ca58a676fcfd37d",
     "https://esm.sh/v135/@noble/curves@1.3.0/denonext/_shortw_utils.js": "8d690a8fbb0100093f6ab96457c634465eb4bd79f07adb30bbda5234d189c5e8",
     "https://esm.sh/v135/@noble/curves@1.3.0/denonext/abstract/curve.js": "280130b0d3e1f15037b449b5870e1f39f5db99f8c310f85a9d4ab129d6dfa583",
     "https://esm.sh/v135/@noble/curves@1.3.0/denonext/abstract/hash-to-curve.js": "591fb0f81529b2dc9f7ea61a0b988ab659564688ce33bd6c95b0e55c698cb338",
@@ -178,29 +195,12 @@
     "https://esm.sh/v135/@noble/curves@1.3.0/denonext/abstract/utils.js": "0ff50d14245befb0ee4b0eae5f0292acc5fd0f6e5f385195654d7825f0a75669",
     "https://esm.sh/v135/@noble/curves@1.3.0/denonext/abstract/weierstrass.js": "f97e7a6ecf9f23a864538f7089645c17103f3809134c0bb99c29d56ce824e7b4",
     "https://esm.sh/v135/@noble/curves@1.3.0/denonext/secp256k1.js": "641ad16ddf79c7f4b69cba4d266078ef21f446cfc3fec83120f6de4f6dee84aa",
-    "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/_assert.js": "8b3fcc3a8d18f25fded5ecb46250f2009f11e0586b0e1e33757d12b6d1b05591",
-    "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/_sha2.js": "9571edb1dbcf00041aaa5b4d9bafb109bb9944bf47452fae653206a0242c2a0a",
-    "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/crypto.js": "3d09b6d143b1cb8ec95375586a7d9a30a02b60cb1de984ba374c779f8e6c877a",
-    "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/hmac.js": "23f7c9bebfbb777754e776b3197005b866742ce752945bfca17bc3c3a59e0e21",
-    "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/pbkdf2.js": "bd2869e43867b1da6cf5ddab1bda5ca52fdcb37d176ff4cf937646b37df6476f",
-    "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/ripemd160.js": "d7232e571460ab5d017b0e21ad633f11a8daa5627462092b8e3e59995a4ef9bd",
-    "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/sha256.js": "0c34ea09faae3f2b64691a608ffbe5b3a332f433138039c3bef2e7a53ee7f6d7",
-    "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/sha512.js": "057089c3e7d4743a8f19ef42a0dcc3a6c9d144e0cec59040e7c17501d9677b8f",
-    "https://esm.sh/v135/@noble/hashes@1.3.2/denonext/utils.js": "bbfe700df9ae51f477688035ec3dd96739f77fd2f50439a4c84bcbc1aa7c7d4a",
     "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/_assert.js": "f8882bd96e2a6d1834a445c5af97f927b1ba028f34963c8570568e33385c4419",
     "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/_sha2.js": "7b27807ccd3cf7c3b90ce23b17bc9c5d791a72e41dd2e01a4debd9727990bca9",
     "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/crypto.js": "cf6efbafcbb35e03bcb3a36cccd3d6d1f9bc4ba23f44a79551929a28c83e7901",
     "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/hmac.js": "c7a0a4fa8e369846713459398dfa1dc373ae5e6fa0eb7280f33dfd3f55a5c8fc",
-    "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/pbkdf2.js": "8e57ec66357c161b3f939555d15bcb53fb393a39531c5f7721fc92ff72e489fe",
-    "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/ripemd160.js": "35ff63c8b0aac4bbd13b79494f7603edf9694444ec5e18d91ba09c4495451b69",
     "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/sha256.js": "762e0b0cbde1990fc905eb816d30cdc0cf7dd4c23d123408c6963294f124f97d",
-    "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/sha512.js": "2ae6d8a3bc654349f19c0cb8dc401c84774cefdcb8737252fac03fc3fe9fdee4",
     "https://esm.sh/v135/@noble/hashes@1.3.3/denonext/utils.js": "701831e12a7e656df467b62f929ac9536ababef1b9b7445c7f87512366ae3933",
-    "https://esm.sh/v135/@scure/base@1.1.3/denonext/base.mjs": "fc5767d26d69892e42ff5687cf1e4f943c4ec6ad429893af638298e9950358b1",
-    "https://esm.sh/v135/@scure/base@1.1.6/denonext/base.mjs": "7c4c43cca9644ce6301e900ab7edcfebfd057ca778fa0efdd0cb746ae4339c6a",
-    "https://esm.sh/v135/@scure/bip32@1.3.2/denonext/bip32.mjs": "10ad7dc27871cd88776d525f1bac0c75bc27867db1d143c58d07c8e0b31d5a66",
-    "https://esm.sh/v135/@scure/bip39@1.2.1/denonext/bip39.mjs": "2c4fe1b2f838fc69c48b4979f2628e31a0e301b44b6651d650a15df42fc3f21f",
-    "https://esm.sh/v135/@scure/bip39@1.2.1/denonext/wordlists/english.js": "c606099d820c43e10e7c466571850947405da72f24f9b6bd859685a1610a6840",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts": "2ba3aadf6448e08c69495c618a860646789e96bc33287408bf30c1b480cf8fba"
   },
   "workspace": {

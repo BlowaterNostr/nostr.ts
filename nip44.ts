@@ -134,10 +134,3 @@ export function calcPaddedLen(len: number): number {
     const chunk = nextPower <= 256 ? 32 : nextPower / 8;
     return chunk * (Math.floor((len - 1) / chunk) + 1);
 }
-
-export default {
-    encrypt,
-    decrypt,
-    getConversationKey,
-    calcPaddedLen,
-};

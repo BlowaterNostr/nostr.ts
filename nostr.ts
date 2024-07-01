@@ -2,7 +2,7 @@ import { encodeHex } from "@std/encoding";
 import { PrivateKey, PublicKey } from "./key.ts";
 import { schnorr } from "npm:@noble/curves@1.3.0/secp256k1";
 import { decrypt_with_shared_secret, encrypt, utf8Encode } from "./nip4.ts";
-import nip44 from "./nip44.ts";
+import * as nip44 from "./nip44.ts";
 import stringify from "npm:json-stable-stringify@1.1.1";
 import { sha256 } from "npm:@noble/hashes@1.3.3/sha256";
 import { getSharedSecret } from "./vendor/secp256k1.js";
@@ -362,6 +362,7 @@ export async function verify_event_v2<T extends { sig: string; pubkey: string }>
 }
 
 export * from "./nip4.ts";
+export * as nip44 from "./nip44.ts";
 export * from "./nip06.ts";
 export * from "./nip11.ts";
 export * from "./nip19.ts";

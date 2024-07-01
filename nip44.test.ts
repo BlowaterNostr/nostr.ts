@@ -1,4 +1,4 @@
-import nip44 from "./nip44.ts";
+import * as nip44 from "./nip44.ts";
 import { default as vec } from "./nip44.json" assert { type: "json" };
 import { schnorr } from "https://esm.sh/@noble/curves@1.3.0/secp256k1";
 import { assertEquals, assertMatch, fail } from "@std/assert";
