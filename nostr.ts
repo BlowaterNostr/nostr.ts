@@ -1,11 +1,13 @@
-import { encodeHex } from "@std/encoding";
 import { PrivateKey, PublicKey } from "./key.ts";
-import { schnorr } from "npm:@noble/curves@1.3.0/secp256k1";
 import { decrypt_with_shared_secret, encrypt, utf8Encode } from "./nip4.ts";
 import * as nip44 from "./nip44.ts";
+
+import { encodeHex } from "@std/encoding";
+import { getSharedSecret } from "@noble/secp256k1";
+
+import { schnorr } from "npm:@noble/curves@1.3.0/secp256k1";
 import stringify from "npm:json-stable-stringify@1.1.1";
 import { sha256 } from "npm:@noble/hashes@1.3.3/sha256";
-import { getSharedSecret } from "@noble/secp256k1";
 
 export enum Kind_V2 {
     ChannelCreation = "ChannelCreation",
