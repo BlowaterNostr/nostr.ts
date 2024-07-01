@@ -1,0 +1,16 @@
+{
+  "imports": {
+    "@std/encoding": "./jsr.io/@std/encoding/0.224.3/mod.ts",
+    "@blowater/csp": "./jsr.io/@blowater/csp/1.0.0/csp.ts",
+    "@std/assert": "./jsr.io/@std/assert/0.226.0/mod.ts",
+    "@std/datetime": "./jsr.io/@std/datetime/0.224.1/mod.ts",
+    "https://jsr.io/": "./jsr.io/"
+  },
+  "scopes": {
+    "./jsr.io/": {
+      "jsr:/@std/internal@^1.0.0/format": "./jsr.io/@std/internal/1.0.0/format.ts",
+      "jsr:@std/internal@^1.0.0": "./jsr.io/@std/internal/1.0.0/mod.ts",
+      "jsr:/@std/internal@^1.0.0/styles": "./jsr.io/@std/internal/1.0.0/styles.ts"
+    }
+  }
+}
