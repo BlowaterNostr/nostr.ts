@@ -1,7 +1,8 @@
 /*
 ende stands for encryption decryption
 */
-import { getSharedSecret } from "./secp256k1.js";
+
+import { getSharedSecret } from "@noble/secp256k1";
 
 export async function encrypt(
     publicKey: string,

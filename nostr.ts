@@ -5,7 +5,7 @@ import { decrypt_with_shared_secret, encrypt, utf8Encode } from "./nip4.ts";
 import * as nip44 from "./nip44.ts";
 import stringify from "npm:json-stable-stringify@1.1.1";
 import { sha256 } from "npm:@noble/hashes@1.3.3/sha256";
-import { getSharedSecret } from "./secp256k1.js";
+import { getSharedSecret } from "@noble/secp256k1";
 
 export enum Kind_V2 {
     ChannelCreation = "ChannelCreation",
