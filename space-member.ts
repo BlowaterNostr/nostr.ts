@@ -2,7 +2,7 @@ import { Kind_V2, Signer_V2, SpaceMember } from "./nostr.ts";
 import { PublicKey } from "./key.ts";
 import { parseJSON, RESTRequestFailed, RFC3339 } from "./_helper.ts";
 import { format } from "@std/datetime";
-import { z } from "npm:zod";
+import { z } from "npm:zod@3.23.8";
 
 export function prepareSpaceMember(
     author: Signer_V2,
