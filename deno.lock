@@ -2,12 +2,15 @@
   "version": "3",
   "packages": {
     "specifiers": {
+      "jsr:@blowater/csp@^1.0.0": "jsr:@blowater/csp@1.0.0",
+      "jsr:@noble/secp256k1@^2.1.0": "jsr:@noble/secp256k1@2.1.0",
       "jsr:@std/assert@^0.226.0": "jsr:@std/assert@0.226.0",
       "jsr:@std/datetime@^0.224.1": "jsr:@std/datetime@0.224.1",
       "jsr:@std/encoding@^0.224.3": "jsr:@std/encoding@0.224.3",
       "jsr:@std/internal@^1.0.0": "jsr:@std/internal@1.0.0",
       "npm:@noble/ciphers@0.4.1": "npm:@noble/ciphers@0.4.1",
       "npm:@noble/curves@1.3.0": "npm:@noble/curves@1.3.0",
+      "npm:@noble/curves@1.4.0": "npm:@noble/curves@1.4.0",
       "npm:@noble/hashes": "npm:@noble/hashes@1.3.2",
       "npm:@noble/hashes@1.3.2": "npm:@noble/hashes@1.3.2",
       "npm:@noble/hashes@1.3.3": "npm:@noble/hashes@1.3.3",
@@ -19,6 +22,12 @@
       "npm:zod@3.23.8": "npm:zod@3.23.8"
     },
     "jsr": {
+      "@blowater/csp@1.0.0": {
+        "integrity": "415d4e8bf1656e4a508997fb8e725e9372e1e39b2b714afa76e86efd733f8c4c"
+      },
+      "@noble/secp256k1@2.1.0": {
+        "integrity": "b5843dfb90c67026ec5d2771cc2c809155fa5954ff0300b23de5d4a1f4eec758"
+      },
       "@std/assert@0.226.0": {
         "integrity": "0dfb5f7c7723c18cec118e080fec76ce15b4c31154b15ad2bd74822603ef75b3",
         "dependencies": [
@@ -52,12 +61,22 @@
           "@noble/hashes": "@noble/hashes@1.3.3"
         }
       },
+      "@noble/curves@1.4.0": {
+        "integrity": "sha512-p+4cb332SFCrReJkCYe8Xzm0OWi4Jji5jVdIZRL/PmacmDkFNw6MrrV+gGpiPxLHbV+zKFRywUWbaseT+tZRXg==",
+        "dependencies": {
+          "@noble/hashes": "@noble/hashes@1.4.0"
+        }
+      },
       "@noble/hashes@1.3.2": {
         "integrity": "sha512-MVC8EAQp7MvEcm30KWENFjgR+Mkmf+D189XJTkFIlwohU5hcBbn1ZkKq7KVTi2Hme3PMGF390DaL52beVrIihQ==",
         "dependencies": {}
       },
       "@noble/hashes@1.3.3": {
         "integrity": "sha512-V7/fPHgl+jsVPXqqeOzT8egNj2iBIVt+ECeMMG8TdcnTikP3oaBtUVqpT/gYCR68aEBJSF+XbYUxStjbFMqIIA==",
+        "dependencies": {}
+      },
+      "@noble/hashes@1.4.0": {
+        "integrity": "sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==",
         "dependencies": {}
       },
       "@scure/base@1.1.5": {
@@ -189,6 +208,7 @@
     "https://esm.sh/v135/@types/json-stable-stringify@~1/index.d.ts": "https://esm.sh/v135/@types/json-stable-stringify@1.0.36/index.d.ts"
   },
   "remote": {
+    "@blowater/csp": "4469313196bb1385ad38d13b72db0dbaf09a512c78d821144bc72b96c807417b",
     "https://deno.land/std@0.224.0/assert/_constants.ts": "a271e8ef5a573f1df8e822a6eb9d09df064ad66a4390f21b3e31f820a38e0975",
     "https://deno.land/std@0.224.0/assert/assert.ts": "09d30564c09de846855b7b071e62b5974b001bb72a4b797958fe0660e7849834",
     "https://deno.land/std@0.224.0/assert/assert_almost_equals.ts": "9e416114322012c9a21fa68e187637ce2d7df25bcbdbfd957cd639e65d3cf293",
@@ -307,12 +327,12 @@
     "https://esm.sh/v135/jsonify@0.0.1/denonext/jsonify.mjs": "958f96e48d994f565ec0c3942f90f11fdc2679c7c013689a71914c04481704c6",
     "https://esm.sh/v135/object-keys@1.1.1/denonext/object-keys.mjs": "9b1c41ea017ff80bc11f70885530199fbca620a7ac9b5b2bef20c8fb9829a4de",
     "https://esm.sh/v135/set-function-length@1.2.1/denonext/set-function-length.mjs": "1af2f38f3851e0d1a0d48bfaa96659e405dfe9229bc44ea3b39a147924fd0e5f",
-    "@blowater/csp": "4469313196bb1385ad38d13b72db0dbaf09a512c78d821144bc72b96c807417b",
     "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts": "2ba3aadf6448e08c69495c618a860646789e96bc33287408bf30c1b480cf8fba"
   },
   "workspace": {
     "dependencies": [
       "jsr:@blowater/csp@^1.0.0",
+      "jsr:@noble/secp256k1@^2.1.0",
       "jsr:@std/assert@^0.226.0",
       "jsr:@std/datetime@^0.224.1",
       "jsr:@std/encoding@^0.224.3"

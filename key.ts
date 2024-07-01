@@ -1,14 +1,12 @@
-import { schnorr, secp256k1 } from "npm:@noble/curves@1.3.0/secp256k1";
 import { bech32 } from "./scure.js";
 import { decodeHex, encodeHex } from "@std/encoding";
+import { utils } from "@noble/secp256k1";
+import { schnorr } from "npm:@noble/curves@1.4.0/secp256k1";
 
 export class PrivateKey {
     static Generate() {
-        const str = generatePrivateKeyHex();
-        const key = PrivateKey.FromHex(str);
-        if (key instanceof Error) {
-            throw key; // impossible
-        }
+        const pri = utils.randomPrivateKey();
+        const key = new PrivateKey(pri);
         return key;
     }
 
@@ -16,7 +14,8 @@ export class PrivateKey {
         if (!isValidHexKey(key)) {
             return new Error(`${key} is not valid`);
         }
-        return new PrivateKey(key);
+        const hex = decodeHex(key);
+        return new PrivateKey(hex);
     }
 
     static FromBech32(key: string) {
@@ -44,16 +43,15 @@ export class PrivateKey {
     public readonly bech32: string;
     public readonly hex: string;
 
-    private constructor(key: string) {
-        const array = decodeHex(key);
-        const words = bech32.toWords(array);
+    private constructor(private key: Uint8Array) {
+        this.hex = encodeHex(key);
+        const words = bech32.toWords(key);
         this.bech32 = bech32.encode("nsec", words, 1500);
-        this.hex = key;
     }
 
     toPublicKey(): PublicKey {
-        const hex = toPublicKeyHex(this.hex);
-        const pub = PublicKey.FromHex(hex);
+        const pub_bytes = schnorr.getPublicKey(this.key);
+        const pub = PublicKey.FromHex(encodeHex(pub_bytes));
         if (pub instanceof Error) {
             throw pub; // impossible
         }
@@ -101,12 +99,6 @@ export class PublicKey {
     }
 }
 
-function toPublicKeyHex(privateKey: string): string {
-    return encodeHex(
-        schnorr.getPublicKey(privateKey),
-    );
-}
-
 function publicKeyHexFromNpub(key: string) {
     try {
         const ok = isValidPublicKey(key);
@@ -122,11 +114,6 @@ function publicKeyHexFromNpub(key: string) {
     } catch (e) {
         return e as Error;
     }
-}
-
-// NIP 1 https://github.com/nostr-protocol/nips/blob/master/01.md
-function generatePrivateKeyHex(): string {
-    return encodeHex(secp256k1.utils.randomPrivateKey());
 }
 
 function isValidPublicKey(key: string) {

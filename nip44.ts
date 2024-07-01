@@ -1,19 +1,20 @@
+import { decodeBase64, encodeBase64 } from "@std/encoding";
 import { chacha20 } from "npm:@noble/ciphers@0.4.1/chacha";
 import { ensureBytes, equalBytes } from "npm:@noble/ciphers@0.4.1/utils";
-import { secp256k1 } from "npm:@noble/curves@1.3.0/secp256k1";
+
 import { expand as hkdf_expand, extract as hkdf_extract } from "npm:@noble/hashes@1.3.3/hkdf";
 import { hmac } from "npm:@noble/hashes@1.3.3/hmac";
 import { sha256 } from "npm:@noble/hashes@1.3.3/sha256";
-import { concatBytes, randomBytes, utf8ToBytes } from "npm:@noble/hashes@1.3.3/utils";
-import { base64 } from "npm:@scure/base@1.1.5";
+import { concatBytes, randomBytes } from "npm:@noble/hashes@1.3.3/utils";
+import { secp256k1 } from "npm:@noble/curves@1.4.0/secp256k1";
 
 const decoder = new TextDecoder();
+const encoder = new TextEncoder();
 
 const minPlaintextSize = 0x0001; // 1b msg => padded to 32b
 const maxPlaintextSize = 0xffff; // 65535 (64kb-1) => padded to 64kb
 
 const u = {
-    utf8Encode: utf8ToBytes,
     utf8Decode(bytes: Uint8Array) {
         return decoder.decode(bytes);
     },
@@ -39,7 +40,7 @@ const u = {
     },
 
     pad(plaintext: string): Uint8Array {
-        const unpadded = u.utf8Encode(plaintext);
+        const unpadded = encoder.encode(plaintext);
         const unpaddedLen = unpadded.length;
         const prefix = u.writeU16BE(unpaddedLen);
         const suffix = new Uint8Array(calcPaddedLen(unpaddedLen) - unpaddedLen);
@@ -79,7 +80,7 @@ const u = {
         if (payload[0] === "#") throw new Error("unknown encryption version");
         let data: Uint8Array;
         try {
-            data = base64.decode(payload);
+            data = decodeBase64(payload);
         } catch (error) {
             throw new Error("invalid base64: " + (error as any).message);
         }
@@ -100,7 +101,7 @@ export function encrypt(plaintext: string, conversationKey: Uint8Array, nonce = 
     const padded = u.pad(plaintext);
     const ciphertext = chacha20(chacha_key, chacha_nonce, padded);
     const mac = u.hmacAad(hmac_key, ciphertext, nonce);
-    return base64.encode(concatBytes(new Uint8Array([2]), nonce, ciphertext, mac));
+    return encodeBase64(concatBytes(new Uint8Array([2]), nonce, ciphertext, mac));
 }
 
 export function decrypt(payload: string, conversationKey: Uint8Array): string | Error {
