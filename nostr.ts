@@ -373,3 +373,4 @@ export * from "./relay-pool.ts";
 export * from "./websocket.ts";
 export * from "./event.ts";
 export * from "./key.ts";
+export * from "./relay.interface.ts";
