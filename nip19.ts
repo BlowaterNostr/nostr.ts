@@ -1,8 +1,9 @@
-import { utils } from "./vendor/secp256k1.js";
-import { bech32 } from "./scure.js";
+import { bech32 } from "./scure.ts";
 import { utf8Decode, utf8Encode } from "./nip4.ts";
 import { PublicKey } from "./key.ts";
 import { NostrKind } from "./nostr.ts";
+import { decodeHex, encodeHex } from "@std/encoding";
+import { concatBytes } from "@noble/hashes/utils";
 
 export class NoteID {
     static FromBech32(id: string): NoteID | Error {
@@ -41,7 +42,7 @@ export class NoteID {
 }
 
 function toBech32(hex: string, prefix: string) {
-    const array = utils.hexToBytes(hex);
+    const array = decodeHex(hex);
     const words = bech32.toWords(array);
     return bech32.encode(prefix, words, 1500);
 }
@@ -49,7 +50,7 @@ function toBech32(hex: string, prefix: string) {
 function toHex(bech: string) {
     const code = bech32.decode(bech, 1500);
     const data = new Uint8Array(bech32.fromWords(code.words));
-    return utils.bytesToHex(data);
+    return encodeHex(data);
 }
 type TLV = { [t: number]: Uint8Array[] };
 function encodeTLV(tlv: TLV): Uint8Array {
@@ -63,7 +64,7 @@ function encodeTLV(tlv: TLV): Uint8Array {
             entries.push(entry);
         }
     }
-    return utils.concatBytes(...entries);
+    return concatBytes(...entries);
 }
 function parseTLV(data: Uint8Array): TLV | Error {
     const result: TLV = {};
@@ -100,7 +101,7 @@ export class NostrAddress {
         const data = encodeTLV({
             0: [utf8Encode(this.addr.identifier)],
             1: (this.addr.relays || []).map((url) => utf8Encode(url)),
-            2: [utils.hexToBytes(this.addr.pubkey.hex)],
+            2: [decodeHex(this.addr.pubkey.hex)],
             3: [new Uint8Array(kind)],
         });
 
@@ -124,14 +125,14 @@ export class NostrAddress {
         if (tlv[2][0].length !== 32) return new Error("TLV 2 should be 32 bytes");
         if (!tlv[3][0]) return new Error("missing TLV 3 for naddr");
         if (tlv[3][0].length !== 4) return new Error("TLV 3 should be 4 bytes");
-        const pubkey = PublicKey.FromHex(utils.bytesToHex(tlv[2][0]));
+        const pubkey = PublicKey.FromHex(encodeHex(tlv[2][0]));
         if (pubkey instanceof Error) {
             return pubkey;
         }
         return new NostrAddress({
             identifier: utf8Decode(tlv[0][0]),
             pubkey,
-            kind: parseInt(utils.bytesToHex(tlv[3][0]), 16),
+            kind: parseInt(encodeHex(tlv[3][0]), 16),
             relays: tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
         });
     }
@@ -142,7 +143,7 @@ export class NostrAddress {
 export class NostrProfile {
     encode(): string | Error {
         const data = encodeTLV({
-            0: [utils.hexToBytes(this.pubkey.hex)],
+            0: [decodeHex(this.pubkey.hex)],
             1: (this.relays || []).map((url) => utf8Encode(url)),
         });
         const words = bech32.toWords(data);
@@ -168,7 +169,7 @@ export class NostrProfile {
         if (tlv[0][0].length !== 32) {
             return new Error("TLV 0 should be 32 bytes");
         }
-        const pubkey = PublicKey.FromHex(utils.bytesToHex(tlv[0][0]));
+        const pubkey = PublicKey.FromHex(encodeHex(tlv[0][0]));
         if (pubkey instanceof Error) {
             return pubkey;
         }
@@ -211,9 +212,9 @@ export class Nevent {
         }
 
         const data = encodeTLV({
-            0: [utils.hexToBytes(this.pointer.id)],
+            0: [decodeHex(this.pointer.id)],
             1: (this.pointer.relays || []).map((url) => utf8Encode(url)),
-            2: (this.pointer.pubkey ? [this.pointer.pubkey.hex] : []).map((url) => utils.hexToBytes(url)),
+            2: (this.pointer.pubkey ? [this.pointer.pubkey.hex] : []).map((url) => decodeHex(url)),
             3: kindArray ? [new Uint8Array(kindArray)] : [],
         });
 
@@ -248,19 +249,19 @@ export class Nevent {
         }
         let pubkey;
         if (tlv[2]) {
-            pubkey = PublicKey.FromHex(utils.bytesToHex(tlv[2][0]));
+            pubkey = PublicKey.FromHex(encodeHex(tlv[2][0]));
             if (pubkey instanceof Error) {
                 return pubkey;
             }
         }
 
         const pointer: EventPointer = {
-            id: utils.bytesToHex(tlv[0][0]),
+            id: encodeHex(tlv[0][0]),
             relays: tlv[1] ? tlv[1].map((d) => utf8Decode(d)) : [],
             pubkey: pubkey,
         };
         if (tlv[3]) {
-            pointer.kind = parseInt(utils.bytesToHex(tlv[3][0]), 16);
+            pointer.kind = parseInt(encodeHex(tlv[3][0]), 16);
         }
         return new Nevent(pointer);
     }

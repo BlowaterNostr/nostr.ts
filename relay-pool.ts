@@ -1,8 +1,4 @@
-import {
-    chan,
-    Channel,
-    PutToClosedChannelError,
-} from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import { chan, Channel, PutToClosedChannelError } from "@blowater/csp";
 import { NoteID } from "./nip19.ts";
 import { NostrEvent, NostrFilter, RelayResponse_REQ_Message, Signer, Signer_V2 } from "./nostr.ts";
 import { Closer, EventSender, SubscriptionCloser } from "./relay.interface.ts";

@@ -1,4 +1,4 @@
-import { assertEquals, fail } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, fail } from "@std/assert";
 import { PrivateKey } from "./key.ts";
 import { InMemoryAccountContext, NostrKind, verifyEvent } from "./nostr.ts";
 import { prepareEncryptedNostrEvent, prepareNormalNostrEvent } from "./event.ts";
@@ -26,22 +26,26 @@ Deno.test("Verify Event", async (t) => {
     });
 });
 
-Deno.test("wrong encryption key causing decryption failure", async () => {
-    const ctx = InMemoryAccountContext.New(PrivateKey.Generate());
-    const key = PrivateKey.Generate().hex;
-    const event = await prepareEncryptedNostrEvent(ctx, {
-        encryptKey: ctx.publicKey,
-        kind: NostrKind.DIRECT_MESSAGE,
-        tags: [
-            ["p", key],
-        ],
-        content: "123",
-    });
-    if (event instanceof Error) fail(event.message);
-    const err = await ctx.decrypt(key, event.content, "nip4");
-    if (err instanceof Error) {
-        // ok
-    } else {
-        fail(`should have error, get ${err}`);
-    }
+Deno.test({
+    name: "wrong encryption key causing decryption failure",
+    ignore: false,
+    fn: async () => {
+        const ctx = InMemoryAccountContext.New(PrivateKey.Generate());
+        const key = PrivateKey.Generate().hex;
+        const event = await prepareEncryptedNostrEvent(ctx, {
+            encryptKey: ctx.publicKey,
+            kind: NostrKind.DIRECT_MESSAGE,
+            tags: [
+                ["p", key],
+            ],
+            content: "123",
+        });
+        if (event instanceof Error) fail(event.message);
+        const err = await ctx.decrypt(key, event.content, "nip4");
+        if (err instanceof Error) {
+            // ok
+        } else {
+            fail(`should have error, get ${err}`);
+        }
+    },
 });

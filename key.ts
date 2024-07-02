@@ -1,13 +1,12 @@
-import * as secp256k1 from "./vendor/secp256k1.js";
-import { bech32 } from "./scure.js";
+import { bech32 } from "./scure.ts";
+import { decodeHex, encodeHex } from "@std/encoding";
+import { utils } from "@noble/secp256k1";
+import { schnorr } from "@noble/curves/secp256k1";
 
 export class PrivateKey {
     static Generate() {
-        const str = generatePrivateKeyHex();
-        const key = PrivateKey.FromHex(str);
-        if (key instanceof Error) {
-            throw key; // impossible
-        }
+        const pri = utils.randomPrivateKey();
+        const key = new PrivateKey(pri);
         return key;
     }
 
@@ -15,7 +14,8 @@ export class PrivateKey {
         if (!isValidHexKey(key)) {
             return new Error(`${key} is not valid`);
         }
-        return new PrivateKey(key);
+        const hex = decodeHex(key);
+        return new PrivateKey(hex);
     }
 
     static FromBech32(key: string) {
@@ -23,7 +23,7 @@ export class PrivateKey {
             try {
                 const code = bech32.decode(key, 1500);
                 const data = new Uint8Array(bech32.fromWords(code.words));
-                const hex = secp256k1.utils.bytesToHex(data);
+                const hex = encodeHex(data);
                 return PrivateKey.FromHex(hex);
             } catch (e) {
                 return e as Error;
@@ -43,16 +43,15 @@ export class PrivateKey {
     public readonly bech32: string;
     public readonly hex: string;
 
-    private constructor(key: string) {
-        const array = secp256k1.utils.hexToBytes(key);
-        const words = bech32.toWords(array);
+    private constructor(private key: Uint8Array) {
+        this.hex = encodeHex(key);
+        const words = bech32.toWords(key);
         this.bech32 = bech32.encode("nsec", words, 1500);
-        this.hex = key;
     }
 
     toPublicKey(): PublicKey {
-        const hex = toPublicKeyHex(this.hex);
-        const pub = PublicKey.FromHex(hex);
+        const pub_bytes = schnorr.getPublicKey(this.key);
+        const pub = PublicKey.FromHex(encodeHex(pub_bytes));
         if (pub instanceof Error) {
             throw pub; // impossible
         }
@@ -88,7 +87,7 @@ export class PublicKey {
     }
 
     bech32(): string {
-        const array = secp256k1.utils.hexToBytes(this.hex);
+        const array = decodeHex(this.hex);
         const words = bech32.toWords(array);
         return bech32.encode("npub", words, 1500);
     }
@@ -100,12 +99,6 @@ export class PublicKey {
     }
 }
 
-function toPublicKeyHex(privateKey: string): string {
-    return secp256k1.utils.bytesToHex(
-        secp256k1.schnorr.getPublicKey(privateKey),
-    );
-}
-
 function publicKeyHexFromNpub(key: string) {
     try {
         const ok = isValidPublicKey(key);
@@ -115,17 +108,12 @@ function publicKeyHexFromNpub(key: string) {
         if (key.substring(0, 4) === "npub") {
             const code = bech32.decode(key, 1500);
             const data = new Uint8Array(bech32.fromWords(code.words));
-            return secp256k1.utils.bytesToHex(data);
+            return encodeHex(data);
         }
         return key;
     } catch (e) {
         return e as Error;
     }
-}
-
-// NIP 1 https://github.com/nostr-protocol/nips/blob/master/01.md
-function generatePrivateKeyHex(): string {
-    return secp256k1.utils.bytesToHex(secp256k1.utils.randomPrivateKey());
 }
 
 function isValidPublicKey(key: string) {
