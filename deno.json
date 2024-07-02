@@ -19,6 +19,8 @@
         "@noble/curves": "npm:@noble/curves@1.4.0",
         "@noble/hashes": "npm:@noble/hashes@1.4.0",
         "@noble/ciphers": "npm:@noble/ciphers@0.4.1",
+        "@scure/bip39": "npm:@scure/bip39",
+        "@scure/bip32": "npm:@scure/bip32",
         "zod": "npm:zod@3.23.8"
     }
 }

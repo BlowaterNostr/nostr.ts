@@ -1,8 +1,8 @@
 // copied from https://github.com/nbd-wtf/nostr-tools/blob/master/nip06.ts
 import { encodeHex } from "@std/encoding";
-import { wordlist } from "npm:@scure/bip39@1.2.1/wordlists/english";
-import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "npm:@scure/bip39@1.2.1";
-import { HDKey } from "npm:@scure/bip32@1.3.2";
+import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
+import { wordlist } from "@scure/bip39/wordlists/english";
+import { HDKey } from "@scure/bip32";
 import { PrivateKey } from "./key.ts";
 
 export function privateKeyFromSeedWords(mnemonic: string | string[], passphrase?: string) {
