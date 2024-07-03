@@ -1,4 +1,4 @@
-import { assertEquals, assertNotInstanceOf } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertNotInstanceOf } from "@std/assert";
 import { generateSeedWords, privateKeyFromSeedWords, validateWords } from "./nip06.ts";
 import { PrivateKey } from "./key.ts";
 

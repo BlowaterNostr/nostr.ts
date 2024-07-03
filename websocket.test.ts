@@ -1,7 +1,7 @@
 import { AsyncWebSocket, CloseReason, CloseTwice } from "./websocket.ts";
 import { relays } from "./relay-list.test.ts";
 import { WebSocketClosed } from "./relay-single.ts";
-import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { PrivateKey } from "./key.ts";
 import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
 

@@ -1,8 +1,8 @@
-import { assertEquals, assertInstanceOf, fail } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { prepareNormalNostrEvent } from "./event.ts";
 import { InMemoryAccountContext, NostrKind, RelayResponse_Event, Signer, Signer_V2 } from "./nostr.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
-import * as csp from "https://raw.githubusercontent.com/BlowaterNostr/csp/master/csp.ts";
+import * as csp from "@blowater/csp";
 import { PrivateKey, PublicKey } from "./key.ts";
 
 export const open_close = (urls: string[]) => async () => {

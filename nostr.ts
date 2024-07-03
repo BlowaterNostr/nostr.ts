@@ -1,9 +1,13 @@
-import { encodeHex } from "https://deno.land/std@0.224.0/encoding/hex.ts";
 import { PrivateKey, PublicKey } from "./key.ts";
-import { getSharedSecret, schnorr, utils } from "./vendor/secp256k1.js";
 import { decrypt_with_shared_secret, encrypt, utf8Encode } from "./nip4.ts";
-import nip44 from "./nip44.ts";
-import stringify from "https://esm.sh/json-stable-stringify@1.1.1";
+import * as nip44 from "./nip44.ts";
+
+import { encodeHex } from "@std/encoding";
+import { getSharedSecret } from "@noble/secp256k1";
+import { schnorr } from "@noble/curves/secp256k1";
+import { sha256 } from "@noble/hashes/sha256";
+
+import stringify from "npm:json-stable-stringify@1.1.1";
 
 export enum Kind_V2 {
     ChannelCreation = "ChannelCreation",
@@ -216,9 +220,8 @@ export class DecryptionFailure extends Error {
 
 export async function calculateId(event: UnsignedNostrEvent) {
     const commit = eventCommitment(event);
-    const sha256 = utils.sha256;
     const buf = utf8Encode(commit);
-    return hexEncode(await sha256(buf));
+    return hexEncode(sha256(buf));
 }
 
 function eventCommitment(event: UnsignedNostrEvent): string {
@@ -295,10 +298,9 @@ export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
     async signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
         event: T,
     ): Promise<T & { sig: string; id: string }> {
-        const sha256 = utils.sha256;
         {
             const buf = utf8Encode(stringify(event));
-            const id = hexEncode(await sha256(buf));
+            const id = hexEncode(sha256(buf));
             const sig = encodeHex(await signId(id, this.privateKey.hex));
             return { ...event, id, sig };
         }
@@ -349,7 +351,6 @@ export async function verifyEvent(event: NostrEvent) {
 export async function verify_event_v2<T extends { sig: string; pubkey: string }>(
     event: T,
 ) {
-    const sha256 = utils.sha256;
     try {
         const event_copy: any = { ...event };
         delete event_copy.sig;
@@ -361,3 +362,17 @@ export async function verify_event_v2<T extends { sig: string; pubkey: string }>
         return false;
     }
 }
+
+export * from "./nip4.ts";
+export * as nip44 from "./nip44.ts";
+export * from "./nip06.ts";
+export * from "./nip11.ts";
+export * from "./nip19.ts";
+export * from "./nip25.ts";
+export * from "./nip96.ts";
+export * from "./relay-single.ts";
+export * from "./relay-pool.ts";
+export * from "./websocket.ts";
+export * from "./event.ts";
+export * from "./key.ts";
+export * from "./relay.interface.ts";
