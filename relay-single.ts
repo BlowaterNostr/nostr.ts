@@ -7,14 +7,11 @@ import { NoteID } from "./nip19.ts";
 import {
     _RelayResponse,
     ClientRequest_REQ,
-    Event_V2,
     NostrEvent,
     NostrFilter,
     NostrKind,
     RelayResponse_REQ_Message,
     Signer,
-    Signer_V2,
-    SpaceMember,
 } from "./nostr.ts";
 import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
 import {
@@ -27,6 +24,7 @@ import {
 import * as csp from "@blowater/csp";
 import { getSpaceMembers, prepareSpaceMember } from "./space-member.ts";
 import { assertEquals } from "@std/assert";
+import { Event_V2, Signer_V2, SpaceMember } from "./v2.ts";
 
 export class WebSocketClosed extends Error {
     constructor(
