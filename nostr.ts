@@ -8,40 +8,7 @@ import { schnorr } from "@noble/curves/secp256k1";
 import { sha256 } from "@noble/hashes/sha256";
 
 import stringify from "npm:json-stable-stringify@1.1.1";
-
-export enum Kind_V2 {
-    ChannelCreation = "ChannelCreation",
-    ChannelEdition = "ChannelEdition",
-    SpaceMember = "SpaceMember",
-}
-
-type Event_Base = {
-    pubkey: string;
-    id: string;
-    sig: string;
-    created_at: string;
-};
-
-export type ChannelCreation = Event_Base & {
-    kind: Kind_V2.ChannelCreation;
-    name: string;
-    scope: "server";
-};
-
-// EditChannel is a different type from CreateChannel because
-// a channel only has one creator but could have multiple admin to modify it
-export type ChannelEdition = Event_Base & {
-    kind: Kind_V2.ChannelEdition;
-    channel_id: string;
-    name: string;
-};
-
-export type SpaceMember = Event_Base & {
-    kind: Kind_V2.SpaceMember;
-    member: string; // the pubkey of member
-};
-
-export type Event_V2 = ChannelCreation | ChannelEdition | SpaceMember;
+import { Kind_V2, Signer_V2 } from "./v2.ts";
 
 export enum NostrKind {
     META_DATA = 0,
@@ -203,13 +170,6 @@ export interface Signer {
     signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
 }
 
-export interface Signer_V2 {
-    readonly publicKey: PublicKey;
-    signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
-        event: T,
-    ): Promise<T & { sig: string; id: string }>;
-}
-
 export class DecryptionFailure extends Error {
     constructor(
         public event: NostrEvent,
@@ -221,7 +181,7 @@ export class DecryptionFailure extends Error {
 export async function calculateId(event: UnsignedNostrEvent) {
     const commit = eventCommitment(event);
     const buf = utf8Encode(commit);
-    return hexEncode(sha256(buf));
+    return encodeHex(sha256(buf));
 }
 
 function eventCommitment(event: UnsignedNostrEvent): string {
@@ -229,27 +189,8 @@ function eventCommitment(event: UnsignedNostrEvent): string {
     return JSON.stringify([0, pubkey, created_at, kind, tags, content]);
 }
 
-function hexEncode(buf: Uint8Array) {
-    let str = "";
-    for (let i = 0; i < buf.length; i++) {
-        const c = buf[i];
-        str += hexChar(c >> 4);
-        str += hexChar(c & 0xF);
-    }
-    return str;
-}
-
-function hexChar(val: number) {
-    if (val < 10) {
-        return String.fromCharCode(48 + val);
-    }
-    if (val < 16) {
-        return String.fromCharCode(97 + val - 10);
-    }
-}
-
 export async function signId(id: string, privateKey: string) {
-    return await schnorr.sign(id, privateKey);
+    return schnorr.sign(id, privateKey);
 }
 
 export function blobToBase64(blob: Blob): Promise<string> {
@@ -300,7 +241,7 @@ export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
     ): Promise<T & { sig: string; id: string }> {
         {
             const buf = utf8Encode(stringify(event));
-            const id = hexEncode(sha256(buf));
+            const id = encodeHex(sha256(buf));
             const sig = encodeHex(await signId(id, this.privateKey.hex));
             return { ...event, id, sig };
         }
@@ -348,21 +289,6 @@ export async function verifyEvent(event: NostrEvent) {
     }
 }
 
-export async function verify_event_v2<T extends { sig: string; pubkey: string }>(
-    event: T,
-) {
-    try {
-        const event_copy: any = { ...event };
-        delete event_copy.sig;
-        delete event_copy.id;
-        const buf = utf8Encode(stringify(event_copy));
-        const id = hexEncode(await sha256(buf));
-        return schnorr.verify(event.sig, id, event.pubkey);
-    } catch (err) {
-        return false;
-    }
-}
-
 export * from "./nip4.ts";
 export * as nip44 from "./nip44.ts";
 export * from "./nip06.ts";
@@ -376,3 +302,4 @@ export * from "./websocket.ts";
 export * from "./event.ts";
 export * from "./key.ts";
 export * from "./relay.interface.ts";
+export * as v2 from "./v2.ts";
