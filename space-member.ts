@@ -1,8 +1,8 @@
-import { Kind_V2, Signer_V2, SpaceMember } from "./nostr.ts";
 import { PublicKey } from "./key.ts";
 import { parseJSON, RESTRequestFailed, RFC3339 } from "./_helper.ts";
 import { format } from "@std/datetime";
 import { z } from "zod";
+import { Kind_V2, Signer_V2, SpaceMember } from "./v2.ts";
 
 export function prepareSpaceMember(
     author: Signer_V2,
