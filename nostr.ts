@@ -193,14 +193,6 @@ export async function signId(id: string, privateKey: string) {
     return schnorr.sign(id, privateKey);
 }
 
-export function blobToBase64(blob: Blob): Promise<string> {
-    const reader = new FileReader();
-    return new Promise((resolve, _) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-    });
-}
-
 export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
     static New(privateKey: PrivateKey) {
         return new InMemoryAccountContext(privateKey);
