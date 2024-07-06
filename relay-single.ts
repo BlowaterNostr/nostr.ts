@@ -1,5 +1,5 @@
 import { sleep } from "@blowater/csp";
-import { parseJSON } from "./_helper.ts";
+import { parseJSON, RESTRequestFailed } from "./_helper.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import { PublicKey } from "./key.ts";
 import { getRelayInformation, RelayInformation } from "./nip11.ts";
@@ -467,7 +467,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return this.ws.status() == "Closed" || this.ws.status() == "Closing";
     }
 
-    public async connect() {
+    private async connect() {
         if (this.error instanceof Error) {
             return this.error;
         }
@@ -527,8 +527,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return getRelayInformation(this.url);
     };
 
-    // before we have relay info as events,
-    // let's pull it periodically to have an async iterable API
+    /**
+     * before we have relay info as events,
+     * let's pull it periodically to have an async iterable API
+     */
     getRelayInformationStream = () => {
         const chan = csp.chan<Error | RelayInformation>();
         (async () => {
@@ -550,18 +552,35 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return chan;
     };
 
-    getSpaceMembers = () => {
-        return getSpaceMembers(this.url);
-    };
-
+    /**
+     * v2 API, unstable
+     * a stream of space members
+     */
     getSpaceMembersStream = () => {
-        const chan = csp.chan<Error | SpaceMember[]>();
+        const chan = csp.chan<RESTRequestFailed | TypeError | SyntaxError | DOMException | SpaceMember[]>();
         (async () => {
-            let spaceMembers: SpaceMember[] | Error | undefined;
+            let spaceMembers:
+                | SpaceMember[]
+                | RESTRequestFailed
+                | TypeError
+                | SyntaxError
+                | DOMException
+                | undefined;
             for (;;) {
                 if (chan.closed()) return;
-                const members = await this.getSpaceMembers();
-                if (members instanceof Error || !deepEqual(spaceMembers, members)) {
+                const members = await getSpaceMembers(new URL(this.url));
+                if (members instanceof Error) {
+                    if (members instanceof RESTRequestFailed) {
+                        if (members.res.status == 404) {
+                            await chan.put(members);
+                            await chan.close();
+                        } else {
+                            await chan.put(members);
+                        }
+                    } else {
+                        await chan.put(members);
+                    }
+                } else if (!deepEqual(spaceMembers, members)) {
                     spaceMembers = members;
                     const err = await chan.put(members);
                     if (err instanceof Error) {
@@ -575,10 +594,18 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return chan;
     };
 
-    addSpaceMember = async (member: PublicKey | string) => {
-        if (!this.signer_v2) return new SignerV2NotExist();
+    /**
+     * v2 API, unstable
+     * add a public key to this relay as its member
+     */
+    addSpaceMember = async (member: PublicKey | string): Promise<Error | Response> => {
+        if (!this.signer_v2) {
+            return new SignerV2NotExist();
+        }
         const spaceMemberEvent = await prepareSpaceMember(this.signer_v2, member);
-        if (spaceMemberEvent instanceof Error) return spaceMemberEvent;
+        if (spaceMemberEvent instanceof Error) {
+            return spaceMemberEvent;
+        }
         return await this.postEventV2(spaceMemberEvent);
     };
 
