@@ -557,20 +557,26 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     getSpaceMembersStream = () => {
         const chan = csp.chan<RESTRequestFailed | TypeError | SyntaxError | DOMException | SpaceMember[]>();
         (async () => {
-            let spaceMembers: SpaceMember[] | RESTRequestFailed | TypeError | SyntaxError | DOMException  | undefined;
+            let spaceMembers:
+                | SpaceMember[]
+                | RESTRequestFailed
+                | TypeError
+                | SyntaxError
+                | DOMException
+                | undefined;
             for (;;) {
                 if (chan.closed()) return;
                 const members = await this.getSpaceMembers();
-                if(members instanceof Error) {
-                    if(members instanceof RESTRequestFailed) {
-                        if(members.res.status == 404) {
-                            await chan.put(members)
-                            await chan.close()
+                if (members instanceof Error) {
+                    if (members instanceof RESTRequestFailed) {
+                        if (members.res.status == 404) {
+                            await chan.put(members);
+                            await chan.close();
                         } else {
-                            await chan.put(members)
+                            await chan.put(members);
                         }
                     } else {
-                        await chan.put(members)
+                        await chan.put(members);
                     }
                 } else if (!deepEqual(spaceMembers, members)) {
                     spaceMembers = members;

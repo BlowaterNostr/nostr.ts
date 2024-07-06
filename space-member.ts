@@ -38,24 +38,24 @@ export async function getSpaceMembers(url: URL) {
         res = await fetch(httpURL);
     } catch (e) {
         // https://developer.mozilla.org/en-US/docs/Web/API/fetch#exceptions
-        if(e instanceof DOMException) {
-            return e
-        } else if(e instanceof TypeError) {
-            return e
+        if (e instanceof DOMException) {
+            return e;
+        } else if (e instanceof TypeError) {
+            return e;
         }
-        throw e // impossible
+        throw e; // impossible
     }
 
     let body;
     try {
         body = await res.text();
     } catch (e) {
-        if(e instanceof DOMException) {
-            return e
-        } else if(e instanceof TypeError) {
-            return e
+        if (e instanceof DOMException) {
+            return e;
+        } else if (e instanceof TypeError) {
+            return e;
         }
-        throw e // impossible
+        throw e; // impossible
     }
 
     if (!res.ok) {
@@ -65,5 +65,5 @@ export async function getSpaceMembers(url: URL) {
     if (data instanceof SyntaxError) {
         return data;
     }
-    return SpaceMembers_Schema.parse(data) as SpaceMember[]
+    return SpaceMembers_Schema.parse(data) as SpaceMember[];
 }

@@ -10,7 +10,7 @@ export async function getRelayInformation(url: URL | string) {
             },
         });
         if (!res.ok) {
-            return new RESTRequestFailed(res.status, await res.text());
+            return new RESTRequestFailed(res, await res.text());
         }
         const detail = await res.text();
         const info = JSON.parse(detail) as RelayInformation;
