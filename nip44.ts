@@ -14,8 +14,6 @@ const encoder = new TextEncoder();
 const minPlaintextSize = 0x0001; // 1b msg => padded to 32b
 const maxPlaintextSize = 0xffff; // 65535 (64kb-1) => padded to 64kb
 
-const u = {};
-
 export function encrypt(
     plaintext: string,
     conversationKey: Uint8Array,
