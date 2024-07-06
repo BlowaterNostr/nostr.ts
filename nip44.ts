@@ -14,6 +14,8 @@ const encoder = new TextEncoder();
 const minPlaintextSize = 0x0001; // 1b msg => padded to 32b
 const maxPlaintextSize = 0xffff; // 65535 (64kb-1) => padded to 64kb
 
+const u = {};
+
 export function encrypt(
     plaintext: string,
     conversationKey: Uint8Array,
@@ -21,20 +23,28 @@ export function encrypt(
 ): string | Error {
     const { chacha_key, chacha_nonce, hmac_key } = getMessageKeys(conversationKey, nonce);
     const padded = pad(plaintext);
-    if (padded instanceof Error) return padded;
+    if (padded instanceof Error) {
+        return padded;
+    }
     const ciphertext = chacha20(chacha_key, chacha_nonce, padded);
     const mac = hmacAad(hmac_key, ciphertext, nonce);
-    if (mac instanceof Error) return mac;
+    if (mac instanceof Error) {
+        return mac;
+    }
     return encodeBase64(concatBytes(new Uint8Array([2]), nonce, ciphertext, mac));
 }
 
 export function decrypt(payload: string, conversationKey: Uint8Array): string | Error {
     const decoded = decodePayload(payload);
-    if (decoded instanceof Error) return decoded;
+    if (decoded instanceof Error) {
+        return decoded;
+    }
     const { nonce, ciphertext, mac } = decoded;
     const { chacha_key, chacha_nonce, hmac_key } = getMessageKeys(conversationKey, nonce);
     const calculatedMac = hmacAad(hmac_key, ciphertext, nonce);
-    if (calculatedMac instanceof Error) return calculatedMac;
+    if (calculatedMac instanceof Error) {
+        return calculatedMac;
+    }
     if (!equalBytes(calculatedMac, mac)) {
         return new Error("invalid MAC");
     }
@@ -64,9 +74,11 @@ function pad(plaintext: string): Uint8Array | Error {
     const unpaddedLen = unpadded.length;
     const prefix = writeU16BE(unpaddedLen);
     if (prefix instanceof Error) return prefix;
-    const len = calcPaddedLen(unpaddedLen);
-    if (len instanceof Error) return len;
-    const suffix = new Uint8Array(len - unpaddedLen);
+    const padded_len = calcPaddedLen(unpaddedLen);
+    if (padded_len instanceof Error) {
+        return padded_len;
+    }
+    const suffix = new Uint8Array(padded_len - unpaddedLen);
     return concatBytes(prefix, unpadded, suffix);
 }
 
@@ -82,14 +94,18 @@ function writeU16BE(num: number) {
 function unpad(padded: Uint8Array): string | Error {
     const unpaddedLen = new DataView(padded.buffer).getUint16(0);
     const unpadded = padded.subarray(2, 2 + unpaddedLen);
-    const len = calcPaddedLen(unpaddedLen);
-    if (len instanceof Error) return len;
     if (
         unpaddedLen < minPlaintextSize ||
         unpaddedLen > maxPlaintextSize ||
-        unpadded.length !== unpaddedLen ||
-        padded.length !== 2 + len
+        unpadded.length !== unpaddedLen
     ) {
+        return new Error("invalid padding");
+    }
+    const padded_len = calcPaddedLen(unpaddedLen);
+    if (padded_len instanceof Error) {
+        return padded_len;
+    }
+    if (padded.length !== 2 + padded_len) {
         return new Error("invalid padding");
     }
     return decoder.decode(unpadded);
