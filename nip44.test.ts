@@ -22,6 +22,9 @@ Deno.test("encrypt_decrypt", () => {
 
         assertEquals(encodeHex(key), v.conversation_key);
         const ciphertext = nip44.encrypt(v.plaintext, key, decodeHex(v.nonce));
+        if (ciphertext instanceof Error) {
+            fail(ciphertext.message);
+        }
         assertEquals(ciphertext, v.payload);
         const decrypted = nip44.decrypt(ciphertext, key);
         assertEquals(decrypted, v.plaintext);
