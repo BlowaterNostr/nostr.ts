@@ -1,5 +1,5 @@
 import { sleep } from "@blowater/csp";
-import { parseJSON } from "./_helper.ts";
+import { parseJSON, RESTRequestFailed } from "./_helper.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import { PublicKey } from "./key.ts";
 import { getRelayInformation, RelayInformation } from "./nip11.ts";
@@ -551,17 +551,28 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     getSpaceMembers = () => {
-        return getSpaceMembers(this.url);
+        return getSpaceMembers(new URL(this.url));
     };
 
     getSpaceMembersStream = () => {
-        const chan = csp.chan<Error | SpaceMember[]>();
+        const chan = csp.chan<RESTRequestFailed | TypeError | SyntaxError | DOMException | SpaceMember[]>();
         (async () => {
-            let spaceMembers: SpaceMember[] | Error | undefined;
+            let spaceMembers: SpaceMember[] | RESTRequestFailed | TypeError | SyntaxError | DOMException  | undefined;
             for (;;) {
                 if (chan.closed()) return;
                 const members = await this.getSpaceMembers();
-                if (members instanceof Error || !deepEqual(spaceMembers, members)) {
+                if(members instanceof Error) {
+                    if(members instanceof RESTRequestFailed) {
+                        if(members.res.status == 404) {
+                            await chan.put(members)
+                            await chan.close()
+                        } else {
+                            await chan.put(members)
+                        }
+                    } else {
+                        await chan.put(members)
+                    }
+                } else if (!deepEqual(spaceMembers, members)) {
                     spaceMembers = members;
                     const err = await chan.put(members);
                     if (err instanceof Error) {

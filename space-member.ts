@@ -18,29 +18,52 @@ export function prepareSpaceMember(
     });
 }
 
-export async function getSpaceMembers(url: URL | string) {
-    const SpaceMembers = z.object({
-        pubkey: z.string(),
-        id: z.string(),
-        sig: z.string(),
-        created_at: z.string(),
-        kind: z.literal(Kind_V2.SpaceMember),
-        member: z.string(),
-    }).array();
+const SpaceMembers_Schema = z.object({
+    pubkey: z.string(),
+    id: z.string(),
+    sig: z.string(),
+    created_at: z.string(),
+    kind: z.literal(Kind_V2.SpaceMember),
+    member: z.string(),
+}).array();
 
+export async function getSpaceMembers(url: URL) {
+    // construct a new URL so that we don't change the old instance
+    const httpURL = new URL(url);
+    httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
+    httpURL.pathname = "/api/members";
+
+    let res;
     try {
-        const httpURL = new URL(url);
-        httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
-        httpURL.pathname = "/api/members";
-
-        const res = await fetch(httpURL);
-        if (!res.ok) {
-            return new RESTRequestFailed(res.status, await res.text());
-        }
-        const data = parseJSON<SpaceMember[]>(await res.text());
-        if (data instanceof Error) return data;
-        return SpaceMembers.parse(data);
+        res = await fetch(httpURL);
     } catch (e) {
-        return e as Error;
+        // https://developer.mozilla.org/en-US/docs/Web/API/fetch#exceptions
+        if(e instanceof DOMException) {
+            return e
+        } else if(e instanceof TypeError) {
+            return e
+        }
+        throw e // impossible
     }
+
+    let body;
+    try {
+        body = await res.text();
+    } catch (e) {
+        if(e instanceof DOMException) {
+            return e
+        } else if(e instanceof TypeError) {
+            return e
+        }
+        throw e // impossible
+    }
+
+    if (!res.ok) {
+        return new RESTRequestFailed(res, body);
+    }
+    const data = parseJSON(body);
+    if (data instanceof SyntaxError) {
+        return data;
+    }
+    return SpaceMembers_Schema.parse(data) as SpaceMember[]
 }
