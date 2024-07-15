@@ -64,23 +64,27 @@ export class ConnectionPool
     }
 
     getRelay(url: string | URL): SingleRelayConnection | undefined {
-        if (url instanceof URL) {
-            url = url.toString();
-        }
-        if (url[url.length - 1] == "/") {
-            url = url.slice(0, url.length - 1);
-        }
-        return this.connections.get(url);
+        return this.connections.get(new URL(url).toString());
     }
 
-    async addRelayURL(url: string) {
+    async addRelayURL(url: string | URL) {
+        if (typeof url == "string") {
+            if (!url.startsWith("ws://") && !url.startsWith("wss://")) {
+                url = "wss://" + url;
+            }
+        }
+        try {
+            url = new URL(url);
+        } catch (e) {
+            return e as TypeError;
+        }
         {
-            const relay = this.connections.get(url);
+            const relay = this.connections.get(url.toString());
             if (relay) {
                 return relay;
             }
         }
-        const client = SingleRelayConnection.New(url, {
+        const client = SingleRelayConnection.New(url.toString(), {
             wsCreator: this.wsCreator,
             log: true,
             signer: this.args?.signer,

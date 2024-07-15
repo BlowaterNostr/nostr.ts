@@ -1,4 +1,4 @@
-import { assertInstanceOf, assertNotInstanceOf, fail } from "@std/assert";
+import { assertNotInstanceOf, fail } from "@std/assert";
 import { SingleRelayConnection } from "../relay-single.ts";
 import { ConnectionPool } from "../relay-pool.ts";
 

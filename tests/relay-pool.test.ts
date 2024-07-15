@@ -257,16 +257,32 @@ Deno.test("send & get event", async (t) => {
 });
 
 Deno.test("URL handling", async (t) => {
-    const pool = new ConnectionPool();
-    pool.addRelayURL(blowater);
-    {
-        const relay = pool.getRelay(blowater);
-        // URL.toString contains ending / in the string
-        const relay2 = pool.getRelay(new URL(blowater).toString());
-        const relay3 = pool.getRelay(new URL(blowater));
-        assertEquals(relay, relay2);
-        assertEquals(relay, relay3);
-        assertNotEquals(relay, undefined);
-    }
-    await pool.close();
+    await t.step("wss://blowater.nostr1.com", async () => {
+        const pool = new ConnectionPool();
+        pool.addRelayURL("wss://blowater.nostr1.com");
+        {
+            const relay = pool.getRelay(blowater);
+            // URL.toString contains ending / in the string
+            const relay2 = pool.getRelay(new URL(blowater).toString());
+            const relay3 = pool.getRelay(new URL(blowater));
+            assertEquals(relay, relay2);
+            assertEquals(relay, relay3);
+            assertNotEquals(relay, undefined);
+        }
+        await pool.close();
+    });
+    await t.step("wss://blowater.nostr1.com/", async () => {
+        const pool = new ConnectionPool();
+        pool.addRelayURL("wss://blowater.nostr1.com/");
+        {
+            const relay = pool.getRelay(blowater);
+            // URL.toString contains ending / in the string
+            const relay2 = pool.getRelay(new URL(blowater).toString());
+            const relay3 = pool.getRelay(new URL(blowater));
+            assertEquals(relay, relay2);
+            assertEquals(relay, relay3);
+            assertNotEquals(relay, undefined);
+        }
+        await pool.close();
+    });
 });
