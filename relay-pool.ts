@@ -67,6 +67,9 @@ export class ConnectionPool
         if (url instanceof URL) {
             url = url.toString();
         }
+        if (url[url.length - 1] == "/") {
+            url = url.slice(0, url.length - 1);
+        }
         return this.connections.get(url);
     }
 

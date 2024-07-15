@@ -6,8 +6,7 @@ test: fmt
 		--allow-read=relayed.db,relayed.db-journal \
 		--allow-write=relayed.db,relayed.db-journal \
 		--trace-leaks --coverage=cov_profile \
-		--unstable-kv \
-		*.test.ts
+		--unstable-kv
 
 # https://deno.com/manual@main/basics/testing/coverage
 cov:
