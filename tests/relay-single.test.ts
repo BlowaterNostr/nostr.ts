@@ -17,9 +17,9 @@ import {
 } from "./relay-single-test.ts";
 import { wirednet } from "./relay-list.test.ts";
 import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
-import { PrivateKey } from "./key.ts";
+import { PrivateKey } from "../key.ts";
 import { fail } from "@std/assert";
-import { InMemoryAccountContext } from "./nostr.ts";
+import { InMemoryAccountContext } from "../nostr.ts";
 
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
@@ -97,8 +97,8 @@ Deno.test("space members", async (t) => {
     if (auth_required instanceof Error) return fail(auth_required.message);
 
     await t.step("get members", async () => {
-        await get_space_members(relay.ws_url, { signer_v2: ctx })();
-        await get_space_members(auth_required.ws_url, { signer: ctx, signer_v2: ctx })();
+        await get_space_members(new URL(relay.ws_url))();
+        await get_space_members(new URL(auth_required.ws_url))();
     });
 
     await t.step("add member", async () => {

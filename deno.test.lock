@@ -193,7 +193,9 @@
       }
     }
   },
-  "remote": {},
+  "remote": {
+    "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts": "2ba3aadf6448e08c69495c618a860646789e96bc33287408bf30c1b480cf8fba"
+  },
   "workspace": {
     "dependencies": [
       "jsr:@blowater/csp@1.0.0",

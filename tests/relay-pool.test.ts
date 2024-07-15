@@ -1,13 +1,13 @@
-import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
-import { relays } from "./relay-list.test.ts";
-import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
-import { AsyncWebSocket } from "./websocket.ts";
+import { InMemoryAccountContext, NostrKind } from "../nostr.ts";
+import { blowater, relays } from "./relay-list.test.ts";
+import { SingleRelayConnection, SubscriptionAlreadyExist } from "../relay-single.ts";
+import { AsyncWebSocket } from "../websocket.ts";
+import { ConnectionPool } from "../relay-pool.ts";
+import { prepareNormalNostrEvent } from "../event.ts";
+import { PrivateKey } from "../key.ts";
 import * as csp from "@blowater/csp";
-import { ConnectionPool } from "./relay-pool.ts";
-import { prepareNormalNostrEvent } from "./event.ts";
-import { assertEquals, assertNotInstanceOf, fail } from "@std/assert";
+import { assertEquals, assertNotEquals, assertNotInstanceOf, fail } from "@std/assert";
 import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
-import { PrivateKey } from "./key.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
     const pool = new ConnectionPool();
@@ -252,6 +252,21 @@ Deno.test("send & get event", async (t) => {
         if (e instanceof Error) fail(e.message);
 
         assertEquals(e, event);
+    }
+    await pool.close();
+});
+
+Deno.test("URL handling", async (t) => {
+    const pool = new ConnectionPool();
+    pool.addRelayURL(blowater);
+    {
+        const relay = pool.getRelay(blowater);
+        // URL.toString contains ending / in the string
+        const relay2 = pool.getRelay(new URL(blowater).toString());
+        const relay3 = pool.getRelay(new URL(blowater));
+        assertEquals(relay, relay2);
+        assertEquals(relay, relay3);
+        assertNotEquals(relay, undefined);
     }
     await pool.close();
 });

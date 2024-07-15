@@ -1,9 +1,11 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
-import { prepareNormalNostrEvent } from "./event.ts";
-import { InMemoryAccountContext, NostrKind, RelayResponse_Event, Signer, Signer_V2 } from "./nostr.ts";
-import { SingleRelayConnection, SubscriptionAlreadyExist } from "./relay-single.ts";
+import { prepareNormalNostrEvent } from "../event.ts";
+import { InMemoryAccountContext, NostrKind, RelayResponse_Event, Signer } from "../nostr.ts";
+import { SingleRelayConnection, SubscriptionAlreadyExist } from "../relay-single.ts";
 import * as csp from "@blowater/csp";
-import { PrivateKey, PublicKey } from "./key.ts";
+import { PrivateKey, PublicKey } from "../key.ts";
+import { Signer_V2 } from "../v2.ts";
+import { getSpaceMembers } from "../space-member.ts";
 
 export const open_close = (urls: string[]) => async () => {
     for (let url of urls) {
@@ -295,19 +297,9 @@ export const get_replaceable_event = (url: string) => async () => {
     await client.close();
 };
 
-export const get_space_members = (url: string, args: {
-    signer?: Signer;
-    signer_v2: Signer_V2;
-}) =>
-async () => {
-    // Although accessing the members of a space does not require authentication.
-    // However, if the space requires authentication, the signer must be passed in here.
-    const client = SingleRelayConnection.New(url, args);
-    {
-        const members = await client.getSpaceMembers();
-        if (members instanceof Error) fail(members.message);
-    }
-    await client.close();
+export const get_space_members = (url: URL) => async () => {
+    const members = await getSpaceMembers(url);
+    if (members instanceof Error) fail(members.message);
 };
 
 export const add_space_member = (url: string, args: {

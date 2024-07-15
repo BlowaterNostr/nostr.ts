@@ -1,6 +1,6 @@
 import { assertInstanceOf, assertNotInstanceOf, fail } from "@std/assert";
-import { SingleRelayConnection } from "./relay-single.ts";
-import { ConnectionPool } from "./relay-pool.ts";
+import { SingleRelayConnection } from "../relay-single.ts";
+import { ConnectionPool } from "../relay-pool.ts";
 
 Deno.test("url acceptance", async (t) => {
     {

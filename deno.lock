@@ -2,7 +2,10 @@
   "version": "3",
   "packages": {
     "specifiers": {
+      "jsr:@blowater/csp@1.0.0": "jsr:@blowater/csp@1.0.0",
+      "jsr:@noble/secp256k1@2.1.0": "jsr:@noble/secp256k1@2.1.0",
       "jsr:@std/assert@0.226.0": "jsr:@std/assert@0.226.0",
+      "jsr:@std/datetime@0.224.1": "jsr:@std/datetime@0.224.1",
       "jsr:@std/encoding@0.224.3": "jsr:@std/encoding@0.224.3",
       "jsr:@std/internal@^1.0.0": "jsr:@std/internal@1.0.0",
       "npm:@noble/ciphers@0.4.1": "npm:@noble/ciphers@0.4.1",
@@ -20,11 +23,20 @@
       "npm:zod@3.23.8": "npm:zod@3.23.8"
     },
     "jsr": {
+      "@blowater/csp@1.0.0": {
+        "integrity": "415d4e8bf1656e4a508997fb8e725e9372e1e39b2b714afa76e86efd733f8c4c"
+      },
+      "@noble/secp256k1@2.1.0": {
+        "integrity": "b5843dfb90c67026ec5d2771cc2c809155fa5954ff0300b23de5d4a1f4eec758"
+      },
       "@std/assert@0.226.0": {
         "integrity": "0dfb5f7c7723c18cec118e080fec76ce15b4c31154b15ad2bd74822603ef75b3",
         "dependencies": [
           "jsr:@std/internal@^1.0.0"
         ]
+      },
+      "@std/datetime@0.224.1": {
+        "integrity": "3b4d5062333a3fe2e8f94b343e05e8c34ec8b09e2e8311fe0e879a6773075830"
       },
       "@std/encoding@0.224.3": {
         "integrity": "5e861b6d81be5359fad4155e591acf17c0207b595112d1840998bb9f476dbdaf"
