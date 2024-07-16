@@ -72,7 +72,6 @@ export class ConnectionPool
     }
 
     getRelay(url: string | URL): SingleRelayConnection | undefined {
-        console.log("getRelay", url);
         return this.connections.get(url);
     }
 
