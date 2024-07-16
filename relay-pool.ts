@@ -10,6 +10,7 @@ import {
 import { AsyncWebSocket } from "./websocket.ts";
 import { Signer_V2 } from "./v2.ts";
 import { ValueMap } from "@blowater/collections";
+import { newURL } from "./_helper.ts";
 
 export interface RelayAdder {
     addRelayURL(url: string): Promise<Error | SingleRelayConnection>;
@@ -20,7 +21,11 @@ export interface RelayRemover {
 }
 
 export interface RelayGetter {
-    getRelay(url: string | URL): SingleRelayConnection | undefined;
+    getRelay(
+        url: string | URL,
+    ): SingleRelayConnection | undefined | SingleRelayConnection | undefined | typeof url extends string
+        ? TypeError
+        : void;
 }
 
 export class ConnectionPoolClosed extends Error {}
@@ -34,13 +39,8 @@ export class NoRelayRegistered extends Error {
 export class ConnectionPool
     implements SubscriptionCloser, EventSender, Closer, RelayAdder, RelayRemover, RelayGetter {
     private closed = false;
-    private readonly connections = new ValueMap<URL | string, SingleRelayConnection>((url) => {
-        if (typeof url == "string") {
-            if (url[url.length - 1] != "/") {
-                return url + "/";
-            }
-        }
-        return url.toString();
+    private readonly connections = new ValueMap<URL, SingleRelayConnection>((url) => {
+        return url.origin + url.pathname;
     });
     private readonly subscriptionMap = new Map<
         string,
@@ -72,6 +72,14 @@ export class ConnectionPool
     }
 
     getRelay(url: string | URL): SingleRelayConnection | undefined {
+        if (typeof url == "string") {
+            const theURL = newURL(url);
+            if (theURL instanceof TypeError) {
+                console.error(theURL);
+                return undefined;
+            }
+            url = theURL;
+        }
         return this.connections.get(url);
     }
 
@@ -81,8 +89,12 @@ export class ConnectionPool
                 url = "wss://" + url;
             }
         }
+        const theURL = newURL(url);
+        if (theURL instanceof Error) {
+            return theURL;
+        }
         {
-            const relay = this.connections.get(url);
+            const relay = this.connections.get(theURL);
             if (relay) {
                 return relay;
             }
@@ -163,13 +175,17 @@ export class ConnectionPool
     }
 
     async removeRelay(url: string | URL) {
-        const relay = this.connections.get(url);
+        const theURL = newURL(url);
+        if (theURL instanceof Error) {
+            return;
+        }
+        const relay = this.connections.get(theURL);
         if (relay === undefined) {
             return;
         }
         const p = relay.close();
         await p;
-        this.connections.delete(url);
+        this.connections.delete(theURL);
     }
 
     async newSub(
@@ -233,6 +249,7 @@ export class ConnectionPool
             const p = relay.sendEvent(nostrEvent);
             ps.push(p);
         }
+        console.log("!");
         for (const p of ps) {
             const err = await p;
             if (err instanceof RelayDisconnectedByClient) {

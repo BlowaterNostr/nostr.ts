@@ -1,6 +1,6 @@
 {
     "name": "@blowater/nostr-sdk",
-    "version": "0.0.6-rc1",
+    "version": "0.0.6-rc2",
     "exports": "./nostr.ts",
     "fmt": {
         "indentWidth": 4,
