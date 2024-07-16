@@ -9,6 +9,8 @@ import {
 } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
 import { Signer_V2 } from "./v2.ts";
+import { ValueMap } from "@blowater/collections";
+
 export interface RelayAdder {
     addRelayURL(url: string): Promise<Error | SingleRelayConnection>;
 }
@@ -31,14 +33,20 @@ export class NoRelayRegistered extends Error {
 
 export class ConnectionPool
     implements SubscriptionCloser, EventSender, Closer, RelayAdder, RelayRemover, RelayGetter {
-    //
     private closed = false;
-    private readonly connections = new Map<string, SingleRelayConnection>(); // url -> relay
+    private readonly connections = new ValueMap<URL | string, SingleRelayConnection>((url) => {
+        if (typeof url == "string") {
+            if (url[url.length - 1] != "/") {
+                return url + "/";
+            }
+        }
+        return url.toString();
+    });
     private readonly subscriptionMap = new Map<
         string,
         {
             filters: NostrFilter[];
-            chan: Channel<{ res: RelayResponse_REQ_Message; url: string }>;
+            chan: Channel<{ res: RelayResponse_REQ_Message; url: URL }>;
         }
     >();
 
@@ -64,7 +72,8 @@ export class ConnectionPool
     }
 
     getRelay(url: string | URL): SingleRelayConnection | undefined {
-        return this.connections.get(new URL(url).toString());
+        console.log("getRelay", url);
+        return this.connections.get(url);
     }
 
     async addRelayURL(url: string | URL) {
@@ -73,13 +82,8 @@ export class ConnectionPool
                 url = "wss://" + url;
             }
         }
-        try {
-            url = new URL(url);
-        } catch (e) {
-            return e as TypeError;
-        }
         {
-            const relay = this.connections.get(url.toString());
+            const relay = this.connections.get(url);
             if (relay) {
                 return relay;
             }
@@ -89,7 +93,7 @@ export class ConnectionPool
             log: true,
             signer: this.args?.signer,
             signer_v2: this.args?.signer_v2,
-        });
+        }) as SingleRelayConnection;
         const err = await this.addRelay(client);
         if (err instanceof Error) {
             return err;
@@ -159,7 +163,7 @@ export class ConnectionPool
         return relay;
     }
 
-    async removeRelay(url: string) {
+    async removeRelay(url: string | URL) {
         const relay = this.connections.get(url);
         if (relay === undefined) {
             return;
@@ -176,7 +180,7 @@ export class ConnectionPool
         if (this.subscriptionMap.has(subID)) {
             return new SubscriptionAlreadyExist(subID, "relay pool");
         }
-        const results = chan<{ res: RelayResponse_REQ_Message; url: string }>();
+        const results = chan<{ res: RelayResponse_REQ_Message; url: URL }>();
         for (const conn of this.connections.values()) {
             (async (relay: SingleRelayConnection) => {
                 const sub = await relay.newSub(subID, ...filters);

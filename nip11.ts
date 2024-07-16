@@ -1,9 +1,12 @@
-import { RESTRequestFailed } from "./_helper.ts";
+import { newURL, RESTRequestFailed } from "./_helper.ts";
 
 export async function getRelayInformation(url: URL | string) {
+    const httpURL = newURL(url);
+    if (httpURL instanceof TypeError) {
+        return httpURL;
+    }
+    httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
     try {
-        const httpURL = new URL(url);
-        httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
         const res = await fetch(httpURL, {
             headers: {
                 "accept": "application/nostr+json",

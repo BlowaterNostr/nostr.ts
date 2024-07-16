@@ -9,14 +9,14 @@ import { getSpaceMembers } from "../space-member.ts";
 
 export const open_close = (urls: string[]) => async () => {
     for (let url of urls) {
-        const client = SingleRelayConnection.New(url);
+        const client = SingleRelayConnection.New(url) as SingleRelayConnection;
         await client.close();
     }
 };
 
 export const newSub_close = (url: string) => async () => {
     // able to open & close
-    const client = SingleRelayConnection.New(url);
+    const client = SingleRelayConnection.New(url) as SingleRelayConnection;
     const sub = await client.newSub("1", { kinds: [0], limit: 1 });
     if (sub instanceof Error) fail(sub.message);
 
@@ -29,7 +29,7 @@ export const newSub_close = (url: string) => async () => {
 };
 
 export const sub_exits = (url: string) => async () => {
-    const client = SingleRelayConnection.New(url);
+    const client = SingleRelayConnection.New(url) as SingleRelayConnection;
     {
         // open
         const subID = "1";
@@ -54,7 +54,7 @@ export const sub_exits = (url: string) => async () => {
 };
 
 export const close_sub_keep_reading = (url: string) => async () => {
-    const client = SingleRelayConnection.New(url);
+    const client = SingleRelayConnection.New(url) as SingleRelayConnection;
     {
         const subID = "1";
         const sub = await client.newSub(subID, { limit: 1 });
@@ -66,7 +66,7 @@ export const close_sub_keep_reading = (url: string) => async () => {
 };
 
 export const send_event = (url: string) => async () => {
-    const client = SingleRelayConnection.New(url);
+    const client = SingleRelayConnection.New(url) as SingleRelayConnection;
     {
         const err = client.sendEvent(
             await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
@@ -80,7 +80,7 @@ export const send_event = (url: string) => async () => {
 };
 
 export const get_correct_kind = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url);
+    const relay = SingleRelayConnection.New(url) as SingleRelayConnection;
     {
         const err = await relay.sendEvent(
             await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
@@ -108,7 +108,7 @@ export const get_correct_kind = (url: string) => async () => {
 };
 
 export const newSub_multiple_filters = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url);
+    const relay = SingleRelayConnection.New(url) as SingleRelayConnection;
     const event_1 = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
         kind: NostrKind.TEXT_NOTE,
         content: "test1",
@@ -148,7 +148,7 @@ export const newSub_multiple_filters = (url: string) => async () => {
 // maximum number of events relays SHOULD return in the initial query
 export const limit = (url: string) => async () => {
     const ctx = InMemoryAccountContext.Generate();
-    const relay = SingleRelayConnection.New(url);
+    const relay = SingleRelayConnection.New(url) as SingleRelayConnection;
     {
         const err = await relay.sendEvent(
             await prepareNormalNostrEvent(ctx, {
@@ -198,7 +198,7 @@ export const limit = (url: string) => async () => {
 
 export const no_event = (url: string) => async () => {
     const ctx = InMemoryAccountContext.Generate();
-    const relay = SingleRelayConnection.New(url);
+    const relay = SingleRelayConnection.New(url) as SingleRelayConnection;
     {
         const subID = "NoEvent";
         const sub = await relay.newSub(subID, {
@@ -217,8 +217,8 @@ export const no_event = (url: string) => async () => {
 
 export const two_clients_communicate = (url: string) => async () => {
     const ctx = InMemoryAccountContext.Generate();
-    const relay1 = SingleRelayConnection.New(url);
-    const relay2 = SingleRelayConnection.New(url);
+    const relay1 = SingleRelayConnection.New(url) as SingleRelayConnection;
+    const relay2 = SingleRelayConnection.New(url) as SingleRelayConnection;
     {
         const sub = await relay1.newSub("relay1", {
             authors: [ctx.publicKey.hex],
@@ -247,7 +247,7 @@ export const two_clients_communicate = (url: string) => async () => {
 };
 
 export const get_event_by_id = (url: string) => async () => {
-    const client = SingleRelayConnection.New(url, { log: true });
+    const client = SingleRelayConnection.New(url, { log: true }) as SingleRelayConnection;
     const ctx = InMemoryAccountContext.Generate();
     {
         const event_1 = await client.getEvent(PrivateKey.Generate().hex);
@@ -269,7 +269,7 @@ export const get_event_by_id = (url: string) => async () => {
 };
 
 export const get_replaceable_event = (url: string) => async () => {
-    const client = SingleRelayConnection.New(url);
+    const client = SingleRelayConnection.New(url) as SingleRelayConnection;
     const ctx = InMemoryAccountContext.Generate();
 
     const event1 = await prepareNormalNostrEvent(ctx, {
@@ -307,7 +307,7 @@ export const add_space_member = (url: string, args: {
     signer_v2: Signer_V2;
 }) =>
 async () => {
-    const client = SingleRelayConnection.New(url, args);
+    const client = SingleRelayConnection.New(url, args) as SingleRelayConnection;
     {
         const new_member = PrivateKey.Generate().toPublicKey();
         const added = await client.addSpaceMember(new_member);

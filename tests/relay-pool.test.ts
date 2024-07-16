@@ -197,7 +197,7 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         fail();
     }
     // don't care the value, just need to make sure that it's from the same relay
-    assertEquals(msg.url, relay.ws_url);
+    assertEquals(msg.url.toString(), new URL(relay.ws_url).toString());
     await pool.close();
     await relay.shutdown();
 });

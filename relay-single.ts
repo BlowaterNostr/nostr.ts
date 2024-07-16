@@ -1,5 +1,5 @@
 import { sleep } from "@blowater/csp";
-import { parseJSON, RESTRequestFailed } from "./_helper.ts";
+import { newURL, parseJSON, RESTRequestFailed } from "./_helper.ts";
 import { prepareNormalNostrEvent } from "./event.ts";
 import { PublicKey } from "./key.ts";
 import { getRelayInformation, RelayInformation } from "./nip11.ts";
@@ -25,10 +25,11 @@ import * as csp from "@blowater/csp";
 import { getSpaceMembers, prepareSpaceMember } from "./space-member.ts";
 import { assertEquals } from "@std/assert";
 import { Event_V2, Signer_V2, SpaceMember } from "./v2.ts";
+import { ValueMap } from "@blowater/collections";
 
 export class WebSocketClosed extends Error {
     constructor(
-        public url: string,
+        public url: string | URL,
         public state: WebSocketReadyState,
         public reason?: WebSocketClosedEvent,
     ) {
@@ -120,7 +121,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 
     private constructor(
-        readonly url: string,
+        readonly url: URL,
         readonly wsCreator: (url: string, log: boolean) => BidirectionalNetwork | Error,
         public log: boolean,
         readonly signer?: Signer,
@@ -269,7 +270,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     }
 
     public static New(
-        url: string,
+        urlString: string,
         args?: {
             wsCreator?: (url: string, log: boolean) => BidirectionalNetwork | Error;
             connect?: boolean;
@@ -277,16 +278,20 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             signer?: Signer; // used for authentication
             signer_v2?: Signer_V2; // used for sign event v2
         },
-    ): SingleRelayConnection {
+    ): SingleRelayConnection | TypeError {
         if (args == undefined) {
             args = {};
         }
         try {
-            if (!url.startsWith("wss://") && !url.startsWith("ws://")) {
-                url = "wss://" + url;
+            if (!urlString.startsWith("wss://") && !urlString.startsWith("ws://")) {
+                urlString = "wss://" + urlString;
             }
             if (args.wsCreator == undefined) {
                 args.wsCreator = AsyncWebSocket.New;
+            }
+            const url = newURL(urlString);
+            if (url instanceof TypeError) {
+                return url;
             }
             return new SingleRelayConnection(
                 url,
@@ -307,9 +312,10 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         if (this.log) {
             console.log(`${this.url} registers subscription ${subID}`, ...filters);
         }
+
         const subscription = this.subscriptionMap.get(subID);
         if (subscription !== undefined) {
-            return new SubscriptionAlreadyExist(subID, this.url);
+            return new SubscriptionAlreadyExist(subID, this.url.toString());
         }
 
         if (this.ws != undefined) {
@@ -329,7 +335,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
     async sendEvent(event: NostrEvent) {
         if (this.ws == undefined) {
-            return new WebSocketClosed(this.url, this.status());
+            return new WebSocketClosed(this.url.toString(), this.status());
         }
         if (this.error) {
             return this.error;
@@ -486,9 +492,8 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 }
             }
 
-            const url = new URL(this.url);
             if (this.signer) {
-                url.searchParams.set(
+                this.url.searchParams.set(
                     "auth",
                     btoa(JSON.stringify(
                         await prepareNormalNostrEvent(this.signer, {
@@ -498,7 +503,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     )),
                 );
             }
-            ws = this.wsCreator(url.toString(), this.log);
+            ws = this.wsCreator(this.url.toString(), this.log);
             if (ws instanceof Error) {
                 console.error(ws.name, ws.message, ws.cause);
                 if (ws.name == "SecurityError") {
@@ -568,7 +573,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 | undefined;
             for (;;) {
                 if (chan.closed()) return;
-                const members = await getSpaceMembers(new URL(this.url));
+                const members = await getSpaceMembers(this.url);
                 if (members instanceof Error) {
                     if (members instanceof RESTRequestFailed) {
                         if (members.res.status == 404) {
@@ -610,9 +615,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
     };
 
     private postEventV2 = async (event: Event_V2): Promise<Error | Response> => {
+        const httpURL = new URL(this.url);
+        httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
         try {
-            const httpURL = new URL(this.url);
-            httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
             return await fetch(httpURL, { method: "POST", body: JSON.stringify(event) });
         } catch (e) {
             return e as Error;
