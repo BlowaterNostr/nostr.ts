@@ -39,7 +39,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
     >();
     private readonly onClose = csp.chan<never>();
     private closedEvent?: WebSocketClosedEvent;
-    public readonly url: string;
+    public readonly url: URL;
 
     static New(url: string, log: boolean): AsyncWebSocket | Error {
         try {
@@ -54,7 +54,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         private readonly ws: WebSocket,
         public log: boolean,
     ) {
-        this.url = ws.url;
+        this.url = new URL(ws.url);
         this.ws.onopen = async (event: Event) => {
             if (log) {
                 console.log(ws.url, "openned");
@@ -166,13 +166,13 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         }
 
         this.ws.close(code, reason);
-        const url = new URL(this.url);
-        console.log(this.status(), url.host + url.pathname);
+
+        console.log(this.status(), this.url.host + this.url.pathname);
         if (force) {
             return;
         }
         await this.onClose.pop();
-        console.log(this.status(), url.host + url.pathname, this.closedEvent);
+        console.log(this.status(), this.url.host + this.url.pathname, this.closedEvent);
         return this.closedEvent;
     }
 

@@ -197,7 +197,7 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         fail();
     }
     // don't care the value, just need to make sure that it's from the same relay
-    assertEquals(msg.url, relay.ws_url);
+    assertEquals(msg.url.toString(), new URL(relay.ws_url).toString());
     await pool.close();
     await relay.shutdown();
 });
@@ -241,16 +241,18 @@ Deno.test("send & get event", async (t) => {
         fail();
     }
     {
+        console.log("----");
         const event = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
             kind: NostrKind.CONTACTS,
             content: "",
         });
+        console.log("----1");
         const err = await pool.sendEvent(event);
         if (err) fail(err.message);
-
+        console.log("----2");
         const e = await pool.getEvent(event.id);
         if (e instanceof Error) fail(e.message);
-
+        console.log("----3");
         assertEquals(e, event);
     }
     await pool.close();
@@ -274,6 +276,20 @@ Deno.test("URL handling", async (t) => {
     await t.step("wss://blowater.nostr1.com/", async () => {
         const pool = new ConnectionPool();
         pool.addRelayURL("wss://blowater.nostr1.com/");
+        {
+            const relay = pool.getRelay(blowater);
+            // URL.toString contains ending / in the string
+            const relay2 = pool.getRelay(new URL(blowater).toString());
+            const relay3 = pool.getRelay(new URL(blowater));
+            assertEquals(relay, relay2);
+            assertEquals(relay, relay3);
+            assertNotEquals(relay, undefined);
+        }
+        await pool.close();
+    });
+    await t.step("with search params", async () => {
+        const pool = new ConnectionPool();
+        pool.addRelayURL("wss://blowater.nostr1.com/?x=1");
         {
             const relay = pool.getRelay(blowater);
             // URL.toString contains ending / in the string

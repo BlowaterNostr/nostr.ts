@@ -15,3 +15,12 @@ export class RESTRequestFailed extends Error {
         this.name = RESTRequestFailed.name;
     }
 }
+
+export function newURL(url: string | URL): URL | TypeError {
+    try {
+        // https://developer.mozilla.org/en-US/docs/Web/API/URL/URL#exceptions
+        return new URL(url);
+    } catch (e) {
+        return e as TypeError;
+    }
+}

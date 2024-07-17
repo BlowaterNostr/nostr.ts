@@ -102,7 +102,7 @@ Deno.test("websocket close with a code & reason", async () => {
 
         let err = await ws.close();
         if (err instanceof CloseTwice) {
-            assertEquals(err.url, ws.url);
+            assertEquals(err.url, ws.url.toString());
         } else {
             console.error(err);
             fail();
