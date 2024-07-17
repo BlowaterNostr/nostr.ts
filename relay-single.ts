@@ -98,7 +98,7 @@ export type SubscriptionStream = {
 
 /**
  * ```
- * See at ./tests/example.test.ts
+ * [examples](./tests/example.test.ts)
  * ```
  */
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
