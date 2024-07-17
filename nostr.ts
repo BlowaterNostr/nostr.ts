@@ -294,4 +294,5 @@ export * from "./websocket.ts";
 export * from "./event.ts";
 export * from "./key.ts";
 export * from "./relay.interface.ts";
+export * from "./_helper.ts";
 export * as v2 from "./v2.ts";
