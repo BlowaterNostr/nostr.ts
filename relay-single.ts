@@ -96,6 +96,9 @@ export type SubscriptionStream = {
     chan: csp.Channel<RelayResponse_REQ_Message>;
 };
 
+/**
+ * [examples](./tests/example.test.ts)
+ */
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
     private _isClosedByClient = false;
     isClosedByClient() {

@@ -2,7 +2,7 @@
   "version": "3",
   "packages": {
     "specifiers": {
-      "jsr:@blowater/collections@^0.0.0-rc1": "jsr:@blowater/collections@0.0.0-rc1",
+      "jsr:@blowater/collections@^0.0.0-rc1": "jsr:@blowater/collections@0.0.0-rc3",
       "jsr:@blowater/csp@1.0.0": "jsr:@blowater/csp@1.0.0",
       "jsr:@noble/secp256k1@2.1.0": "jsr:@noble/secp256k1@2.1.0",
       "jsr:@std/assert@0.226.0": "jsr:@std/assert@0.226.0",
@@ -18,8 +18,8 @@
       "npm:zod@3.23.8": "npm:zod@3.23.8"
     },
     "jsr": {
-      "@blowater/collections@0.0.0-rc1": {
-        "integrity": "a18c92ccf7b55f45cbf000304703a344624a22f84b11b970024546a012a450a9"
+      "@blowater/collections@0.0.0-rc3": {
+        "integrity": "54cdc175266e16d50aaf780885b6e6eb3009f99c66641ff9b0c6c60f5b6e629d"
       },
       "@blowater/csp@1.0.0": {
         "integrity": "415d4e8bf1656e4a508997fb8e725e9372e1e39b2b714afa76e86efd733f8c4c"
