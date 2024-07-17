@@ -3,6 +3,9 @@ import { decodeHex, encodeHex } from "@std/encoding";
 import { utils } from "@noble/secp256k1";
 import { schnorr } from "@noble/curves/secp256k1";
 
+/**
+ * see examples [here](./tests/example.test.ts)
+ */
 export class PrivateKey {
     static Generate() {
         const pri = utils.randomPrivateKey();
@@ -59,6 +62,9 @@ export class PrivateKey {
     }
 }
 
+/**
+ * see examples [here](./tests/example.test.ts)
+ */
 export class PublicKey {
     static FromString(key: string) {
         if (!isValidPublicKey(key)) {

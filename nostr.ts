@@ -165,6 +165,16 @@ export interface NostrAccountContext extends Signer {
     decrypt(pubkey: string, ciphertext: string, algorithm?: "nip44" | "nip4"): Promise<string | Error>;
 }
 
+/**
+ * A Signer is just any object that
+ *  1. contains a public key
+ *  2. implements the signEvent function
+ *
+ * InMemoryAccountContext is the implementation this library provides
+ * But in a web application, the program usually wants to implement one with NIP-7
+ *
+ * see examples [here](./tests/example.test.ts)
+ */
 export interface Signer {
     readonly publicKey: PublicKey;
     signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
@@ -193,6 +203,9 @@ export async function signId(id: string, privateKey: string) {
     return schnorr.sign(id, privateKey);
 }
 
+/**
+ * see examples [here](./tests/example.test.ts)
+ */
 export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
     static New(privateKey: PrivateKey) {
         return new InMemoryAccountContext(privateKey);
