@@ -96,6 +96,10 @@ export type SubscriptionStream = {
     chan: csp.Channel<RelayResponse_REQ_Message>;
 };
 
+/**
+ * @example
+ * const relay = SingleRelayConnection.New("wss://some.relay")
+ */
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
     private _isClosedByClient = false;
     isClosedByClient() {

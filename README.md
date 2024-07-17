@@ -8,7 +8,7 @@ deno install https://jsr.io/@blowater/nostr-sdk/cli/nostr.ts
 
 ### Examples
 
-See tests for examples.
+See [tests](tests/example.test.ts) for examples.
 
 The auto complete provided by your editors should give you enough information to get started!
 
