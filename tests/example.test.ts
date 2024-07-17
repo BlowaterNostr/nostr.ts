@@ -52,7 +52,7 @@ Deno.test("SingleRelayConnection", async () => {
             console.log(response_message);
         }
     }
-    await relay.close()
+    await relay.close();
 });
 
 Deno.test("Key Handling", async () => {
