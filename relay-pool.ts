@@ -249,7 +249,7 @@ export class ConnectionPool
             const p = relay.sendEvent(nostrEvent);
             ps.push(p);
         }
-        console.log("!");
+
         for (const p of ps) {
             const err = await p;
             if (err instanceof RelayDisconnectedByClient) {

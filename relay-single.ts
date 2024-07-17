@@ -347,18 +347,15 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         if (err instanceof Error) {
             return err;
         }
-        console.log("!2", this.url.toString());
+
         const res = await new Promise<{ ok: boolean; message: string }>(
             (resolve) => {
-                console.log("!send_promise_resolvers", this.url.toString());
                 this.send_promise_resolvers.set(event.id, resolve);
             },
         );
-        console.log("!3", this.url.toString(), res);
         if (!res.ok) {
             return new RelayRejectedEvent(res.message, event);
         }
-        console.log("!3");
         return res.message;
     }
 
