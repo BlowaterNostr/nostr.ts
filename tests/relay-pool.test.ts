@@ -241,18 +241,14 @@ Deno.test("send & get event", async (t) => {
         fail();
     }
     {
-        console.log("----");
         const event = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
             kind: NostrKind.CONTACTS,
             content: "",
         });
-        console.log("----1");
         const err = await pool.sendEvent(event);
         if (err) fail(err.message);
-        console.log("----2");
         const e = await pool.getEvent(event.id);
         if (e instanceof Error) fail(e.message);
-        console.log("----3");
         assertEquals(e, event);
     }
     await pool.close();
