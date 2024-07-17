@@ -97,8 +97,7 @@ export type SubscriptionStream = {
 };
 
 /**
- * @example
- * const relay = SingleRelayConnection.New("wss://some.relay")
+ * See ./tests/example.test.ts
  */
 export class SingleRelayConnection implements Subscriber, SubscriptionCloser, EventSender, Closer {
     private _isClosedByClient = false;
