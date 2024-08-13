@@ -1,5 +1,5 @@
 import { NostrEvent, NostrKind, Signer, Tag } from "./nostr.ts";
-import { prepareNormalNostrEvent } from "./event.ts";
+import { prepareNostrEvent } from "./event.ts";
 import * as nostr from "./nostr.ts";
 
 export async function prepareReactionEvent(
@@ -17,7 +17,7 @@ export async function prepareReactionEvent(
         ["e", targetEvent.id],
         ["p", targetEvent.pubkey],
     ];
-    return prepareNormalNostrEvent(
+    return prepareNostrEvent(
         author,
         {
             kind: NostrKind.REACTION,

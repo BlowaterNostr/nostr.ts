@@ -1,4 +1,4 @@
-import { prepareNormalNostrEvent } from "./event.ts";
+import { prepareNostrEvent } from "./event.ts";
 import { NostrAccountContext, NostrEvent, NostrKind, Tag } from "./nostr.ts";
 
 export type UploadFileResponse = {
@@ -71,7 +71,7 @@ async function prepareHttpAuthEvent(
         const hashString = hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
         tags.push(["payload", hashString]);
     }
-    return prepareNormalNostrEvent(
+    return prepareNostrEvent(
         author,
         {
             kind: NostrKind.HTTP_AUTH,

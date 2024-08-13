@@ -1,6 +1,6 @@
 import { sleep } from "@blowater/csp";
 import { newURL, parseJSON, RESTRequestFailed } from "./_helper.ts";
-import { prepareNormalNostrEvent } from "./event.ts";
+import { prepareNostrEvent } from "./event.ts";
 import { PublicKey } from "./key.ts";
 import { getRelayInformation, RelayInformation } from "./nip11.ts";
 import { NoteID } from "./nip19.ts";
@@ -500,7 +500,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 this.url.searchParams.set(
                     "auth",
                     btoa(JSON.stringify(
-                        await prepareNormalNostrEvent(this.signer, {
+                        await prepareNostrEvent(this.signer, {
                             kind: NostrKind.HTTP_AUTH,
                             content: "",
                         }),

@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { PrivateKey, PublicKey } from "../key.ts";
-import { InMemoryAccountContext, NostrKind, prepareNormalNostrEvent } from "../nostr.ts";
+import { InMemoryAccountContext, NostrKind, prepareNostrEvent } from "../nostr.ts";
 import { SingleRelayConnection } from "../relay-single.ts";
 import * as relayList from "./relay-list.test.ts";
 import { Signer } from "../nostr.ts";
@@ -13,7 +13,7 @@ Deno.test("SingleRelayConnection", async () => {
     }
     const privateKey = PrivateKey.Generate();
     const signer = InMemoryAccountContext.New(privateKey);
-    const event = await prepareNormalNostrEvent(signer, {
+    const event = await prepareNostrEvent(signer, {
         content: "this is an example",
         kind: NostrKind.TEXT_NOTE,
         tags: [
