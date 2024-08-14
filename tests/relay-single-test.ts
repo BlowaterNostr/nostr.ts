@@ -1,5 +1,5 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
-import { prepareNormalNostrEvent } from "../event.ts";
+import { prepareNostrEvent } from "../event.ts";
 import { InMemoryAccountContext, NostrKind, RelayResponse_Event, Signer } from "../nostr.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "../relay-single.ts";
 import * as csp from "@blowater/csp";
@@ -69,7 +69,7 @@ export const send_event = (url: string) => async () => {
     const client = SingleRelayConnection.New(url) as SingleRelayConnection;
     {
         const err = client.sendEvent(
-            await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+            await prepareNostrEvent(InMemoryAccountContext.Generate(), {
                 content: "",
                 kind: NostrKind.TEXT_NOTE,
             }),
@@ -83,7 +83,7 @@ export const get_correct_kind = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url) as SingleRelayConnection;
     {
         const err = await relay.sendEvent(
-            await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+            await prepareNostrEvent(InMemoryAccountContext.Generate(), {
                 kind: NostrKind.Encrypted_Custom_App_Data,
                 content: "test",
             }),
@@ -109,11 +109,11 @@ export const get_correct_kind = (url: string) => async () => {
 
 export const newSub_multiple_filters = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url) as SingleRelayConnection;
-    const event_1 = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+    const event_1 = await prepareNostrEvent(InMemoryAccountContext.Generate(), {
         kind: NostrKind.TEXT_NOTE,
         content: "test1",
     });
-    const event_2 = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+    const event_2 = await prepareNostrEvent(InMemoryAccountContext.Generate(), {
         kind: NostrKind.Long_Form,
         content: "test2",
     });
@@ -151,28 +151,28 @@ export const limit = (url: string) => async () => {
     const relay = SingleRelayConnection.New(url) as SingleRelayConnection;
     {
         const err = await relay.sendEvent(
-            await prepareNormalNostrEvent(ctx, {
+            await prepareNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
                 content: "1",
             }),
         );
         if (err instanceof Error) fail(err.message);
         const err2 = await relay.sendEvent(
-            await prepareNormalNostrEvent(ctx, {
+            await prepareNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
                 content: "2",
             }),
         );
         if (err2 instanceof Error) fail(err2.message);
         const err3 = await relay.sendEvent(
-            await prepareNormalNostrEvent(ctx, {
+            await prepareNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
                 content: "3",
             }),
         );
         if (err3 instanceof Error) fail(err3.message);
         const err4 = await relay.sendEvent(
-            await prepareNormalNostrEvent(ctx, {
+            await prepareNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
                 content: "4",
             }),
@@ -226,7 +226,7 @@ export const two_clients_communicate = (url: string) => async () => {
         if (sub instanceof Error) fail(sub.message);
 
         const err = await relay2.sendEvent(
-            await prepareNormalNostrEvent(ctx, {
+            await prepareNostrEvent(ctx, {
                 content: "test",
                 kind: NostrKind.TEXT_NOTE,
             }),
@@ -253,7 +253,7 @@ export const get_event_by_id = (url: string) => async () => {
         const event_1 = await client.getEvent(PrivateKey.Generate().hex);
         assertEquals(event_1, undefined);
 
-        const event = await prepareNormalNostrEvent(ctx, {
+        const event = await prepareNostrEvent(ctx, {
             content: "get_event_by_id",
             kind: NostrKind.TEXT_NOTE,
         });
@@ -272,7 +272,7 @@ export const get_replaceable_event = (url: string) => async () => {
     const client = SingleRelayConnection.New(url) as SingleRelayConnection;
     const ctx = InMemoryAccountContext.Generate();
 
-    const event1 = await prepareNormalNostrEvent(ctx, {
+    const event1 = await prepareNostrEvent(ctx, {
         content: "1",
         kind: NostrKind.META_DATA,
         created_at: Date.now() / 1000,
@@ -282,7 +282,7 @@ export const get_replaceable_event = (url: string) => async () => {
         if (err instanceof Error) fail(err.message);
     }
 
-    const event2 = await prepareNormalNostrEvent(ctx, {
+    const event2 = await prepareNostrEvent(ctx, {
         content: "2",
         kind: NostrKind.META_DATA,
         created_at: Date.now() / 1000 + 1,

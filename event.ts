@@ -19,7 +19,7 @@ export async function prepareEncryptedNostrEvent<T extends NostrKind>(
     if (encrypted instanceof Error) {
         return encrypted;
     }
-    return prepareNormalNostrEvent(
+    return prepareNostrEvent(
         sender,
         {
             kind: args.kind,
@@ -29,7 +29,7 @@ export async function prepareEncryptedNostrEvent<T extends NostrKind>(
     );
 }
 
-export async function prepareNormalNostrEvent<Kind extends NostrKind = NostrKind>(
+export async function prepareNostrEvent<Kind extends NostrKind = NostrKind>(
     sender: Signer,
     args: {
         kind: Kind;
@@ -64,7 +64,7 @@ export async function prepareDeletionEvent(
         tags.push(["e", e.id]);
     }
 
-    return prepareNormalNostrEvent(
+    return prepareNostrEvent(
         author,
         {
             kind: NostrKind.DELETE,

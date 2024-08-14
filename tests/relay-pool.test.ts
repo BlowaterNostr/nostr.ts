@@ -3,7 +3,7 @@ import { blowater, relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "../relay-single.ts";
 import { AsyncWebSocket } from "../websocket.ts";
 import { ConnectionPool } from "../relay-pool.ts";
-import { prepareNormalNostrEvent } from "../event.ts";
+import { prepareNostrEvent } from "../event.ts";
 import { PrivateKey } from "../key.ts";
 import * as csp from "@blowater/csp";
 import { assertEquals, assertNotEquals, assertNotInstanceOf, fail } from "@std/assert";
@@ -186,7 +186,7 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
     assertEquals(_relay, client);
 
     await pool.sendEvent(
-        await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+        await prepareNostrEvent(InMemoryAccountContext.Generate(), {
             kind: NostrKind.DELETE,
             content: "",
         }),
@@ -241,7 +241,7 @@ Deno.test("send & get event", async (t) => {
         fail();
     }
     {
-        const event = await prepareNormalNostrEvent(InMemoryAccountContext.Generate(), {
+        const event = await prepareNostrEvent(InMemoryAccountContext.Generate(), {
             kind: NostrKind.CONTACTS,
             content: "",
         });

@@ -1,11 +1,11 @@
 import { assertEquals, fail } from "@std/assert";
 import { PrivateKey } from "./key.ts";
 import { InMemoryAccountContext, NostrKind, verifyEvent } from "./nostr.ts";
-import { prepareEncryptedNostrEvent, prepareNormalNostrEvent } from "./event.ts";
+import { prepareEncryptedNostrEvent, prepareNostrEvent } from "./event.ts";
 
 Deno.test("Verify Event", async (t) => {
     let pri = PrivateKey.Generate();
-    let event = await prepareNormalNostrEvent(InMemoryAccountContext.New(pri), {
+    let event = await prepareNostrEvent(InMemoryAccountContext.New(pri), {
         kind: NostrKind.TEXT_NOTE,
         content: "",
     });
