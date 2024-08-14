@@ -22,6 +22,8 @@ export enum NostrKind {
     Encrypted_Custom_App_Data = 20231125,
     Custom_App_Data = 30078, // https://github.com/nostr-protocol/nips/blob/master/78.md
     Long_Form = 30023, // https://github.com/nostr-protocol/nips/blob/master/23.md
+    Calendar_Date = 31922, // https://github.com/nostr-protocol/nips/blob/master/52.md#date-based-calendar-event
+    Calendar_Time = 31923, // https://github.com/nostr-protocol/nips/blob/master/52.md#time-based-calendar-event
     HTTP_AUTH = 27235, // https://github.com/nostr-protocol/nips/blob/master/98.md
 }
 
