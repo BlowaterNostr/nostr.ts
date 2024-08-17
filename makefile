@@ -28,3 +28,6 @@ install:
 
 build:
 	deno bundle *.ts mod.ts
+
+publish:
+	deno publish --allow-slow-types
