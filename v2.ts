@@ -60,3 +60,5 @@ export interface Signer_V2 {
         event: T,
     ): Promise<T & { sig: string; id: string }>;
 }
+
+export * from "./space-member.ts";
