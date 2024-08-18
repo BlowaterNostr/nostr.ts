@@ -2,7 +2,7 @@ import { PublicKey } from "./key.ts";
 import { parseJSON, RESTRequestFailed, RFC3339 } from "./_helper.ts";
 import { format } from "@std/datetime";
 import { z } from "zod";
-import { Kind_V2, Signer_V2, SpaceMember } from "./v2.ts";
+import { Signer_V2, SpaceMember } from "./v2.ts";
 
 export function prepareSpaceMember(
     author: Signer_V2,
@@ -12,7 +12,7 @@ export function prepareSpaceMember(
     if (pubkey instanceof Error) return pubkey;
     return author.signEventV2({
         pubkey: author.publicKey.hex,
-        kind: Kind_V2.SpaceMember,
+        kind: "SpaceMember",
         member: pubkey.hex,
         created_at: format(new Date(), RFC3339),
     });
@@ -23,7 +23,7 @@ const SpaceMembers_Schema = z.object({
     id: z.string(),
     sig: z.string(),
     created_at: z.string(),
-    kind: z.literal(Kind_V2.SpaceMember),
+    kind: z.literal("SpaceMember"),
     member: z.string(),
 }).array();
 

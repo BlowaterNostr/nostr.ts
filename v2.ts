@@ -5,11 +5,7 @@ import { encodeHex } from "@std/encoding";
 import stringify from "npm:json-stable-stringify@1.1.1";
 import { PublicKey } from "./key.ts";
 
-export enum Kind_V2 {
-    ChannelCreation = "ChannelCreation",
-    ChannelEdition = "ChannelEdition",
-    SpaceMember = "SpaceMember",
-}
+export type Kind_V2 = "ChannelCreation" | "ChannelEdition" | "SpaceMember";
 
 type Event_Base = {
     pubkey: string;
@@ -19,7 +15,7 @@ type Event_Base = {
 };
 
 export type ChannelCreation = Event_Base & {
-    kind: Kind_V2.ChannelCreation;
+    kind: "ChannelCreation";
     name: string;
     scope: "server";
 };
@@ -27,13 +23,13 @@ export type ChannelCreation = Event_Base & {
 // EditChannel is a different type from CreateChannel because
 // a channel only has one creator but could have multiple admin to modify it
 export type ChannelEdition = Event_Base & {
-    kind: Kind_V2.ChannelEdition;
+    kind: "ChannelEdition";
     channel_id: string;
     name: string;
 };
 
 export type SpaceMember = Event_Base & {
-    kind: Kind_V2.SpaceMember;
+    kind: "SpaceMember";
     member: string; // the pubkey of member
 };
 
@@ -60,3 +56,5 @@ export interface Signer_V2 {
         event: T,
     ): Promise<T & { sig: string; id: string }>;
 }
+
+export * from "./space-member.ts";

@@ -25,7 +25,6 @@ import * as csp from "@blowater/csp";
 import { getSpaceMembers, prepareSpaceMember } from "./space-member.ts";
 import { assertEquals } from "@std/assert";
 import { Event_V2, Signer_V2, SpaceMember } from "./v2.ts";
-import { ValueMap } from "@blowater/collections";
 
 export class WebSocketClosed extends Error {
     constructor(
