@@ -310,7 +310,7 @@ async () => {
     const client = SingleRelayConnection.New(url, args) as SingleRelayConnection;
     {
         const new_member = PrivateKey.Generate().toPublicKey();
-        const added = await client.addSpaceMember(new_member);
+        const added = await client.unstable.addSpaceMember(new_member);
         if (added instanceof Error) fail(added.message);
         assertEquals(added.status, 200);
         assertEquals(await added.text(), "");
