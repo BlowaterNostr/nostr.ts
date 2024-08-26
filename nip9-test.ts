@@ -4,7 +4,7 @@ import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { SingleRelayConnection } from "./relay-single.ts";
 
 export const store_deletion_event = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url, { log: true });
+    const relay = SingleRelayConnection.New(url, { log: true }) as SingleRelayConnection;
     const ctx = InMemoryAccountContext.Generate();
     try {
         const event = await prepareNostrEvent(ctx, {
@@ -26,7 +26,7 @@ export const store_deletion_event = (url: string) => async () => {
 };
 
 export const delete_regular_events = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url, { log: true });
+    const relay = SingleRelayConnection.New(url, { log: true }) as SingleRelayConnection;
     const ctx = InMemoryAccountContext.Generate();
     const testkind = [NostrKind.TEXT_NOTE, NostrKind.DIRECT_MESSAGE];
     try {

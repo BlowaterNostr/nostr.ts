@@ -531,100 +531,100 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
         return message;
     }
 
-    getSpaceInformation = () => {
-        return getRelayInformation(this.url);
-    };
-
-    /**
-     * before we have relay info as events,
-     * let's pull it periodically to have an async iterable API
-     */
-    getRelayInformationStream = () => {
-        const chan = csp.chan<Error | RelayInformation>();
-        (async () => {
-            let spaceInformation: RelayInformation | Error | undefined;
-            for (;;) {
-                if (chan.closed()) return;
-                const info = await this.getSpaceInformation();
-                if (info instanceof Error || !deepEqual(spaceInformation, info)) {
-                    spaceInformation = info;
-                    const err = await chan.put(info);
-                    if (err instanceof Error) {
-                        // the channel is closed by outside, stop the stream
-                        return;
+    unstable = {
+        /**
+         * before we have relay info as events,
+         * let's pull it periodically to have an async iterable API
+         */
+        getRelayInformationStream: () => {
+            const chan = csp.chan<Error | RelayInformation>();
+            (async () => {
+                let spaceInformation: RelayInformation | Error | undefined;
+                for (;;) {
+                    if (chan.closed()) return;
+                    const info = await this.unstable.getSpaceInformation();
+                    if (info instanceof Error || !deepEqual(spaceInformation, info)) {
+                        spaceInformation = info;
+                        const err = await chan.put(info);
+                        if (err instanceof Error) {
+                            // the channel is closed by outside, stop the stream
+                            return;
+                        }
                     }
+                    await sleep(3000); // every 3 sec
                 }
-                await sleep(3000); // every 3 sec
+            })();
+            return chan;
+        },
+        postEventV2: async (event: Event_V2): Promise<Error | Response> => {
+            const httpURL = new URL(this.url);
+            httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
+            try {
+                return await fetch(httpURL, { method: "POST", body: JSON.stringify(event) });
+            } catch (e) {
+                return e as Error;
             }
-        })();
-        return chan;
-    };
-
-    /**
-     * v2 API, unstable
-     * a stream of space members
-     */
-    getSpaceMembersStream = () => {
-        const chan = csp.chan<RESTRequestFailed | TypeError | SyntaxError | DOMException | SpaceMember[]>();
-        (async () => {
-            let spaceMembers:
-                | SpaceMember[]
-                | RESTRequestFailed
-                | TypeError
-                | SyntaxError
-                | DOMException
-                | undefined;
-            for (;;) {
-                if (chan.closed()) return;
-                const members = await getSpaceMembers(this.url);
-                if (members instanceof Error) {
-                    if (members instanceof RESTRequestFailed) {
-                        if (members.res.status == 404) {
-                            await chan.put(members);
-                            await chan.close();
+        },
+        /**
+         * v2 API, unstable
+         * add a public key to this relay as its member
+         */
+        addSpaceMember: async (member: PublicKey | string): Promise<Error | Response> => {
+            if (!this.signer_v2) {
+                return new SignerV2NotExist();
+            }
+            const spaceMemberEvent = await prepareSpaceMember(this.signer_v2, member);
+            if (spaceMemberEvent instanceof Error) {
+                return spaceMemberEvent;
+            }
+            return await this.unstable.postEventV2(spaceMemberEvent);
+        },
+        /**
+         * v2 API, unstable
+         * a stream of space members
+         */
+        getSpaceMembersStream: () => {
+            const chan = csp.chan<
+                RESTRequestFailed | TypeError | SyntaxError | DOMException | SpaceMember[]
+            >();
+            (async () => {
+                let spaceMembers:
+                    | SpaceMember[]
+                    | RESTRequestFailed
+                    | TypeError
+                    | SyntaxError
+                    | DOMException
+                    | undefined;
+                for (;;) {
+                    if (chan.closed()) return;
+                    const members = await getSpaceMembers(this.url);
+                    if (members instanceof Error) {
+                        if (members instanceof RESTRequestFailed) {
+                            if (members.res.status == 404) {
+                                await chan.put(members);
+                                await chan.close();
+                            } else {
+                                await chan.put(members);
+                            }
                         } else {
                             await chan.put(members);
                         }
-                    } else {
-                        await chan.put(members);
+                    } else if (!deepEqual(spaceMembers, members)) {
+                        spaceMembers = members;
+                        const err = await chan.put(members);
+                        if (err instanceof Error) {
+                            // the channel is closed by outside, stop the stream
+                            return;
+                        }
                     }
-                } else if (!deepEqual(spaceMembers, members)) {
-                    spaceMembers = members;
-                    const err = await chan.put(members);
-                    if (err instanceof Error) {
-                        // the channel is closed by outside, stop the stream
-                        return;
-                    }
+                    await sleep(3000); // every 3 sec
                 }
-                await sleep(3000); // every 3 sec
-            }
-        })();
-        return chan;
-    };
-
-    /**
-     * v2 API, unstable
-     * add a public key to this relay as its member
-     */
-    addSpaceMember = async (member: PublicKey | string): Promise<Error | Response> => {
-        if (!this.signer_v2) {
-            return new SignerV2NotExist();
-        }
-        const spaceMemberEvent = await prepareSpaceMember(this.signer_v2, member);
-        if (spaceMemberEvent instanceof Error) {
-            return spaceMemberEvent;
-        }
-        return await this.postEventV2(spaceMemberEvent);
-    };
-
-    private postEventV2 = async (event: Event_V2): Promise<Error | Response> => {
-        const httpURL = new URL(this.url);
-        httpURL.protocol = httpURL.protocol == "wss:" ? "https" : "http";
-        try {
-            return await fetch(httpURL, { method: "POST", body: JSON.stringify(event) });
-        } catch (e) {
-            return e as Error;
-        }
+            })();
+            return chan;
+        },
+        getSpaceInformation: () => {
+            return getRelayInformation(this.url);
+        },
     };
 }
 
