@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { PrivateKey, PublicKey } from "../key.ts";
-import { InMemoryAccountContext, NostrKind, prepareNostrEvent } from "../nostr.ts";
+import { InMemoryAccountContext, NostrEvent, NostrKind, prepareNostrEvent } from "../nostr.ts";
 import { SingleRelayConnection } from "../relay-single.ts";
 import * as relayList from "./relay-list.test.ts";
 import { Signer } from "../nostr.ts";
@@ -19,7 +19,7 @@ Deno.test("SingleRelayConnection", async () => {
         tags: [
             ["p", signer.publicKey.hex],
         ],
-    });
+    }) as NostrEvent;
     const ok = await relay.sendEvent(event);
     if (ok instanceof Error) {
         console.error(ok);
