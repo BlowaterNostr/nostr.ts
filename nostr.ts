@@ -177,10 +177,12 @@ export interface NostrAccountContext extends Signer {
  *
  * see examples [here](./tests/example.test.ts)
  */
-export interface Signer {
+export type Signer = {
     readonly publicKey: PublicKey;
-    signEvent<Kind extends NostrKind = NostrKind>(event: UnsignedNostrEvent<Kind>): Promise<NostrEvent<Kind>>;
-}
+    signEvent<Kind extends NostrKind = NostrKind>(
+        event: UnsignedNostrEvent<Kind>,
+    ): Promise<NostrEvent<Kind> | Error>;
+};
 
 export class DecryptionFailure extends Error {
     constructor(
