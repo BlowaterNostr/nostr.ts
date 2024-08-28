@@ -1,4 +1,4 @@
-import { InMemoryAccountContext, NostrKind } from "../nostr.ts";
+import { InMemoryAccountContext, NostrEvent, NostrKind } from "../nostr.ts";
 import { blowater, relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "../relay-single.ts";
 import { AsyncWebSocket } from "../websocket.ts";
@@ -189,7 +189,7 @@ Deno.test("ConnectionPool able to subscribe before adding relays", async () => {
         await prepareNostrEvent(InMemoryAccountContext.Generate(), {
             kind: NostrKind.DELETE,
             content: "",
-        }),
+        }) as NostrEvent,
     );
 
     const msg = await chan.chan.pop();
@@ -244,7 +244,7 @@ Deno.test("send & get event", async (t) => {
         const event = await prepareNostrEvent(InMemoryAccountContext.Generate(), {
             kind: NostrKind.CONTACTS,
             content: "",
-        });
+        }) as NostrEvent;
         const err = await pool.sendEvent(event);
         if (err) fail(err.message);
         const e = await pool.getEvent(event.id);
