@@ -37,7 +37,7 @@ export async function prepareNostrEvent<Kind extends NostrKind = NostrKind>(
         tags?: Tag[];
         created_at?: number;
     },
-): Promise<NostrEvent<Kind>> {
+): Promise<NostrEvent<Kind> | Error> {
     const event: UnsignedNostrEvent<Kind> = {
         created_at: args.created_at ? Math.floor(args.created_at) : Math.floor(Date.now() / 1000),
         kind: args.kind,

@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { prepareNostrEvent } from "../event.ts";
-import { InMemoryAccountContext, NostrKind, RelayResponse_Event, Signer } from "../nostr.ts";
+import { InMemoryAccountContext, NostrEvent, NostrKind, RelayResponse_Event, Signer } from "../nostr.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "../relay-single.ts";
 import * as csp from "@blowater/csp";
 import { PrivateKey, PublicKey } from "../key.ts";
@@ -68,12 +68,11 @@ export const close_sub_keep_reading = (url: string) => async () => {
 export const send_event = (url: string) => async () => {
     const client = SingleRelayConnection.New(url) as SingleRelayConnection;
     {
-        const err = client.sendEvent(
-            await prepareNostrEvent(InMemoryAccountContext.Generate(), {
-                content: "",
-                kind: NostrKind.TEXT_NOTE,
-            }),
-        );
+        const event = await prepareNostrEvent(InMemoryAccountContext.Generate(), {
+            content: "",
+            kind: NostrKind.TEXT_NOTE,
+        }) as NostrEvent;
+        const err = client.sendEvent(event);
         if (err instanceof Error) fail(err.message);
     }
     await client.close();
@@ -86,7 +85,7 @@ export const get_correct_kind = (url: string) => async () => {
             await prepareNostrEvent(InMemoryAccountContext.Generate(), {
                 kind: NostrKind.Encrypted_Custom_App_Data,
                 content: "test",
-            }),
+            }) as NostrEvent,
         );
         if (err instanceof Error) fail(err.message);
     }
@@ -112,15 +111,15 @@ export const newSub_multiple_filters = (url: string) => async () => {
     const event_1 = await prepareNostrEvent(InMemoryAccountContext.Generate(), {
         kind: NostrKind.TEXT_NOTE,
         content: "test1",
-    });
+    }) as NostrEvent;
     const event_2 = await prepareNostrEvent(InMemoryAccountContext.Generate(), {
         kind: NostrKind.Long_Form,
         content: "test2",
-    });
+    }) as NostrEvent;
     {
-        const err1 = await relay.sendEvent(event_1);
+        const err1 = await relay.sendEvent(event_1 as NostrEvent);
         if (err1 instanceof Error) fail(err1.message);
-        const err2 = await relay.sendEvent(event_2);
+        const err2 = await relay.sendEvent(event_2 as NostrEvent);
         if (err2 instanceof Error) fail(err2.message);
     }
 
@@ -154,28 +153,28 @@ export const limit = (url: string) => async () => {
             await prepareNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
                 content: "1",
-            }),
+            }) as NostrEvent,
         );
         if (err instanceof Error) fail(err.message);
         const err2 = await relay.sendEvent(
             await prepareNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
                 content: "2",
-            }),
+            }) as NostrEvent,
         );
         if (err2 instanceof Error) fail(err2.message);
         const err3 = await relay.sendEvent(
             await prepareNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
                 content: "3",
-            }),
+            }) as NostrEvent,
         );
         if (err3 instanceof Error) fail(err3.message);
         const err4 = await relay.sendEvent(
             await prepareNostrEvent(ctx, {
                 kind: NostrKind.TEXT_NOTE,
                 content: "4",
-            }),
+            }) as NostrEvent,
         );
         if (err4 instanceof Error) fail(err4.message);
 
@@ -229,7 +228,7 @@ export const two_clients_communicate = (url: string) => async () => {
             await prepareNostrEvent(ctx, {
                 content: "test",
                 kind: NostrKind.TEXT_NOTE,
-            }),
+            }) as NostrEvent,
         );
         if (err instanceof Error) fail(err.message);
 
@@ -256,7 +255,7 @@ export const get_event_by_id = (url: string) => async () => {
         const event = await prepareNostrEvent(ctx, {
             content: "get_event_by_id",
             kind: NostrKind.TEXT_NOTE,
-        });
+        }) as NostrEvent;
         const err = await client.sendEvent(event);
         if (err instanceof Error) fail(err.message);
 
@@ -276,7 +275,7 @@ export const get_replaceable_event = (url: string) => async () => {
         content: "1",
         kind: NostrKind.META_DATA,
         created_at: Date.now() / 1000,
-    });
+    }) as NostrEvent;
     {
         const err = await client.sendEvent(event1);
         if (err instanceof Error) fail(err.message);
@@ -286,7 +285,7 @@ export const get_replaceable_event = (url: string) => async () => {
         content: "2",
         kind: NostrKind.META_DATA,
         created_at: Date.now() / 1000 + 1,
-    });
+    }) as NostrEvent;
     {
         const err = await client.sendEvent(event2);
         if (err instanceof Error) fail(err.message);
