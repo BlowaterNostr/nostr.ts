@@ -10,10 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    timeout-minutes: 1
+  setup:
     runs-on: ubuntu-latest
-
     steps:
       - name: Setup repo
         uses: actions/checkout@v3
@@ -26,11 +24,16 @@ jobs:
       - name: Verify formatting & other checks
         run: make check
 
+  test:
+    needs: setup
+    timeout-minutes: 1
+    runs-on: ubuntu-latest
+    steps:
       - name: Run tests
         run: make test
 
   react_native_ci_job:
-    needs: test
+    needs: setup
     runs-on: ubuntu-latest
     name: React Native Test
     steps:
