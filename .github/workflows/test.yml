@@ -29,13 +29,18 @@ jobs:
     timeout-minutes: 1
     runs-on: ubuntu-latest
     steps:
+      - name: Setup repo
+        uses: actions/checkout@v3
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+
       - name: Run tests
         run: make test
 
-  react_native_ci_job:
+  react_native_test:
     needs: setup
     runs-on: ubuntu-latest
-    name: React Native Test
     steps:
       - name: Checkout
         uses: actions/checkout@v3
