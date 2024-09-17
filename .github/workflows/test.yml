@@ -30,6 +30,7 @@ jobs:
         run: make test
 
   react_native_ci_job:
+    needs: test
     runs-on: ubuntu-latest
     name: React Native Test
     steps:
