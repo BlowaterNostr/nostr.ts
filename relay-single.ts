@@ -76,7 +76,7 @@ export type BidirectionalNetwork = {
     >;
     send: (
         str: string | ArrayBufferLike | Blob | ArrayBufferView,
-    ) => Promise<WebSocketClosed | DOMException | undefined>;
+    ) => Promise<WebSocketClosed | Error | undefined>;
     close: (
         code?: number,
         reason?: string,
@@ -322,9 +322,6 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
 
         if (this.ws != undefined) {
             const err = await sendSubscription(this.ws, subID, ...filters);
-            if (err instanceof DOMException) {
-                return err;
-            }
             if (err instanceof Error) {
                 console.error(err);
             }
@@ -585,7 +582,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
          */
         getSpaceMembersStream: () => {
             const chan = csp.chan<
-                RESTRequestFailed | TypeError | SyntaxError | DOMException | SpaceMember[]
+                RESTRequestFailed | TypeError | SyntaxError | Error | SpaceMember[]
             >();
             (async () => {
                 let spaceMembers:
@@ -593,7 +590,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                     | RESTRequestFailed
                     | TypeError
                     | SyntaxError
-                    | DOMException
+                    | Error
                     | undefined;
                 for (;;) {
                     if (chan.closed()) return;

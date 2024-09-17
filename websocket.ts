@@ -149,7 +149,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             if (e.message == "readyState not OPEN") {
                 return new WebSocketClosed(this.url, this.status());
             }
-            return e as DOMException;
+            return e as Error;
         }
     }
 
