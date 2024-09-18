@@ -4,7 +4,7 @@ import { RFC3339 } from "./_helper.ts";
 import { format } from "@std/datetime";
 import { verify_event_v2 } from "./v2.ts";
 import { prepareNostrEvent } from "./event.ts";
-import { PrivateKey, PublicKey } from "./key.ts";
+import { PrivateKey } from "./key.ts";
 
 Deno.test("verify event v2", async () => {
     const ctx = InMemoryAccountContext.Generate();
