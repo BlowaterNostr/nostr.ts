@@ -271,10 +271,11 @@ export const get_replaceable_event = (url: string) => async () => {
     const client = SingleRelayConnection.New(url) as SingleRelayConnection;
     const ctx = InMemoryAccountContext.Generate();
 
+    const created_at = Date.now() / 1000;
     const event1 = await prepareNostrEvent(ctx, {
         content: "1",
         kind: NostrKind.META_DATA,
-        created_at: Date.now() / 1000,
+        created_at: created_at,
     }) as NostrEvent;
     {
         const err = await client.sendEvent(event1);
@@ -284,7 +285,7 @@ export const get_replaceable_event = (url: string) => async () => {
     const event2 = await prepareNostrEvent(ctx, {
         content: "2",
         kind: NostrKind.META_DATA,
-        created_at: Date.now() / 1000 + 1,
+        created_at: created_at + 100,
     }) as NostrEvent;
     {
         const err = await client.sendEvent(event2);
