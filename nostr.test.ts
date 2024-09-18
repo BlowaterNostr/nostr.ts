@@ -18,9 +18,9 @@ Deno.test("verify event v2", async () => {
 });
 
 Deno.test("getTags", async () => {
-    const d = PrivateKey.Generate().hex
-    const e = PrivateKey.Generate().hex
-    const p = PrivateKey.Generate().hex
+    const d = PrivateKey.Generate().hex;
+    const e = PrivateKey.Generate().hex;
+    const p = PrivateKey.Generate().hex;
     const event = await prepareNostrEvent(InMemoryAccountContext.Generate(), {
         kind: NostrKind.TEXT_NOTE,
         content: "",
@@ -28,14 +28,14 @@ Deno.test("getTags", async () => {
             ["d", d],
             ["e", e],
             ["p", p],
-            ["client", "Deno"]
-        ]
-    }) as NostrEvent
-    const tags = getTags(event)
+            ["client", "Deno"],
+        ],
+    }) as NostrEvent;
+    const tags = getTags(event);
     assertEquals(tags, {
         e: [e],
         p: [p],
         d: d,
-        client: "Deno"
-    })
-})
+        client: "Deno",
+    });
+});

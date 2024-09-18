@@ -140,7 +140,7 @@ export type TagIdentifier = ["d", string];
 export type Tags = {
     p: string[];
     e: string[];
-    d?: string
+    d?: string;
     client?: string;
 };
 
@@ -158,10 +158,10 @@ export function getTags(event: NostrEvent): Tags {
                 tags.e.push(tag[1]);
                 break;
             case "d":
-                tags.d = tag[1]
+                tags.d = tag[1];
                 break;
             case "client":
-                tags.client = tag[1]
+                tags.client = tag[1];
                 break;
         }
     }
