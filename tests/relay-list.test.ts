@@ -5,7 +5,7 @@ export const blowater = "wss://blowater.nostr1.com";
 export const satlantis = "wss://relay.satlantis.io/";
 
 export const relays = [
-    damus,
     nos,
+    wirednet,
     satlantis,
 ];
