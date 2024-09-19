@@ -147,6 +147,7 @@ export type Tags = {
     p: string[];
     e: string[];
     t: string[];
+    d?: string;
     client?: string;
 };
 
