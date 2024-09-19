@@ -233,7 +233,6 @@ export const two_clients_communicate = (url: string) => async () => {
         if (err instanceof Error) fail(err.message);
 
         for await (const msg of sub.chan) {
-            console.log(msg);
             if (msg.type == "EVENT") {
                 assertEquals(msg.event.content, "test");
                 assertEquals(msg.event.pubkey, ctx.publicKey.hex);

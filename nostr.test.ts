@@ -29,6 +29,7 @@ Deno.test("getTags", async () => {
             ["e", e],
             ["p", p],
             ["client", "Deno"],
+            ["t", "food"],
         ],
     }) as NostrEvent;
     const tags = getTags(event);
@@ -36,6 +37,7 @@ Deno.test("getTags", async () => {
         e: [e],
         p: [p],
         d: d,
+        t: ["food"],
         client: "Deno",
     });
 });

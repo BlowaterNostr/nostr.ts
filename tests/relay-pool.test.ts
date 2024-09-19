@@ -1,5 +1,5 @@
 import { InMemoryAccountContext, NostrEvent, NostrKind } from "../nostr.ts";
-import { blowater, relays } from "./relay-list.test.ts";
+import { blowater, nos, relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "../relay-single.ts";
 import { AsyncWebSocket } from "../websocket.ts";
 import { ConnectionPool } from "../relay-pool.ts";
@@ -222,7 +222,7 @@ Deno.test("newSub 2 times & add relay url later", async (t) => {
 
         // add relay after creating subscriptions
         // should not create starvation for readers
-        await pool.addRelayURL(relays[1]);
+        await pool.addRelayURL(nos);
 
         const res1 = await stream1.chan.pop();
         const res2 = await stream1.chan.pop();
