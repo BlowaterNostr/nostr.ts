@@ -19,6 +19,11 @@ export enum NostrKind {
     DIRECT_MESSAGE_V2 = 44,
     DELETE = 5,
     REACTION = 7,
+    // https://github.com/nostr-protocol/nips/blob/master/51.md#standard-lists
+    Mute_List = 10000,
+    Pinned_Notes = 10001,
+    Bookmarks = 10003,
+    Interests = 10015,
     Encrypted_Custom_App_Data = 20231125,
     Custom_App_Data = 30078, // https://github.com/nostr-protocol/nips/blob/master/78.md
     Long_Form = 30023, // https://github.com/nostr-protocol/nips/blob/master/23.md
