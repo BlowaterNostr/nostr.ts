@@ -137,15 +137,16 @@ export interface UnsignedNostrEvent<Kind extends NostrKind = NostrKind, TagType 
     readonly content: string;
 }
 
-export type Tag = TagPubKey | TagEvent | TagIdentifier | [string, ...string[]];
+export type Tag = TagPubKey | TagEvent | TagIdentifier | TagHashtag | [string, ...string[]];
 export type TagPubKey = ["p", string];
 export type TagEvent = ["e", string];
 export type TagIdentifier = ["d", string];
+export type TagHashtag = ["t", string]; // https://github.com/nostr-protocol/nips/blob/master/24.md#tags
 
 export type Tags = {
     p: string[];
     e: string[];
-    d?: string;
+    t: string[];
     client?: string;
 };
 
@@ -153,6 +154,7 @@ export function getTags(event: NostrEvent): Tags {
     const tags: Tags = {
         p: [],
         e: [],
+        t: [],
     };
     for (const tag of event.tags) {
         switch (tag[0]) {
@@ -167,6 +169,9 @@ export function getTags(event: NostrEvent): Tags {
                 break;
             case "client":
                 tags.client = tag[1];
+                break;
+            case "t":
+                tags.t.push(tag[1]);
                 break;
         }
     }
