@@ -656,11 +656,12 @@ export class SignerV2NotExist extends Error {
     }
 }
 
+// deno-lint-ignore no-explicit-any
 function deepEqual(a: any, b: any) {
     try {
         assertEquals(a, b);
         return true;
-    } catch (e) {
+    } catch {
         return false;
     }
 }

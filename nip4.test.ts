@@ -1,10 +1,10 @@
 import * as ende from "./nip4.ts";
 import { assertEquals, assertNotInstanceOf, fail } from "@std/assert";
 import { utf8Decode, utf8Encode } from "./nip4.ts";
-import { PrivateKey } from "./key.ts";
+import { PrivateKey, PublicKey } from "./key.ts";
 import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
 import { prepareEncryptedNostrEvent } from "./event.ts";
-
+import { ProjectivePoint } from "@noble/secp256k1";
 Deno.test("utf8 encrypt & decrypt", async (t) => {
     let pri1 = PrivateKey.Generate();
     let pub1 = pri1.toPublicKey();
@@ -24,6 +24,9 @@ Deno.test("utf8 encrypt & decrypt", async (t) => {
 
     let start = Date.now();
     let encrypted = await ende.encrypt(pub2.hex, originalStr, pri1.hex);
+    if (encrypted instanceof Error) {
+        fail(encrypted.message);
+    }
     let t2 = Date.now();
     console.log("encrypt cost", t2 - start, "ms");
     let decrypted1 = await ende.decrypt(pri2.hex, pub1.hex, encrypted); // decrypt with receiver pri & sender  pub
@@ -98,4 +101,11 @@ Deno.test("decryption performance: large data", async (t) => {
         if (result instanceof Error) fail(result.message);
     });
     assertEquals(result, data);
+});
+
+Deno.test("failure", async () => {
+    const pub = "ac68c5e86deed0cc0f5b36ddb7eda5d5a1c59f9cc773453a986141a02430de3a";
+    const encrypter = InMemoryAccountContext.Generate();
+    const err = await encrypter.encrypt(pub, "123", "nip4") as Error;
+    assertEquals(err.message, "sqrt invalid");
 });

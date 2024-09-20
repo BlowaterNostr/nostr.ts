@@ -283,7 +283,7 @@ export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
             if (key instanceof Error) return key;
             return nip44.encrypt(plaintext, key);
         } else {
-            return encrypt(pubkey, plaintext, this.privateKey.hex);
+            return await encrypt(pubkey, plaintext, this.privateKey.hex);
         }
     }
 
@@ -314,7 +314,7 @@ export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
 export async function verifyEvent(event: NostrEvent) {
     try {
         return schnorr.verify(event.sig, await calculateId(event), event.pubkey);
-    } catch (err) {
+    } catch {
         return false;
     }
 }

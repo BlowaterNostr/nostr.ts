@@ -1,4 +1,4 @@
-import { blowater, relays } from "./relay-list.test.ts";
+import { blowater, relays, satlantis } from "./relay-list.test.ts";
 import {
     add_space_member,
     close_sub_keep_reading,
@@ -15,7 +15,7 @@ import {
     sub_exits,
     two_clients_communicate,
 } from "./relay-single-test.ts";
-import { wirednet } from "./relay-list.test.ts";
+
 import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
 import { PrivateKey } from "../key.ts";
 import { fail } from "@std/assert";
@@ -72,7 +72,7 @@ Deno.test("Single Relay Connection", async (t) => {
 
 Deno.test("get replaceable event", async () => {
     await get_replaceable_event(blowater)();
-    await get_replaceable_event(wirednet)();
+    await get_replaceable_event(satlantis)();
 });
 
 Deno.test("space members", async (t) => {

@@ -35,17 +35,17 @@ export type SpaceMember = Event_Base & {
 
 export type Event_V2 = ChannelCreation | ChannelEdition | SpaceMember;
 
-export async function verify_event_v2<T extends { sig: string; pubkey: string }>(
+export async function verify_event_v2<T extends { sig: string; pubkey: string; id: string }>(
     event: T,
 ) {
     try {
-        const event_copy: any = { ...event };
+        const event_copy: { sig?: string; pubkey: string; id?: string } = { ...event };
         delete event_copy.sig;
         delete event_copy.id;
         const buf = utf8Encode(stringify(event_copy));
         const id = encodeHex(sha256(buf));
         return schnorr.verify(event.sig, id, event.pubkey);
-    } catch (err) {
+    } catch {
         return false;
     }
 }

@@ -21,6 +21,7 @@ fmt-check:
 	deno fmt --check
 
 check: fmt-check
+	deno lint
 	deno compile cli/nostr.ts
 
 install:

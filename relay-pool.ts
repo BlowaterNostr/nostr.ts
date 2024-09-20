@@ -280,7 +280,7 @@ export class ConnectionPool
         }
         // this function should not be called in production
         // but we implement it for testing purpose
-        for (const [subID, { chan }] of this.subscriptionMap.entries()) {
+        for (const [subID, _] of this.subscriptionMap.entries()) {
             await this.closeSub(subID);
         }
     }

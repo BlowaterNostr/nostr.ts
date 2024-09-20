@@ -1,11 +1,23 @@
 {
     "name": "@blowater/nostr-sdk",
-    "version": "0.0.22",
+    "version": "0.1.0",
     "exports": "./nostr.ts",
     "fmt": {
         "indentWidth": 4,
         "lineWidth": 110,
         "exclude": ["cov_profile"]
+    },
+    "lint": {
+        "rules": {
+            "exclude": [
+                "prefer-const",
+                "no-slow-types",
+                "require-await",
+                "verbatim-module-syntax",
+                "ban-types"
+            ]
+        },
+        "exclude": ["scure.ts", "**/*.test.ts"]
     },
     "test": {
         "exclude": ["relay-pool.test.ts", "relay-single.test.ts", "websocket.test.ts"]

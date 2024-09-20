@@ -8,8 +8,13 @@ export async function encrypt(
     publicKey: string,
     message: string,
     privateKey: string,
-): Promise<string> {
-    const key = getSharedSecret(privateKey, "02" + publicKey);
+): Promise<string | Error> {
+    let key;
+    try {
+        key = getSharedSecret(privateKey, "02" + publicKey);
+    } catch (e) {
+        return e as Error;
+    }
     const normalizedKey = getNormalizedX(key);
     const encoder = new TextEncoder();
     const iv = Uint8Array.from(randomBytes(16));
