@@ -1,5 +1,5 @@
 import { assertEquals, assertIsError, fail } from "@std/assert";
-import { PrivateKey, PublicKey } from "./key.ts";
+import { InvalidKey, PrivateKey, PublicKey } from "./key.ts";
 import { AddressPointer, EventPointer, Nevent, NostrAddress, NostrProfile, NoteID } from "./nip19.ts";
 import { relays } from "./tests/relay-list.test.ts";
 import { NostrKind } from "./nostr.ts";
@@ -36,6 +36,14 @@ Deno.test("nip19 public key incorrect", () => {
     } else {
         fail("should be error");
     }
+
+    const pub2 = PublicKey.FromBech32(
+        "npub1xxxxxxxxrhgtk4fgqdmpuqxv05u9raau3w0shay7msmr0dzs4m7sxxxxxx",
+    ) as InvalidKey;
+    assertEquals(
+        pub2.message,
+        `key 'npub1xxxxxxxxrhgtk4fgqdmpuqxv05u9raau3w0shay7msmr0dzs4m7sxxxxxx' is invalid, reason: Invalid checksum in npub1xxxxxxxxrhgtk4fgqdmpuqxv05u9raau3w0shay7msmr0dzs4m7sxxxxxx: expected "ym976l"`,
+    );
 });
 
 Deno.test("nip19 public key performance", async (t) => {

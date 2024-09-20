@@ -98,10 +98,14 @@ export class PublicKey {
         if (key.substring(0, 4) != "npub") {
             return new InvalidKey(key, "not a npub");
         }
-        const code = bech32.decode(key, 1500);
-        const data = new Uint8Array(bech32.fromWords(code.words));
-        const hex = encodeHex(data);
-        return PublicKey.FromHex(hex);
+        try {
+            const code = bech32.decode(key, 1500);
+            const data = new Uint8Array(bech32.fromWords(code.words));
+            const hex = encodeHex(data);
+            return PublicKey.FromHex(hex);
+        } catch (e) {
+            return new InvalidKey(key, e.message);
+        }
     }
 
     bech32(): string {
