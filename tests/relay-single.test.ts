@@ -15,7 +15,7 @@ import {
     sub_exits,
     two_clients_communicate,
 } from "./relay-single-test.ts";
-import { wirednet } from "./relay-list.test.ts";
+
 import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
 import { PrivateKey } from "../key.ts";
 import { fail } from "@std/assert";
