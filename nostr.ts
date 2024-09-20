@@ -180,8 +180,11 @@ export function getTags(event: NostrEvent): Tags {
 }
 
 // https://github.com/nostr-protocol/nips/blob/master/07.md
-export interface NostrAccountContext extends Signer {
+export type NostrAccountContext = Signer & Encrypter & Decrypter;
+export interface Encrypter {
     encrypt(pubkey: string, plaintext: string, algorithm: "nip44" | "nip4"): Promise<string | Error>;
+}
+export interface Decrypter {
     decrypt(pubkey: string, ciphertext: string, algorithm?: "nip44" | "nip4"): Promise<string | Error>;
 }
 

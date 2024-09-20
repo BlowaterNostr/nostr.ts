@@ -1,8 +1,8 @@
 import { PublicKey } from "./key.ts";
-import { NostrAccountContext, NostrEvent, NostrKind, Signer, Tag, UnsignedNostrEvent } from "./nostr.ts";
+import { Encrypter, NostrEvent, NostrKind, Signer, Tag, UnsignedNostrEvent } from "./nostr.ts";
 
 export async function prepareEncryptedNostrEvent<T extends NostrKind>(
-    sender: NostrAccountContext,
+    sender: Signer & Encrypter,
     args: {
         encryptKey: PublicKey;
         kind: T;
@@ -49,7 +49,7 @@ export async function prepareNostrEvent<Kind extends NostrKind = NostrKind>(
 }
 
 export async function prepareDeletionEvent(
-    author: NostrAccountContext,
+    author: Signer,
     content: string,
     ...events: NostrEvent<NostrKind>[]
 ): Promise<NostrEvent<NostrKind.DELETE> | Error> {
