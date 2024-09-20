@@ -179,14 +179,16 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                             return err;
                         }
                     }
-                    console.log("connection error", messsage);
-                    const err = await this.connect();
-                    if (err instanceof RelayDisconnectedByClient) {
-                        return err;
-                    }
-                    if (err instanceof Error) {
-                        console.error(err);
-                        this.error = err;
+                    if (this._isClosedByClient == false) {
+                        console.log("connection error", messsage);
+                        const err = await this.connect();
+                        if (err instanceof RelayDisconnectedByClient) {
+                            return err;
+                        }
+                        if (err instanceof Error) {
+                            console.error(err);
+                            this.error = err;
+                        }
                     }
                     continue;
                 } else if (messsage.type == "open") {
