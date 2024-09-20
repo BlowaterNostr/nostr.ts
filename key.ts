@@ -61,7 +61,6 @@ export class PrivateKey {
     toPublicKey(): PublicKey {
         const pub_bytes = schnorr.getPublicKey(this.key);
         const hex = encodeHex(pub_bytes);
-        // numberToHexUnpadded
         const pub = PublicKey.FromHex(hex);
         if (pub instanceof Error) {
             throw pub; // impossible

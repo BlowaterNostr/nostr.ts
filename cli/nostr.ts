@@ -36,7 +36,7 @@ async function main() {
         const event = await pool.getEvent(eventID.hex);
         console.log(event);
         await pool.close();
-    } else if (["h", "help", "-h", "-help", "--help"]) {
+    } else {
         console.log("nostr keygen - generate key pairs");
         console.log("nostr get [event id] - get event from relays");
     }

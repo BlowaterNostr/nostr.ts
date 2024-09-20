@@ -314,7 +314,7 @@ export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
 export async function verifyEvent(event: NostrEvent) {
     try {
         return schnorr.verify(event.sig, await calculateId(event), event.pubkey);
-    } catch (err) {
+    } catch {
         return false;
     }
 }

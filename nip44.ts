@@ -124,7 +124,7 @@ function decodePayload(payload: string) {
     try {
         data = decodeBase64(payload);
     } catch (error) {
-        return new Error("invalid base64: " + (error as any).message);
+        return new Error("invalid base64: " + error.message);
     }
     const dlen = data.length;
     if (dlen < 99 || dlen > 65603) return new Error("invalid data length: " + dlen);

@@ -3,7 +3,7 @@ import { prepareNostrEvent } from "../event.ts";
 import { InMemoryAccountContext, NostrEvent, NostrKind, RelayResponse_Event, Signer } from "../nostr.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "../relay-single.ts";
 import * as csp from "@blowater/csp";
-import { PrivateKey, PublicKey } from "../key.ts";
+import { PrivateKey } from "../key.ts";
 import { Signer_V2 } from "../v2.ts";
 import { getSpaceMembers } from "../space-member.ts";
 

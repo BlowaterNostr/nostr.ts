@@ -72,7 +72,7 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             });
         };
 
-        // @ts-ignore
+        // @ts-ignore: bypass type annotations of onerror
         this.ws.onerror = async (event: ErrorEvent) => {
             const err = await this.messageChannel.put({
                 type: "error",
