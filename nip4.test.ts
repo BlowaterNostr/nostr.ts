@@ -105,13 +105,7 @@ Deno.test("decryption performance: large data", async (t) => {
 
 Deno.test("failure", async () => {
     const pub = "ac68c5e86deed0cc0f5b36ddb7eda5d5a1c59f9cc773453a986141a02430de3a";
-    // const pub = PrivateKey.Generate().toPublicKey().hex
-    const ok = ProjectivePoint.fromHex(pub);
-    const pub1 = PublicKey.FromHex(pub);
-    // Point.fromHex(pubB)
-    // console.log(pub1, util.isValidPrivateKey)
     const encrypter = InMemoryAccountContext.Generate();
     const err = await encrypter.encrypt(pub, "123", "nip4") as Error;
-    console.log(ok, err);
     assertEquals(err.message, "sqrt invalid");
 });

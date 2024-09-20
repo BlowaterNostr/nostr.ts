@@ -32,7 +32,7 @@ Deno.test("nip19 public key", () => {
 Deno.test("nip19 public key incorrect", () => {
     const pub = PublicKey.FromBech32("invalid");
     if (pub instanceof Error) {
-        assertEquals(pub.message, "key 'invalid' is invalid");
+        assertEquals(pub.message, "key 'invalid' is invalid, reason: not a npub");
     } else {
         fail("should be error");
     }
@@ -206,18 +206,26 @@ Deno.test("nip19 nprofile", async (t) => {
 
 Deno.test("point is not on curve", () => {
     const hex = "ac68c5e86deed0cc0f5b36ddb7eda5d5a1c59f9cc773453a986141a02430de3a";
+    const err_message =
+        "key 'ac68c5e86deed0cc0f5b36ddb7eda5d5a1c59f9cc773453a986141a02430de3a' is invalid, reason: Cannot find square root";
     {
         const key1 = PublicKey.FromHex(hex) as Error;
-        assertEquals(key1.message, "Point is not on curve");
+        assertEquals(key1.message, err_message);
 
         const key2 = PublicKey.FromString(hex) as Error;
-        assertEquals(key2.message, "Point is not on curve");
+        assertEquals(key2.message, err_message);
     }
     {
-        const key1 = PrivateKey.FromHex(hex) as Error;
-        assertEquals(key1.message, "Point is not on curve");
+        const key1 = PrivateKey.FromHex(hex) as PrivateKey;
+        assertEquals(key1.hex, hex);
 
-        const key2 = PrivateKey.FromString(hex) as Error;
-        assertEquals(key2.message, "Point is not on curve");
+        const key2 = PrivateKey.FromString(hex) as PrivateKey;
+        assertEquals(key2, key1);
+
+        const pub1 = key1.toPublicKey();
+        const pub2 = PublicKey.FromString(pub1.bech32()) as PublicKey;
+        const pub3 = PublicKey.FromString(pub1.hex) as PublicKey;
+        assertEquals(pub2, pub3);
+        assertEquals(pub1, pub2);
     }
 });
