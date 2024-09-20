@@ -203,3 +203,21 @@ Deno.test("nip19 nprofile", async (t) => {
         }
     });
 });
+
+Deno.test("point is not on curve", () => {
+    const hex = "ac68c5e86deed0cc0f5b36ddb7eda5d5a1c59f9cc773453a986141a02430de3a";
+    {
+        const key1 = PublicKey.FromHex(hex) as Error;
+        assertEquals(key1.message, "Point is not on curve");
+
+        const key2 = PublicKey.FromString(hex) as Error;
+        assertEquals(key2.message, "Point is not on curve");
+    }
+    {
+        const key1 = PrivateKey.FromHex(hex) as Error;
+        assertEquals(key1.message, "Point is not on curve");
+
+        const key2 = PrivateKey.FromString(hex) as Error;
+        assertEquals(key2.message, "Point is not on curve");
+    }
+});

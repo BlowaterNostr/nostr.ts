@@ -1,7 +1,6 @@
 import { bech32 } from "./scure.ts";
 import { decodeHex, encodeHex } from "@std/encoding";
-import { utils } from "@noble/secp256k1";
-import { schnorr } from "@noble/curves/secp256k1";
+import { getPublicKey, ProjectivePoint, utils } from "@noble/secp256k1";
 
 /**
  * see examples [here](./tests/example.test.ts)
@@ -14,8 +13,9 @@ export class PrivateKey {
     }
 
     static FromHex(key: string) {
-        if (!isValidHexKey(key)) {
-            return new Error(`${key} is not valid`);
+        const err = isValidHexKey(key);
+        if (err instanceof Error) {
+            return err;
         }
         const hex = decodeHex(key);
         return new PrivateKey(hex);
@@ -48,13 +48,18 @@ export class PrivateKey {
 
     private constructor(private key: Uint8Array) {
         this.hex = encodeHex(key);
+        console.log("pri key", this.hex.length)
         const words = bech32.toWords(key);
         this.bech32 = bech32.encode("nsec", words, 1500);
     }
 
     toPublicKey(): PublicKey {
-        const pub_bytes = schnorr.getPublicKey(this.key);
-        const pub = PublicKey.FromHex(encodeHex(pub_bytes));
+        const pub_bytes = getPublicKey(this.key, true);
+        const _2 = getPublicKey(this.key, false)
+        console.log("pub len", pub_bytes.length, _2.length)
+        const hex = encodeHex(pub_bytes)
+        console.log(hex.length, encodeHex(_2).length)
+        const pub = PublicKey.FromHex(hex);
         if (pub instanceof Error) {
             throw pub; // impossible
         }
@@ -67,29 +72,34 @@ export class PrivateKey {
  */
 export class PublicKey {
     static FromString(key: string) {
-        if (!isValidPublicKey(key)) {
-            return new InvalidKey(key);
+        const pub = PublicKey.FromBech32(key);
+        if (pub instanceof Error) {
+            return PublicKey.FromHex(key);
         }
-        const hex = publicKeyHexFromNpub(key);
-        if (hex instanceof Error) {
-            return hex;
-        }
-        return new PublicKey(hex);
+        return pub;
     }
 
     static FromHex(key: string) {
-        if (!isValidPublicKey(key)) {
-            return new InvalidKey(key);
+        const err = isValidHexKey(key);
+        if (err instanceof Error) {
+            return err;
+        }
+        try {
+            ProjectivePoint.fromHex(key);
+        } catch (e) {
+            return e as Error;
         }
         return new PublicKey(key);
     }
 
     static FromBech32(key: string) {
-        const hex = publicKeyHexFromNpub(key);
-        if (hex instanceof Error) {
-            return hex;
+        if (key.substring(0, 4) != "npub") {
+            return new Error(`${key} is not a npub`);
         }
-        return new PublicKey(hex);
+        const code = bech32.decode(key, 1500);
+        const data = new Uint8Array(bech32.fromWords(code.words));
+        const hex = encodeHex(data);
+        return PublicKey.FromHex(hex);
     }
 
     bech32(): string {
@@ -105,29 +115,32 @@ export class PublicKey {
     }
 }
 
-function publicKeyHexFromNpub(key: string) {
-    try {
-        const ok = isValidPublicKey(key);
-        if (!ok) {
-            return new InvalidKey(key);
-        }
-        if (key.substring(0, 4) === "npub") {
-            const code = bech32.decode(key, 1500);
-            const data = new Uint8Array(bech32.fromWords(code.words));
-            return encodeHex(data);
-        }
-        return key;
-    } catch (e) {
-        return e as Error;
-    }
-}
+// function publicKeyHexFromNpub(key: string) {
+//     try {
+//         const ok = isValidPublicKey(key);
+//         if (!ok) {
+//             return new InvalidKey(key);
+//         }
+//         if (key.substring(0, 4) === "npub") {
+//             const code = bech32.decode(key, 1500);
+//             const data = new Uint8Array(bech32.fromWords(code.words));
+//             return encodeHex(data);
+//         }
+//         return key;
+//     } catch (e) {
+//         return e as Error;
+//     }
+// }
 
 function isValidPublicKey(key: string) {
     return /^[0-9a-f]{64}$/.test(key) || /^npub[0-9a-z]{59}$/.test(key);
 }
 
 export function isValidHexKey(key: string) {
-    return /^[0-9a-f]{64}$/.test(key);
+    const ok = /^[0-9a-f]{64}$/.test(key);
+    if (!ok) {
+        return new InvalidKey(key);
+    }
 }
 
 export class InvalidKey extends Error {
