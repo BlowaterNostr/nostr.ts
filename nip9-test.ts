@@ -1,16 +1,16 @@
 import { assertEquals, fail } from "@std/assert";
 import { prepareDeletionEvent, prepareNostrEvent } from "./event.ts";
-import { InMemoryAccountContext, NostrKind } from "./nostr.ts";
+import { InMemoryAccountContext, NostrEvent, NostrKind } from "./nostr.ts";
 import { SingleRelayConnection } from "./relay-single.ts";
 
 export const store_deletion_event = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url, { log: true }) as SingleRelayConnection;
+    const relay = SingleRelayConnection.New(url) as SingleRelayConnection;
     const ctx = InMemoryAccountContext.Generate();
     try {
         const event = await prepareNostrEvent(ctx, {
             content: "test send_deletion_event",
             kind: NostrKind.TEXT_NOTE,
-        });
+        }) as NostrEvent;
         const deletion = await prepareDeletionEvent(ctx, "test deletion", event);
         if (deletion instanceof Error) {
             fail(deletion.message);
@@ -26,7 +26,7 @@ export const store_deletion_event = (url: string) => async () => {
 };
 
 export const delete_regular_events = (url: string) => async () => {
-    const relay = SingleRelayConnection.New(url, { log: true }) as SingleRelayConnection;
+    const relay = SingleRelayConnection.New(url) as SingleRelayConnection;
     const ctx = InMemoryAccountContext.Generate();
     const testkind = [NostrKind.TEXT_NOTE, NostrKind.DIRECT_MESSAGE];
     try {
@@ -34,7 +34,7 @@ export const delete_regular_events = (url: string) => async () => {
             const event = await prepareNostrEvent(ctx, {
                 content: "test send_deletion_event",
                 kind,
-            });
+            }) as NostrEvent;
             const err1 = await relay.sendEvent(event);
             if (err1 instanceof Error) fail(err1.message);
 

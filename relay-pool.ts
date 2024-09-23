@@ -101,7 +101,6 @@ export class ConnectionPool
         }
         const client = SingleRelayConnection.New(url.toString(), {
             wsCreator: this.wsCreator,
-            log: true,
             signer: this.args?.signer,
             signer_v2: this.args?.signer_v2,
         }) as SingleRelayConnection;

@@ -245,7 +245,7 @@ export const two_clients_communicate = (url: string) => async () => {
 };
 
 export const get_event_by_id = (url: string) => async () => {
-    const client = SingleRelayConnection.New(url, { log: true }) as SingleRelayConnection;
+    const client = SingleRelayConnection.New(url) as SingleRelayConnection;
     const ctx = InMemoryAccountContext.Generate();
     {
         const event_1 = await client.getEvent(PrivateKey.Generate().hex);

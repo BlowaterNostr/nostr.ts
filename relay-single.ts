@@ -141,7 +141,7 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 if (messsage.type == "RelayDisconnectedByClient") {
                     this.error = messsage.error;
                     // exit the coroutine
-                    return messsage.error
+                    return messsage.error;
                 } else if (
                     messsage.type == "WebSocketClosed" ||
                     messsage.type == "FailedToLookupAddress" ||
@@ -262,7 +262,9 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
             }
         })().then((res) => {
             if (res instanceof RelayDisconnectedByClient) {
-                console.log(res);
+                if (this.log) {
+                    console.log(res);
+                }
                 return;
             }
             if (res instanceof Error) {
