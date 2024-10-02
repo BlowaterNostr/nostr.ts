@@ -1,5 +1,5 @@
-import { NostrEvent, NostrFilter } from "./nostr.ts";
-import { SubscriptionStream, WebSocketClosed } from "./relay-single.ts";
+import type { NostrEvent, NostrFilter } from "./nostr.ts";
+import { type SubscriptionStream, WebSocketClosed } from "./relay-single.ts";
 
 export type Subscriber = {
     newSub: (subID: string, ...filters: NostrFilter[]) => Promise<

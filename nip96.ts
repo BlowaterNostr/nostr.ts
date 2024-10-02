@@ -1,5 +1,5 @@
 import { prepareNostrEvent } from "./event.ts";
-import { NostrAccountContext, NostrEvent, NostrKind, Tag } from "./nostr.ts";
+import { type NostrAccountContext, type NostrEvent, NostrKind, type Tag } from "./nostr.ts";
 
 export type UploadFileResponse = {
     status: "success";

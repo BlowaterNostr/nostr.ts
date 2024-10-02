@@ -2,29 +2,29 @@ import { sleep } from "@blowater/csp";
 import { newURL, parseJSON, RESTRequestFailed } from "./_helper.ts";
 import { prepareNostrEvent } from "./event.ts";
 import { PublicKey } from "./key.ts";
-import { getRelayInformation, RelayInformation } from "./nip11.ts";
+import { getRelayInformation, type RelayInformation } from "./nip11.ts";
 import { NoteID } from "./nip19.ts";
 import {
-    _RelayResponse,
-    ClientRequest_REQ,
-    NostrEvent,
-    NostrFilter,
+    type _RelayResponse,
+    type ClientRequest_REQ,
+    type NostrEvent,
+    type NostrFilter,
     NostrKind,
-    RelayResponse_REQ_Message,
-    Signer,
+    type RelayResponse_REQ_Message,
+    type Signer,
 } from "./nostr.ts";
-import { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
+import type { Closer, EventSender, Subscriber, SubscriptionCloser } from "./relay.interface.ts";
 import {
     AsyncWebSocket,
     CloseTwice,
-    WebSocketClosedEvent,
-    WebSocketError,
-    WebSocketReadyState,
+    type WebSocketClosedEvent,
+    type WebSocketError,
+    type WebSocketReadyState,
 } from "./websocket.ts";
 import * as csp from "@blowater/csp";
 import { getSpaceMembers, prepareSpaceMember } from "./space-member.ts";
 import { assertEquals } from "@std/assert";
-import { Event_V2, Signer_V2, SpaceMember } from "./v2.ts";
+import type { Event_V2, Signer_V2, SpaceMember } from "./v2.ts";
 
 export class WebSocketClosed extends Error {
     constructor(

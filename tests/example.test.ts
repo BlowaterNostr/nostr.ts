@@ -1,9 +1,9 @@
 import { assertEquals } from "@std/assert";
 import { PrivateKey, PublicKey } from "../key.ts";
-import { InMemoryAccountContext, NostrEvent, NostrKind, prepareNostrEvent } from "../nostr.ts";
+import { InMemoryAccountContext, type NostrEvent, NostrKind, prepareNostrEvent } from "../nostr.ts";
 import { SingleRelayConnection } from "../relay-single.ts";
 import * as relayList from "./relay-list.test.ts";
-import { Signer } from "../nostr.ts";
+import { type Signer } from "../nostr.ts";
 
 Deno.test("SingleRelayConnection", async () => {
     const relay = SingleRelayConnection.New(relayList.blowater);

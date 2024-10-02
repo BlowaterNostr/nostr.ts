@@ -8,7 +8,7 @@ import { schnorr } from "@noble/curves/secp256k1";
 import { sha256 } from "@noble/hashes/sha256";
 
 import stringify from "npm:json-stable-stringify@1.1.1";
-import { Kind_V2, Signer_V2 } from "./v2.ts";
+import type { Kind_V2, Signer_V2 } from "./v2.ts";
 
 export enum NostrKind {
     META_DATA = 0,
