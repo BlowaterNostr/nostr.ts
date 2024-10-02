@@ -307,7 +307,11 @@ export class SingleRelayConnection implements Subscriber, SubscriptionCloser, Ev
                 args.signer_v2,
             );
         } catch (e) {
-            return e;
+            if (e instanceof Error) {
+                return e;
+            } else {
+                throw e; // impossible
+            }
         }
     }
 
