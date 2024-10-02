@@ -114,6 +114,9 @@ export class NostrAddress {
             const res = bech32.decode(naddr, 1500);
             words = res.words;
         } catch (e) {
+            if (e instanceof Error == false) {
+                throw e; // impossible
+            }
             return new Error(`failed to decode ${naddr}, ${e.message}`);
         }
 
@@ -155,6 +158,9 @@ export class NostrProfile {
             const res = bech32.decode(nprofile, 1500);
             words = res.words;
         } catch (e) {
+            if (e instanceof Error == false) {
+                throw e; // impossible
+            }
             return new Error(`failed to decode ${nprofile}, ${e.message}`);
         }
 
@@ -227,6 +233,9 @@ export class Nevent {
             const res = bech32.decode(nevent, 1500);
             words = res.words;
         } catch (e) {
+            if (e instanceof Error == false) {
+                throw e; // impossible
+            }
             return new Error(`failed to decode ${nevent}, ${e.message}`);
         }
 

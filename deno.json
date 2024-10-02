@@ -1,6 +1,6 @@
 {
     "name": "@blowater/nostr-sdk",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "exports": "./nostr.ts",
     "fmt": {
         "indentWidth": 4,
@@ -8,7 +8,8 @@
         "exclude": ["cov_profile"]
     },
     "compilerOptions": {
-        "verbatimModuleSyntax": true
+        "verbatimModuleSyntax": true,
+        "useUnknownInCatchVariables": true
     },
     "lint": {
         "rules": {

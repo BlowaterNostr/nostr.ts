@@ -23,6 +23,6 @@ Deno.test("Upload File", async () => {
         assertEquals(uploaded.nip94_event.tags[3], ["m", "image/jpeg"]);
         assertEquals(uploaded.nip94_event.tags[4], ["dim", "460x460"]);
     } catch (error) {
-        fail(error);
+        fail((error as Error).message);
     }
 });

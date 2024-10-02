@@ -46,7 +46,11 @@ export async function uploadFile(
         const json = await response.json();
         return json;
     } catch (error) {
-        return error;
+        if (error instanceof Error) {
+            return error;
+        } else {
+            throw error; // impossible
+        }
     }
 }
 

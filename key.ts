@@ -89,7 +89,11 @@ export class PublicKey {
         try {
             schnorr.utils.lift_x(hexToNumber(key));
         } catch (e) {
-            return new InvalidKey(key, e.message);
+            if (e instanceof Error) {
+                return new InvalidKey(key, e.message);
+            } else {
+                throw e; // impossible
+            }
         }
         return new PublicKey(key);
     }
@@ -104,7 +108,11 @@ export class PublicKey {
             const hex = encodeHex(data);
             return PublicKey.FromHex(hex);
         } catch (e) {
-            return new InvalidKey(key, e.message);
+            if (e instanceof Error) {
+                return new InvalidKey(key, e.message);
+            } else {
+                throw e; // impossible
+            }
         }
     }
 

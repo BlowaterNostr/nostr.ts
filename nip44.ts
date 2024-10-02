@@ -55,6 +55,9 @@ export function getConversationKey(privkeyA: string, pubkeyB: string): Uint8Arra
         const sharedX = secp256k1.getSharedSecret(privkeyA, "02" + pubkeyB).subarray(1, 33);
         return hkdf_extract(sha256, sharedX, "nip44-v2");
     } catch (e) {
+        if (e instanceof Error == false) {
+            throw e; // impossible
+        }
         return e;
     }
 }
@@ -124,6 +127,9 @@ function decodePayload(payload: string) {
     try {
         data = decodeBase64(payload);
     } catch (error) {
+        if (error instanceof Error == false) {
+            throw error; // impossible
+        }
         return new Error("invalid base64: " + error.message);
     }
     const dlen = data.length;

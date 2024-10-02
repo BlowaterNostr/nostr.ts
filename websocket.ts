@@ -46,7 +46,11 @@ export class AsyncWebSocket implements BidirectionalNetwork {
             const ws = new WebSocket(url); // could throw, caller should catch it, not part of the MDN doc
             return new AsyncWebSocket(ws, log);
         } catch (err) {
-            return err;
+            if (err instanceof Error) {
+                return err;
+            } else {
+                throw err; // impossible
+            }
         }
     }
 
@@ -145,11 +149,14 @@ export class AsyncWebSocket implements BidirectionalNetwork {
         try {
             this.ws.send(str);
         } catch (e) {
+            if (e instanceof Error == false) {
+                throw e; // impossible
+            }
             // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/send#invalidstateerror
             if (e.message == "readyState not OPEN") {
                 return new WebSocketClosed(this.url, this.status());
             }
-            return e as Error;
+            return e;
         }
     }
 
