@@ -1,6 +1,6 @@
 import { assertEquals, fail } from "@std/assert";
 import { PrivateKey } from "./key.ts";
-import { InMemoryAccountContext, NostrEvent, NostrKind, verifyEvent } from "./nostr.ts";
+import { InMemoryAccountContext, type NostrEvent, NostrKind, verifyEvent } from "./nostr.ts";
 import { prepareEncryptedNostrEvent, prepareNostrEvent } from "./event.ts";
 
 Deno.test("Verify Event", async (t) => {

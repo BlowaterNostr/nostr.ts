@@ -1,16 +1,17 @@
 import { chan, Channel, PutToClosedChannelError } from "@blowater/csp";
 import { NoteID } from "./nip19.ts";
-import { NostrEvent, NostrFilter, RelayResponse_REQ_Message, Signer } from "./nostr.ts";
-import { Closer, EventSender, SubscriptionCloser } from "./relay.interface.ts";
 import {
     RelayDisconnectedByClient,
     SingleRelayConnection,
     SubscriptionAlreadyExist,
 } from "./relay-single.ts";
 import { AsyncWebSocket } from "./websocket.ts";
-import { Signer_V2 } from "./v2.ts";
+
 import { ValueMap } from "@blowater/collections";
 import { newURL } from "./_helper.ts";
+import type { NostrEvent, NostrFilter, RelayResponse_REQ_Message, Signer } from "./nostr.ts";
+import type { Closer, EventSender, SubscriptionCloser } from "./relay.interface.ts";
+import type { Signer_V2 } from "./v2.ts";
 
 export interface RelayAdder {
     addRelayURL(url: string): Promise<Error | SingleRelayConnection>;

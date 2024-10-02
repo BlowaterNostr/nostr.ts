@@ -1,11 +1,14 @@
 {
     "name": "@blowater/nostr-sdk",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "exports": "./nostr.ts",
     "fmt": {
         "indentWidth": 4,
         "lineWidth": 110,
         "exclude": ["cov_profile"]
+    },
+    "compilerOptions": {
+        "verbatimModuleSyntax": true
     },
     "lint": {
         "rules": {

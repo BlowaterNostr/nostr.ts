@@ -1,6 +1,13 @@
 import { assertEquals, assertIsError, fail } from "@std/assert";
 import { InvalidKey, PrivateKey, PublicKey } from "./key.ts";
-import { AddressPointer, EventPointer, Nevent, NostrAddress, NostrProfile, NoteID } from "./nip19.ts";
+import {
+    type AddressPointer,
+    type EventPointer,
+    Nevent,
+    NostrAddress,
+    NostrProfile,
+    NoteID,
+} from "./nip19.ts";
 import { relays } from "./tests/relay-list.test.ts";
 import { NostrKind } from "./nostr.ts";
 

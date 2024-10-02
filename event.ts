@@ -1,5 +1,12 @@
 import { PublicKey } from "./key.ts";
-import { Encrypter, NostrEvent, NostrKind, Signer, Tag, UnsignedNostrEvent } from "./nostr.ts";
+import {
+    type Encrypter,
+    type NostrEvent,
+    NostrKind,
+    type Signer,
+    type Tag,
+    type UnsignedNostrEvent,
+} from "./nostr.ts";
 
 export async function prepareEncryptedNostrEvent<T extends NostrKind>(
     sender: Signer & Encrypter,
