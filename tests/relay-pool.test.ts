@@ -1,4 +1,4 @@
-import { InMemoryAccountContext, NostrEvent, NostrKind } from "../nostr.ts";
+import { InMemoryAccountContext, type NostrEvent, NostrKind } from "../nostr.ts";
 import { blowater, nos, relays } from "./relay-list.test.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "../relay-single.ts";
 import { AsyncWebSocket } from "../websocket.ts";

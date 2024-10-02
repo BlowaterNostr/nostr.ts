@@ -1,11 +1,18 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { prepareNostrEvent } from "../event.ts";
-import { InMemoryAccountContext, NostrEvent, NostrKind, RelayResponse_Event, Signer } from "../nostr.ts";
 import { SingleRelayConnection, SubscriptionAlreadyExist } from "../relay-single.ts";
 import * as csp from "@blowater/csp";
 import { PrivateKey } from "../key.ts";
-import { Signer_V2 } from "../v2.ts";
+
 import { getSpaceMembers } from "../space-member.ts";
+import {
+    InMemoryAccountContext,
+    type NostrEvent,
+    NostrKind,
+    type RelayResponse_Event,
+    type Signer,
+} from "../nostr.ts";
+import type { Signer_V2 } from "../v2.ts";
 
 export const open_close = (urls: string[]) => async () => {
     for (let url of urls) {
