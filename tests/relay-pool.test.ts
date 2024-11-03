@@ -7,7 +7,7 @@ import { prepareNostrEvent } from "../event.ts";
 import { PrivateKey } from "../key.ts";
 import * as csp from "@blowater/csp";
 import { assertEquals, assertNotEquals, assertNotInstanceOf, fail } from "@std/assert";
-import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
+import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.ts";
 
 Deno.test("ConnectionPool close gracefully 1", async () => {
     const pool = new ConnectionPool();

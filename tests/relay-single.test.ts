@@ -16,7 +16,7 @@ import {
     two_clients_communicate,
 } from "./relay-single-test.ts";
 
-import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
+import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.ts";
 import { PrivateKey } from "../key.ts";
 import { fail } from "@std/assert";
 import { InMemoryAccountContext_V2 } from "../v2.ts";

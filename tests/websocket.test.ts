@@ -3,7 +3,7 @@ import { relays } from "./relay-list.test.ts";
 import { WebSocketClosed } from "../relay-single.ts";
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { PrivateKey } from "../key.ts";
-import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
+import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.ts";
 
 Deno.test("websocket open & close", async () => {
     let ps = [];
@@ -13,6 +13,7 @@ Deno.test("websocket open & close", async () => {
             if (ws instanceof Error) {
                 fail();
             }
+
             await ws.untilOpen();
             await ws.close();
         })();
