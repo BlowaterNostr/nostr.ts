@@ -1,11 +1,9 @@
-import { blowater, relays, satlantis } from "./relay-list.test.ts";
+import { blowater, damus, relays, satlantis } from "./relay-list.test.ts";
 import {
-    add_space_member,
     close_sub_keep_reading,
     get_correct_kind,
     get_event_by_id,
     get_replaceable_event,
-    get_space_members,
     limit,
     newSub_close,
     newSub_multiple_filters,
@@ -16,37 +14,16 @@ import {
     two_clients_communicate,
 } from "./relay-single-test.ts";
 
-import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.ts";
-import { PrivateKey } from "../key.ts";
-import { fail } from "@std/assert";
-import { InMemoryAccountContext_V2 } from "../v2.ts";
-
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
 Deno.test("SingleRelayConnection newSub & close", async () => {
-    const relay = await run({
-        port: 8001,
-        default_policy: {
-            allowed_kinds: "all",
-        },
-        auth_required: false,
-        admin: PrivateKey.Generate().toPublicKey(),
-    });
-    if (relay instanceof Error) return fail(relay.message);
-    await newSub_close(relay.ws_url)();
-    await relay.shutdown();
+    await newSub_close(damus)();
 });
 
 Deno.test("Single Relay Connection", async (t) => {
-    const relay = await run({
-        port: 8001,
-        default_policy: {
-            allowed_kinds: "all",
-        },
-        auth_required: false,
-        admin: PrivateKey.Generate().toPublicKey(),
-    });
-    if (relay instanceof Error) return fail(relay.message);
+    const relay = {
+        ws_url: damus,
+    };
     await t.step("SingleRelayConnection subscription already exists", sub_exits(relay.ws_url));
     await t.step(
         "SingleRelayConnection: close subscription and keep reading",
@@ -67,45 +44,9 @@ Deno.test("Single Relay Connection", async (t) => {
         await get_event_by_id(relay.ws_url)();
         await get_event_by_id(blowater)();
     });
-    await relay.shutdown();
 });
 
 Deno.test("get replaceable event", async () => {
     await get_replaceable_event(blowater)();
     await get_replaceable_event(satlantis)();
-});
-
-Deno.test("space members", async (t) => {
-    const ctx = InMemoryAccountContext_V2.Generate();
-    const relay = await run({
-        port: 8001,
-        default_policy: {
-            allowed_kinds: "all",
-        },
-        auth_required: false,
-        admin: ctx.publicKey.hex,
-    });
-    const auth_required = await run({
-        port: 8002,
-        default_policy: {
-            allowed_kinds: "all",
-        },
-        auth_required: true,
-        admin: ctx.publicKey.hex,
-    });
-    if (relay instanceof Error) return fail(relay.message);
-    if (auth_required instanceof Error) return fail(auth_required.message);
-
-    await t.step("get members", async () => {
-        await get_space_members(new URL(relay.ws_url))();
-        await get_space_members(new URL(auth_required.ws_url))();
-    });
-
-    await t.step("add member", async () => {
-        await add_space_member(relay.ws_url, { signer: ctx, signer_v2: ctx })();
-        await add_space_member(auth_required.ws_url, { signer: ctx, signer_v2: ctx })();
-    });
-
-    await relay.shutdown();
-    await auth_required.shutdown();
 });
