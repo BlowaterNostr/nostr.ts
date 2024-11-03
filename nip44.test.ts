@@ -1,5 +1,5 @@
 import * as nip44 from "./nip44.ts";
-import { default as vec } from "./nip44.json" assert { type: "json" };
+import { default as vec } from "./nip44.json" with { type: "json" };
 import { schnorr } from "@noble/curves/secp256k1";
 import { assertEquals, assertMatch, fail } from "@std/assert";
 import { decodeHex, encodeHex } from "@std/encoding";
