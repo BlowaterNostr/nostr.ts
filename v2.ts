@@ -4,6 +4,7 @@ import { utf8Encode } from "./nip4.ts";
 import { encodeHex } from "@std/encoding";
 import stringify from "npm:json-stable-stringify@1.1.1";
 import { PublicKey } from "./key.ts";
+import { InMemoryAccountContext, signId } from "./nostr.ts";
 
 export type Kind_V2 = "ChannelCreation" | "ChannelEdition" | "SpaceMember";
 
@@ -55,6 +56,19 @@ export interface Signer_V2 {
     signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
         event: T,
     ): Promise<T & { sig: string; id: string }>;
+}
+
+export class InMemoryAccountContext_V2 extends InMemoryAccountContext implements Signer_V2 {
+    async signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
+        event: T,
+    ): Promise<T & { sig: string; id: string }> {
+        {
+            const buf = utf8Encode(stringify(event));
+            const id = encodeHex(sha256(buf));
+            const sig = encodeHex(await signId(id, this.privateKey.hex));
+            return { ...event, id, sig };
+        }
+    }
 }
 
 export * from "./space-member.ts";

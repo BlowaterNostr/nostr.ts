@@ -7,9 +7,6 @@ import { getSharedSecret } from "@noble/secp256k1";
 import { schnorr } from "@noble/curves/secp256k1";
 import { sha256 } from "@noble/hashes/sha256";
 
-import stringify from "npm:json-stable-stringify@1.1.1";
-import type { Kind_V2, Signer_V2 } from "./v2.ts";
-
 export enum NostrKind {
     META_DATA = 0,
     TEXT_NOTE = 1,
@@ -231,7 +228,7 @@ export async function signId(id: string, privateKey: string) {
 /**
  * see examples [here](./tests/example.test.ts)
  */
-export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
+export class InMemoryAccountContext implements NostrAccountContext {
     static New(privateKey: PrivateKey) {
         return new InMemoryAccountContext(privateKey);
     }
@@ -252,7 +249,7 @@ export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
 
     private readonly sharedSecretsMap = new Map<string, Uint8Array>();
 
-    private constructor(
+    constructor(
         readonly privateKey: PrivateKey,
     ) {
         this.publicKey = privateKey.toPublicKey();
@@ -264,17 +261,6 @@ export class InMemoryAccountContext implements NostrAccountContext, Signer_V2 {
         const id = await calculateId(event);
         const sig = encodeHex(await signId(id, this.privateKey.hex));
         return { ...event, id, sig };
-    }
-
-    async signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
-        event: T,
-    ): Promise<T & { sig: string; id: string }> {
-        {
-            const buf = utf8Encode(stringify(event));
-            const id = encodeHex(sha256(buf));
-            const sig = encodeHex(await signId(id, this.privateKey.hex));
-            return { ...event, id, sig };
-        }
     }
 
     async encrypt(pubkey: string, plaintext: string, algorithm: "nip44" | "nip4"): Promise<string | Error> {
