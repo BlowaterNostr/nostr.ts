@@ -6,3 +6,4 @@ nodejs/index.mjs
 test.ts
 # SQLite files
 *.db
+.vscode

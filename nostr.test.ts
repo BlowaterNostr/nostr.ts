@@ -1,13 +1,13 @@
 import { assertEquals } from "@std/assert";
 import { RFC3339 } from "./_helper.ts";
 import { format } from "@std/datetime";
-import { verify_event_v2 } from "./v2.ts";
+import { InMemoryAccountContext_V2, verify_event_v2 } from "./v2.ts";
 import { prepareNostrEvent } from "./event.ts";
 import { PrivateKey } from "./key.ts";
 import { getTags, InMemoryAccountContext, type NostrEvent, NostrKind } from "./nostr.ts";
 
 Deno.test("verify event v2", async () => {
-    const ctx = InMemoryAccountContext.Generate();
+    const ctx = InMemoryAccountContext_V2.Generate();
     const event = await ctx.signEventV2({
         pubkey: ctx.publicKey.hex,
         kind: "SpaceMember",
