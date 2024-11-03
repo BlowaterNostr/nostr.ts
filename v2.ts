@@ -3,8 +3,15 @@ import { sha256 } from "@noble/hashes/sha256";
 import { utf8Encode } from "./nip4.ts";
 import { encodeHex } from "@std/encoding";
 import stringify from "npm:json-stable-stringify@1.1.1";
-import { PublicKey } from "./key.ts";
-import { InMemoryAccountContext, signId } from "./nostr.ts";
+import { PrivateKey, PublicKey } from "./key.ts";
+import {
+    InMemoryAccountContext,
+    type NostrAccountContext,
+    type NostrEvent,
+    NostrKind,
+    signId,
+    type UnsignedNostrEvent,
+} from "./nostr.ts";
 
 export type Kind_V2 = "ChannelCreation" | "ChannelEdition" | "SpaceMember";
 
@@ -58,7 +65,33 @@ export interface Signer_V2 {
     ): Promise<T & { sig: string; id: string }>;
 }
 
-export class InMemoryAccountContext_V2 extends InMemoryAccountContext implements Signer_V2 {
+export class InMemoryAccountContext_V2 implements NostrAccountContext, Signer_V2 {
+    static Generate() {
+        return new InMemoryAccountContext_V2(PrivateKey.Generate());
+    }
+
+    constructor(readonly privateKey: PrivateKey) {
+        this.publicKey = privateKey.toPublicKey();
+        this.ctx = InMemoryAccountContext.New(this.privateKey);
+    }
+
+    public publicKey: PublicKey;
+    private ctx: InMemoryAccountContext;
+
+    signEvent<Kind extends NostrKind = NostrKind>(
+        event: UnsignedNostrEvent<Kind>,
+    ): Promise<NostrEvent<Kind> | Error> {
+        return this.ctx.signEvent(event);
+    }
+
+    encrypt(pubkey: string, plaintext: string, algorithm: "nip44" | "nip4"): Promise<string | Error> {
+        return this.ctx.encrypt(pubkey, plaintext, algorithm);
+    }
+
+    decrypt(pubkey: string, ciphertext: string, algorithm?: "nip44" | "nip4"): Promise<string | Error> {
+        return this.ctx.decrypt(pubkey, ciphertext, algorithm);
+    }
+
     async signEventV2<T extends { pubkey: string; kind: Kind_V2; created_at: string }>(
         event: T,
     ): Promise<T & { sig: string; id: string }> {

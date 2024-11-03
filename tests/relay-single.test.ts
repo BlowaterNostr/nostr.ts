@@ -19,7 +19,7 @@ import {
 import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/mod.ts";
 import { PrivateKey } from "../key.ts";
 import { fail } from "@std/assert";
-import { InMemoryAccountContext } from "../nostr.ts";
+import { InMemoryAccountContext_V2 } from "../v2.ts";
 
 Deno.test("SingleRelayConnection open & close", open_close(relays));
 
@@ -76,7 +76,7 @@ Deno.test("get replaceable event", async () => {
 });
 
 Deno.test("space members", async (t) => {
-    const ctx = InMemoryAccountContext.Generate();
+    const ctx = InMemoryAccountContext_V2.Generate();
     const relay = await run({
         port: 8001,
         default_policy: {
