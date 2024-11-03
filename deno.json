@@ -1,6 +1,6 @@
 {
     "name": "@blowater/nostr-sdk",
-    "version": "0.1.6-rc2",
+    "version": "0.1.6",
     "exports": {
         ".": "./nostr.ts",
         "./key": "./key.ts",
