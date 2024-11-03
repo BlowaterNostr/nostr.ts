@@ -1,9 +1,8 @@
 import { AsyncWebSocket, CloseReason, CloseTwice } from "../websocket.ts";
-import { relays } from "./relay-list.test.ts";
+import { damus, relays } from "./relay-list.test.ts";
 import { WebSocketClosed } from "../relay-single.ts";
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { PrivateKey } from "../key.ts";
-import { run } from "https://raw.githubusercontent.com/BlowaterNostr/relayed/main/main.ts";
 
 Deno.test("websocket open & close", async () => {
     let ps = [];
@@ -24,17 +23,8 @@ Deno.test("websocket open & close", async () => {
 });
 
 Deno.test("websocket call untilOpen after closed", async () => {
-    const relay = await run({
-        port: 8001,
-        default_policy: {
-            allowed_kinds: "all",
-        },
-        auth_required: false,
-        admin: PrivateKey.Generate().toPublicKey(),
-    });
-    if (relay instanceof Error) fail(relay.message);
     {
-        const ws = AsyncWebSocket.New(relay.ws_url, true);
+        const ws = AsyncWebSocket.New(damus, true);
         if (ws instanceof Error) {
             fail();
         }
@@ -44,7 +34,7 @@ Deno.test("websocket call untilOpen after closed", async () => {
         assertInstanceOf(err2, Error);
     }
     {
-        const ws2 = AsyncWebSocket.New(relay.ws_url, true);
+        const ws2 = AsyncWebSocket.New(damus, true);
         if (ws2 instanceof Error) {
             fail();
         }
@@ -54,7 +44,6 @@ Deno.test("websocket call untilOpen after closed", async () => {
         const err4 = await p;
         assertEquals(false, err4 instanceof CloseTwice);
     }
-    await relay.shutdown();
 });
 
 Deno.test("websocket close without waiting for openning", async () => {
