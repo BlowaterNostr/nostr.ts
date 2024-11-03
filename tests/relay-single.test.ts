@@ -1,3 +1,5 @@
+import { wirednet } from "./relay-list.test.ts";
+import { nos } from "./relay-list.test.ts";
 import { blowater, damus, relays, satlantis } from "./relay-list.test.ts";
 import {
     close_sub_keep_reading,
@@ -42,11 +44,11 @@ Deno.test("Single Relay Connection", async (t) => {
 
     await t.step("get_event_by_id", async () => {
         await get_event_by_id(relay.ws_url)();
-        await get_event_by_id(blowater)();
+        await get_event_by_id(nos)();
     });
 });
 
 Deno.test("get replaceable event", async () => {
-    await get_replaceable_event(blowater)();
+    await get_replaceable_event(damus)();
     await get_replaceable_event(satlantis)();
 });
